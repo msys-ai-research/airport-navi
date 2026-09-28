@@ -1,0 +1,5 @@
+# local working files, not part of the site
+Claude outputs/
+photos/
+airport-navi-prototype.html
+.DS_Store

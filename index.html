@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Airport Navi: interactive prototype of a no-install, QR-launched wayfinding web app for NAIA Terminal 1 and Terminal 3. Simulated data.">
+<meta name="theme-color" content="#001F60">
+<meta property="og:title" content="Airport Navi Prototype">
+<meta property="og:description" content="Scan a QR, find your gate. Interactive wayfinding prototype for NAIA T1 and T3.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23001F60'/%3E%3Cpolygon points='14 30 50 13 33 49 29 35' fill='%23fff'/%3E%3C/svg%3E">
+<title>Airport Navi Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap">
+<style>
+:root{
+  --navy:#001F60; --navy-2:#1A3C85; --navy-ink:#12183A;
+  --blue-2:#52649A; --blue-soft:#8FA3D1; --tint:#E6ECF8; --tint-2:#D3DEF3; --line:#E1E4EC; --line-2:#D5DAE8;
+  --ground:#F5F6FA; --paper:#FFFFFF; --muted:#5C6480; --faint:#8A91AB;
+  --ok-bg:#E3F3E7; --ok:#1B5E20; --warn-bg:#FDEBD0; --warn:#8A4B00;
+  --desk:#E9ECF4;
+  --font:'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--desk);color:var(--navy-ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--navy)}
+:focus-visible{outline:3px solid #3A64B8;outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- desk layout ---------- */
+.desk{min-height:100%;display:flex;justify-content:center;align-items:flex-start;padding-block:32px;padding-inline:24px}
+.phone{position:relative;width:390px;height:844px;flex-shrink:0;border-radius:44px;background:var(--ground);overflow:hidden;
+  box-shadow:0 0 0 10px #0B1433,0 0 0 11px #26305a,0 30px 60px rgba(0,31,96,.28)}
+.screen{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column;background:var(--ground)}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+/* demo controls: edge tab + right sheet */
+.demo-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 9px;border:0;border-radius:14px 0 0 14px;background:var(--navy);color:#fff;box-shadow:-4px 6px 20px rgba(0,31,96,.25);font-size:12px;font-weight:800;letter-spacing:.06em}
+.demo-tab span{writing-mode:vertical-rl;transform:rotate(180deg);text-transform:uppercase}
+.demo-tab[aria-expanded="true"]{opacity:0;pointer-events:none}
+.scrim{position:fixed;inset:0;background:rgba(18,24,58,.28);z-index:44;opacity:0;pointer-events:none;transition:opacity .25s}
+.panel{position:fixed;top:0;right:0;bottom:0;z-index:45;width:360px;max-width:100vw;background:var(--ground);border-left:1px solid var(--line);box-shadow:-18px 0 40px rgba(0,31,96,.16);
+  display:flex;flex-direction:column;transform:translateX(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+.panel.open{transform:none;visibility:visible}
+.panel-head{display:flex;align-items:flex-start;gap:12px;padding:18px 18px 14px;border-bottom:1px solid var(--line);background:var(--paper)}
+.panel-head h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--navy)}
+.panel-head p{margin:4px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.panel-close{width:40px;height:40px;flex-shrink:0;border:1px solid var(--line);border-radius:12px;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--navy)}
+.panel-body{flex:1;overflow-y:auto;padding:16px 16px 24px;display:flex;flex-direction:column;gap:14px}
+.pcard{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.pcard h2{margin:0;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--blue-2)}
+.jump{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.jump button{text-align:left;border:1px solid var(--line);background:var(--ground);border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:600;color:var(--navy-ink)}
+.jump button[aria-current="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.sim{display:flex;flex-wrap:wrap;gap:8px}
+.sim button{border:1.5px solid var(--navy);background:var(--paper);color:var(--navy);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700}
+.sim button.ghost{border-color:var(--line-2);color:var(--muted)}
+.samples{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.samples code{font-family:inherit;font-weight:700;color:var(--navy)}
+.small{font-size:12px;color:var(--faint);line-height:1.5}
+@media (prefers-reduced-motion:reduce){.panel,.scrim{transition:none}}
+@media (max-width:820px){
+  .desk{padding-block:0;padding-inline:0}
+  .phone{width:100%;max-width:430px;height:100svh;max-height:932px;border-radius:0;box-shadow:none}
+  .demo-tab{top:auto;bottom:120px;transform:none}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .panel{width:min(360px,92vw)}
+}
+
+/* ---------- app atoms ---------- */
+.top{background:var(--navy);color:#fff;padding:14px 20px 16px;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+.toprow{display:flex;align-items:center;gap:8px}
+.back{width:44px;height:44px;margin-left:-12px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;border-radius:12px;color:#fff}
+.t-title{font-size:18px;font-weight:800;line-height:1.2}
+.t-sub{font-size:11.5px;color:#C9D3F0;margin-top:2px}
+.searchbox{display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;background:var(--paper);border-radius:12px;border:1.5px solid transparent}
+.searchbox.onlight{border-color:var(--line-2)}
+.searchbox input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:15px;color:var(--navy-ink)}
+.searchbox input::placeholder{color:#8A91AB}
+.x{width:32px;height:32px;border:0;background:transparent;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.body{padding:16px 20px 110px;display:flex;flex-direction:column;gap:16px}
+.h3{font-size:14px;font-weight:800;margin:0}
+.label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.muted{color:var(--muted)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px}
+.row{display:flex;align-items:center;gap:12px;padding:10px;background:var(--paper);border:1px solid var(--line);border-radius:14px;text-align:left;width:100%;color:inherit}
+.row .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.row .t{font-size:14px;font-weight:700;line-height:1.25}
+.row .s{font-size:12px;color:var(--muted);line-height:1.35}
+.dist{display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap}
+.dist b{font-size:14px;font-weight:800;color:var(--navy)}
+.dist span{font-size:10.5px;color:var(--faint)}
+.chip{height:34px;padding:0 13px;border-radius:999px;border:1px solid var(--line-2);background:var(--paper);font-size:12.5px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;color:var(--navy-ink)}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.pill{height:24px;padding:0 10px;display:inline-flex;align-items:center;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.navy{background:var(--navy);color:#fff}
+.pill.tint{background:var(--tint);color:var(--navy)}
+.btn{height:52px;border-radius:14px;border:0;background:var(--navy);color:#fff;font-size:15.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-shadow:0 6px 16px rgba(0,31,96,.22)}
+.btn.line{background:var(--paper);color:var(--navy);border:1.5px solid var(--navy);box-shadow:none}
+.btn.text{background:transparent;color:var(--navy);box-shadow:none;height:44px;font-size:14px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.ph{position:relative;background:linear-gradient(135deg,#D3DEF3 0%,#E9EEF9 60%,#DCE4F5 100%);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--blue-2)}
+.ph .cap{position:absolute;left:8px;bottom:6px;font-size:9.5px;font-weight:600;color:#3E4B7A;opacity:.85;letter-spacing:.02em}
+.ph.dark{background:linear-gradient(135deg,#0A2E7A 0%,#123B8F 55%,#1C4AA6 100%);color:#8FA3D1}
+.ph.dark .cap{color:#C9D3F0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 8px}
+.tileicon{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;padding:0;color:var(--navy-ink)}
+.tileicon .sq{width:58px;height:58px;border-radius:18px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.tileicon[aria-pressed="true"] .sq{background:var(--navy);border-color:var(--navy)}
+.tileicon span.l{font-size:11px;font-weight:600;text-align:center;line-height:1.2}
+.tileicon[aria-pressed="true"] span.l{font-weight:800}
+.notice{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;background:var(--paper);border:1px solid var(--line);border-radius:10px;font-size:11.5px;color:var(--muted);line-height:1.45}
+.empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5}
+
+/* bottom bar */
+.bar{position:absolute;left:16px;right:16px;bottom:16px;height:64px;background:var(--paper);border:1px solid var(--line);border-radius:32px;box-shadow:0 8px 24px rgba(0,31,96,.12);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;z-index:5}
+.bar button{border:0;background:transparent;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--blue-2)}
+.bar button[aria-current="page"]{color:var(--navy);font-weight:800}
+.bar .fab{justify-self:center;width:64px;height:64px;margin-top:-30px;border-radius:999px;background:var(--navy);border:4px solid #fff;box-shadow:0 6px 16px rgba(0,31,96,.3);color:#fff}
+
+/* map screen */
+.mapwrap{position:absolute;inset:0;background:#EEF1F8}
+.mapwrap svg{width:100%;height:100%;display:block}
+.float-top{position:absolute;left:16px;right:16px;top:14px;display:flex;align-items:center;gap:10px;height:56px;padding:0 8px 0 4px;background:var(--navy);color:#fff;border-radius:28px;box-shadow:0 8px 24px rgba(0,31,96,.3);z-index:3}
+.fbtn{display:flex;align-items:center;gap:6px;height:40px;padding:0 14px;background:var(--paper);border:0;border-radius:999px;box-shadow:0 4px 14px rgba(0,31,96,.18);font-size:12px;font-weight:700;color:var(--navy)}
+.fbtn[aria-pressed="true"]{background:var(--navy);color:#fff}
+.simtag{position:absolute;left:16px;top:84px;display:flex;align-items:center;gap:4px;height:28px;padding:0 5px 0 10px;background:rgba(18,24,58,.5);border-radius:999px;font-size:10px;font-weight:700;color:#fff;letter-spacing:.05em;z-index:3}
+.simtag button{height:20px;padding:0 8px;border:0;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;letter-spacing:0}
+.steps{position:absolute;left:16px;right:16px;bottom:16px;background:var(--paper);border-radius:18px;box-shadow:0 -2px 28px rgba(0,31,96,.22);overflow:hidden;z-index:3}
+.stephead{display:flex;align-items:center;gap:12px;padding:14px 16px;width:100%;border:0;background:var(--paper);text-align:left}
+.num{width:32px;height:32px;flex-shrink:0;border-radius:999px;background:var(--tint);color:var(--navy);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.num.on{background:var(--navy);color:#fff}
+.steprow{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid #F0F2F7;font-size:14px}
+.sheet-bg{position:absolute;inset:0;background:rgba(18,24,58,.38);z-index:8;display:flex;align-items:flex-end}
+.sheet{width:100%;background:var(--paper);border-radius:22px 22px 0 0;padding:12px 20px 26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+.grab{align-self:center;width:40px;height:4px;border-radius:2px;background:var(--line-2)}
+.toast{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:var(--navy-ink);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:12px;z-index:20;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+
+/* chat */
+.msg{max-width:300px;padding:12px 14px;font-size:14px;line-height:1.45;border-radius:16px}
+.msg.bot{align-self:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:16px 16px 16px 4px}
+.msg.me{align-self:flex-end;background:var(--navy);color:#fff;border-radius:16px 16px 4px 16px}
+.faq{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding:0;list-style:none}
+.faq button{width:100%;display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 12px;background:var(--tint);border:0;border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);text-align:left}
+.faq button::before{content:"";width:6px;height:6px;border-radius:3px;background:var(--navy);flex-shrink:0}
+.rcard{display:flex;width:100%;max-width:310px;align-self:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-align:left;padding:0;color:inherit}
+.typing{display:inline-flex;gap:4px;align-items:center}
+.typing i{width:6px;height:6px;border-radius:3px;background:var(--blue-soft);animation:b 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.typing i{animation:none}}
+</style>
+
+<style>html{-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="desk">
+  <div class="phone" id="phone" aria-label="Airport Navi app preview"></div>
+</div>
+<button type="button" class="demo-tab" id="demoTab" data-act="panel" aria-controls="panel" aria-expanded="false" aria-label="Open demo controls"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></svg><span>Demo</span></button>
+<div class="scrim" id="scrim" data-act="panelClose"></div>
+<aside class="panel" id="panel" aria-label="Demo controls">
+  <div class="panel-head">
+    <div style="flex:1">
+      <h1>Demo controls</h1>
+      <p>Airport Navi prototype for NAIA. Maps follow the real T1 and T3 layouts; flights and positions are simulated.</p>
+    </div>
+    <button type="button" class="panel-close" data-act="panelClose" aria-label="Close demo controls"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  </div>
+  <div class="panel-body">
+    <div class="pcard">
+      <h2>Try a flight number</h2>
+      <div class="samples" id="samples"></div>
+      <div class="small">Simulated in the Cirium Flight Status format. Clock fixed at 13:02, 28 Sep.</div>
+    </div>
+    <div class="pcard">
+      <h2>Simulate</h2>
+      <div class="sim">
+        <button type="button" data-act="simGate">Gate change</button>
+        <button type="button" data-act="simDelay">Delay flight</button>
+        <button type="button" class="ghost" data-act="reset">Reset prototype</button>
+      </div>
+      <div class="small">Enter a flight first. A gate change re-routes you and shows the alert sheet.</div>
+    </div>
+    <div class="pcard">
+      <h2>Jump to screen</h2>
+      <div class="jump" id="jump"></div>
+    </div>
+    <div class="pcard">
+      <h2>Photo credits</h2>
+      <div class="small" id="credits" style="color:var(--muted)"></div>
+    </div>
+    <div class="pcard">
+      <h2>About the maps</h2>
+      <div class="small" style="color:var(--muted)">Schematic, not to scale. Built from public airside guides: T3 domestic gates 117–120 north of the glass partition with bus gates 131–134 at ground level; international gates south along the moving walkway and the south-eastern finger; lounges on Level 4. T1 mid-section with West arm (Gates 9, 15 and hub 10–14, 17) and East arm (Gates 2, 7 and hub 3–6); Gates 1 and 16 down stairs. International gate order in T3 and shop positions are placeholders until MIAA plans arrive.</div>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= icons ================= */
+const P = {
+  back:'<path d="m15 18-6-6 6-6"/>', close:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  pin:'<path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+  nav:'<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
+  home:'<path d="m3 11 9-8 9 8v10a2 2 0 0 1-2 2h-4v-6h-6v6H5a2 2 0 0 1-2-2z"/>',
+  compass:'<circle cx="12" cy="12" r="9"/><polygon points="16 8 14 14 8 16 10 10 16 8"/>',
+  chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  chev:'<path d="m9 18 6-6-6-6"/>', down:'<path d="m6 9 6 6 6-6"/>', up:'<path d="m6 15 6-6 6 6"/>',
+  wc:'<circle cx="8" cy="5" r="2"/><path d="M6 9h4l1 6h-1v6H7v-6H6z"/><circle cx="17" cy="5" r="2"/><path d="M14 9h6l-1 6h-1v6h-2v-6h-1z"/>',
+  bolt:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
+  prayer:'<path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/>',
+  plus:'<path d="M12 5v14"/><path d="M5 12h14"/>',
+  card:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/>',
+  water:'<path d="M12 2.5s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
+  baby:'<circle cx="12" cy="6" r="3"/><path d="M8 21v-5l-2-4h12l-2 4v5"/>',
+  cup:'<path d="M4 8h13v5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3v2M12 3v2"/>',
+  bag:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  sofa:'<path d="M4 11V8a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v3"/><path d="M2 13a2 2 0 0 1 4 0v2h12v-2a2 2 0 0 1 4 0v5H2z"/><path d="M5 18v2M19 18v2"/>',
+  gift:'<rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18"/><path d="M12 8S10 3 7.5 4 8 8 12 8zM12 8s2-5 4.5-4S16 8 12 8z"/>',
+  pill:'<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="m9 8 6 8"/>',
+  plane:'<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/>',
+  warn:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  ext:'<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/>',
+  doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/>',
+  board:'<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 9h10"/><path d="M7 13h6"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  taxi:'<path d="M5 17h14v-5l-2-5H7l-2 5z"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/><path d="M10 4h4"/>',
+  ride:'<path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/><path d="M9 10h6"/>',
+  car:'<rect x="3" y="7" width="18" height="10" rx="3"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/><path d="M7 7l2-3h6l2 3"/>',
+  bus:'<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16"/><path d="M7 21l2-3"/><path d="M17 21l-2-3"/>',
+  wifi:'<path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><path d="M2 9a14 14 0 0 1 20 0"/><path d="M12 20h.01"/>',
+  esim:'<path d="M7 2h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><rect x="8" y="11" width="8" height="7" rx="1"/>',
+  phone:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+  hotel:'<path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/>',
+  porter:'<rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V4h6v3"/><path d="M9 20v1"/><path d="M15 20v1"/>',
+  wrap:'<rect x="5" y="6" width="14" height="15" rx="2"/><path d="M5 11h14"/><path d="M5 16h14"/><path d="M10 6V3h4v3"/>',
+  money:'<circle cx="12" cy="12" r="9"/><path d="M15 9.5a3 3 0 0 0-3-1.5c-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2a3 3 0 0 1-3-1.5"/><path d="M12 6v2"/><path d="M12 16v2"/>',
+  send:'<path d="m5 12 14-7-7 14-2-5z"/>', reload:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  dots:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  access:'<circle cx="12" cy="4" r="2"/><path d="M19 13v-2a2 2 0 0 0-2-2h-6l-3 5"/><path d="M8 21h8"/><path d="M12 16v5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', check:'<path d="M20 6 9 17l-5-5"/>',
+  scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+  walk:'<circle cx="13" cy="4" r="2"/><path d="m9 20 2-6 3 3v5"/><path d="M7 11l3-3 3 1 2 3h3"/>',
+  wall:'<path d="M4 4v16"/><path d="M20 4v16"/><path d="M4 12h16"/>',
+  smoke:'<path d="M3 16h14v4H3z"/><path d="M19 16v4"/><path d="M17 8c0-2 2-2 2-4"/>'
+};
+function ic(n,s,c,w){s=s||20;c=c||'currentColor';w=w||2.2;const solid=(n==='plane'||n==='dots');
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="'+(solid?c:'none')+'" stroke="'+(solid?'none':c)+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+P[n]+'</svg>';}
+function esc(t){return String(t).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+const IMG={hero:{src:'https://images.unsplash.com/photo-1771970574223-24e53a0c5a24?auto=format&fit=crop&w=900&q=70',by:'Spencer Plouzek',page:'https://unsplash.com/photos/people-walking-through-a-modern-airport-terminal-hPluqwRzV2A'},gate:{src:'https://images.unsplash.com/photo-1775810775952-7dd117292c59?auto=format&fit=crop&w=900&q=70',by:'Alexander Schimmeck',page:'https://unsplash.com/photos/empty-airport-waiting-area-with-rows-of-seats-H2HRWHFnOsc'},escalator:{src:'https://images.unsplash.com/photo-1710297125107-0c0021a4b8d1?auto=format&fit=crop&w=900&q=70',by:'rustam burkhanov',page:'https://unsplash.com/photos/a-person-riding-an-escalator-at-an-airport-S5Tphv3VQTM'},lounge:{src:'https://images.unsplash.com/photo-1627750673161-02af15c7c722?auto=format&fit=crop&w=900&q=70',by:'Max Harlynking',page:'https://unsplash.com/photos/people-sitting-on-white-chairs-inside-building-r2e3E92rKq0'},cafe:{src:'https://images.unsplash.com/photo-1777372307561-38fbe6a2eb02?auto=format&fit=crop&w=900&q=70',by:'Haberdoedas',page:'https://unsplash.com/photos/coffee-shop-counter-with-espresso-machine-and-cups-CdV3Q5lJO64'},food:{src:'https://images.unsplash.com/photo-1537495988501-f9cd94a78f3e?auto=format&fit=crop&w=900&q=70',by:'Eiliv Aceron',page:'https://unsplash.com/photos/variety-of-fried-dishes-on-banana-leaf-q4pns2LtGwk'},dutyfree:{src:'https://images.unsplash.com/photo-1777195595983-d9efde4c1223?auto=format&fit=crop&w=900&q=70',by:'Long Chung',page:'https://unsplash.com/photos/interior-of-a-modern-shop-with-curved-displays-JPK6M1wsyy8'},souvenir:{src:'https://images.unsplash.com/photo-1689527612745-a90ea8805008?auto=format&fit=crop&w=900&q=70',by:'Soyoung HAN',page:'https://unsplash.com/photos/a-display-case-filled-with-lots-of-different-types-of-items-jW8uh6aXly0'},pharmacy:{src:'https://images.unsplash.com/photo-1580281657527-47f249e8f4df?auto=format&fit=crop&w=900&q=70',by:'National Cancer Institute',page:'https://unsplash.com/photos/pharmacist-reaching-for-medication-on-shelf-byGTytEGjBo'},restroom:{src:'https://images.unsplash.com/photo-1545693315-85b6be26a3d6?auto=format&fit=crop&w=900&q=70',by:'Tim Mossholder',page:'https://unsplash.com/photos/comfort-room-signage-UcUROHSJfRA'},charging:{src:'https://images.unsplash.com/photo-1778854096628-0266421cac9e?auto=format&fit=crop&w=900&q=70',by:'N1CE',page:'https://unsplash.com/photos/white-wireless-charging-stand-with-devices-on-desk-MysoASBbCY8'},passport:{src:'https://images.unsplash.com/photo-1655722724447-2d2a3071e7f8?auto=format&fit=crop&w=900&q=70',by:'Global Residence Index',page:'https://unsplash.com/photos/passports-with-boarding-passes-for-travel-addEU6TScGI'},taxi:{src:'https://images.unsplash.com/photo-1762271458978-077feb561cf6?auto=format&fit=crop&w=900&q=70',by:'Pic Kaca',page:'https://unsplash.com/photos/taxis-lined-up-at-a-modern-transportation-hub-DIorrn_qPdc'},phone:{src:'https://images.unsplash.com/photo-1498982771025-0af0bf16a927?auto=format&fit=crop&w=900&q=70',by:'Javier Cañada',page:'https://unsplash.com/photos/person-sitting-inside-airplane-using-smartphone-HRMCLERbBJQ'}};
+function poiImg(p){if(!p)return null;return ({cafe:'cafe',cafe_i:'cafe',food:'food',food_i:'food',pharmacy:'pharmacy',dutyfree:'dutyfree',souvenir:'souvenir',store:'souvenir'})[p.id]||({lounge:'lounge',toilets:'restroom',charging:'charging',dining:'food',retail:'souvenir',dutyfree:'dutyfree'})[p.cat]||null;}
+function photo(cap,h,icon,extra,img){const u=img&&IMG[img];return '<div class="ph '+(extra||'')+'" style="height:'+h+'px">'+(icon?ic(icon,Math.min(34,Math.round(h/3)),'currentColor',1.6):'')+(cap?'<span class="cap">'+esc(cap)+'</span>':'')+(u?'<img src="'+u.src+'" alt="" loading="lazy" decoding="async" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">':'')+'</div>';}
+
+/* ================= terminal models =================
+   Schematic Level 3 (departures, airside) layouts built from public guides.
+   Coordinates are map units; mPerU converts to metres for walk times. */
+const TERMS = {
+ '3':{
+  name:'Terminal 3', short:'T3', mPerU:1.0, vb:[-10,30,420,1280],
+  zones:{dom:'Domestic side',intl:'International side'},
+  nodes:{ n1:[200,90,'dom'],n2:[200,180,'dom'],n3:[200,300,'dom'],n4:[200,400,'dom'],n5:[200,470,'dom'],dsec:[335,470,'dom'],nesc:[290,400,'dom'],
+          i1:[200,620,'intl'],isec:[335,590,'intl'],ilift:[75,620,'intl'],i2:[200,730,'intl'],i3:[200,790,'intl'],i4:[200,850,'intl'],i5:[200,910,'intl'],i6:[200,970,'intl'],i7:[200,1015,'intl'],
+          f1:[260,1075,'intl'],f2:[260,1135,'intl'],f3:[260,1195,'intl'],f4:[260,1250,'intl'] },
+  edges:[['n1','n2'],['n2','n3'],['n3','n4'],['n4','n5'],['n5','dsec'],['n4','nesc'],['i1','isec'],['i1','ilift'],['i1','i2'],['i2','i3'],['i3','i4'],['i4','i5'],['i5','i6'],['i6','i7'],['i7','f1'],['f1','f2'],['f2','f3'],['f3','f4']],
+  shapes:[
+    {k:'rect',x:70,y:55,w:260,h:330,r:34},
+    {k:'rect',x:15,y:380,w:370,h:360,r:26},
+    {k:'rect',x:45,y:735,w:310,h:300,r:18},
+    {k:'poly',pts:'150,1010 370,1010 385,1285 135,1285'}
+  ],
+  walls:[{x1:15,y1:545,x2:385,y2:545,label:'Glass partition · no crossing between domestic and international'}],
+  walkways:[{x1:222,y1:740,x2:222,y2:1005,label:'Moving walkway'}],
+  labels:[{x:200,y:74,t:'NORTH PIER · DOMESTIC'},{x:200,y:398,t:'DOMESTIC HALL',sub:1},{x:200,y:573,t:'INTERNATIONAL CENTRAL HALL'},{x:210,y:1275,t:'SOUTH-EAST FINGER'}],
+  nodeNames:{f1:'the south-east finger',i2:'the moving walkway',n3:'the north pier gates',nesc:'the escalators'},
+  levelMarks:[{x:290,y:400,t:'↓ Gates 131–134'},{x:75,y:620,t:'↑ L4 lounges'},{x:335,y:470,t:'Security exit'},{x:335,y:590,t:'Immigration exit'}],
+  gates:[
+    {g:119,x:112,y:180,at:'n2',zone:'dom'},{g:120,x:288,y:180,at:'n2',zone:'dom'},
+    {g:117,x:112,y:300,at:'n3',zone:'dom'},{g:118,x:288,y:300,at:'n3',zone:'dom'},
+    {g:131,x:290,y:400,at:'nesc',zone:'dom',level:'G',via:'esc',group:'bus'},{g:132,x:290,y:400,at:'nesc',zone:'dom',level:'G',via:'esc',group:'bus'},
+    {g:133,x:290,y:400,at:'nesc',zone:'dom',level:'G',via:'esc',group:'bus'},{g:134,x:290,y:400,at:'nesc',zone:'dom',level:'G',via:'esc',group:'bus'},
+    {g:101,x:78,y:790,at:'i3',zone:'intl'},{g:102,x:78,y:850,at:'i4',zone:'intl'},{g:103,x:78,y:910,at:'i5',zone:'intl'},{g:104,x:78,y:970,at:'i6',zone:'intl'},
+    {g:105,x:322,y:790,at:'i3',zone:'intl'},{g:106,x:322,y:850,at:'i4',zone:'intl'},{g:107,x:322,y:910,at:'i5',zone:'intl'},{g:108,x:322,y:970,at:'i6',zone:'intl'},
+    {g:109,x:168,y:1075,at:'f1',zone:'intl'},{g:110,x:352,y:1075,at:'f1',zone:'intl'},{g:111,x:168,y:1135,at:'f2',zone:'intl'},{g:112,x:352,y:1135,at:'f2',zone:'intl'},
+    {g:113,x:168,y:1195,at:'f3',zone:'intl'},{g:114,x:352,y:1195,at:'f3',zone:'intl'},{g:115,x:168,y:1250,at:'f4',zone:'intl'},{g:116,x:352,y:1250,at:'f4',zone:'intl'}
+  ],
+  pois:[
+    {id:'cafe',cat:'dining',name:'Café and pastry shop',sub:'Domestic hall, right after security',x:120,y:440,zone:'dom',hours:'04:00–22:00',price:'₱₱',featured:true,desc:'Coffee, pastries and sandwiches with its own seating area, the first stop after domestic security.',tags:['Cards accepted','E-wallets','Seating'],items:['Brewed coffee','Ensaymada','Chicken sandwich']},
+    {id:'food',cat:'dining',name:'Food stalls',sub:'Centre of the domestic hall',x:255,y:505,zone:'dom',hours:'04:00–22:00',price:'₱₱',desc:'Rice meals, noodles and snacks from counters in the middle of the hall.',tags:['Cards accepted','Takeaway'],items:['Chicken adobo','Pancit canton','Siopao']},
+    {id:'souvenir',cat:'retail',name:'Travel essentials and gifts',sub:'Domestic hall',x:110,y:510,zone:'dom',hours:'04:00–22:00',price:'₱₱',desc:'Neck pillows, adapters, snacks and pasalubong boxes packed for flying.',tags:['Cards accepted'],items:['Dried mangoes','Travel adapter','Neck pillow']},
+    {id:'lounge_dom',cat:'lounge',name:'PAGSS Premium Lounge',sub:'Domestic airside',x:300,y:435,zone:'dom',hours:'04:00–00:00',price:'Walk-in pass',desc:'Pay-per-use lounge on the domestic side with snacks, drinks and quiet seating.',tags:['Walk-in pass','Membership cards'],items:['Snacks','Drinks','Quiet seating']},
+    {id:'wc_d1',cat:'toilets',name:'Toilets, domestic hall',sub:'Accessible',x:85,y:470,zone:'dom',feat:['access','baby']},
+    {id:'wc_d2',cat:'toilets',name:'Toilets, north pier',sub:'Between Gates 118 and 120',x:285,y:240,zone:'dom',feat:['access']},
+    {id:'chg_d',cat:'charging',name:'Charging point, north pier seating',sub:'Rows of seats toward Gates 117–120',x:115,y:240,zone:'dom',feat:['bolt']},
+    {id:'water_d',cat:'water',name:'Drinking water',sub:'North pier',x:150,y:350,zone:'dom',feat:['water']},
+
+    {id:'dutyfree',cat:'dutyfree',name:'Duty free',sub:'International central hall',x:200,y:655,zone:'intl',hours:'04:00–00:00',price:'₱₱₱',featured:true,desc:'Fragrance, cosmetics, liquor and local chocolate. Bring your boarding pass for tax-free prices.',tags:['Cards accepted','Boarding pass needed'],items:['Dried mangoes','Local rum','Fragrance']},
+    {id:'food_i',cat:'dining',name:'Food and drinks',sub:'International central hall',x:285,y:665,zone:'intl',hours:'04:00–00:00',price:'₱₱',desc:'Cafés and quick meals next to the duty free shops.',tags:['Cards accepted','Seating'],items:['Flat white','Rice bowl','Halo-halo']},
+    {id:'cafe_i',cat:'dining',name:'Café',sub:'Start of the south corridor',x:125,y:700,zone:'intl',hours:'04:00–00:00',price:'₱₱',desc:'Grab-and-go coffee before the long walk to the southern gates.',tags:['Cards accepted','Takeaway'],items:['Latte','Croissant','Iced tea']},
+    {id:'pharmacy',cat:'retail',name:'Pharmacy',sub:'International central hall',x:305,y:705,zone:'intl',hours:'05:00–23:00',price:'₱',desc:'Travel medicines, toiletries and travel-size liquids.',tags:['Cards accepted'],items:['Motion sickness tablets','Travel kit','Face masks']},
+    {id:'fx',cat:'atm',name:'Currency exchange and ATM',sub:'After immigration',x:125,y:585,zone:'intl',feat:['card']},
+    {id:'info',cat:'info',name:'Information desk',sub:'International central hall',x:265,y:600,zone:'intl',feat:['info']},
+    {id:'wc_i1',cat:'toilets',name:'Toilets, central hall',sub:'Accessible · baby change',x:105,y:750,zone:'intl',feat:['access','baby','water']},
+    {id:'wc_i2',cat:'toilets',name:'Toilets near Gate 106',sub:'South corridor',x:290,y:880,zone:'intl',feat:['access']},
+    {id:'wc_i3',cat:'toilets',name:'Toilets, south-east finger',sub:'Near Gate 114',x:315,y:1165,zone:'intl',feat:['access']},
+    {id:'prayer',cat:'prayer',name:'Prayer room',sub:'International central hall',x:60,y:690,zone:'intl',feat:['water']},
+    {id:'vape',cat:'smoking',name:'Vaping room',sub:'Start of the corridor to the southern gates',x:275,y:745,zone:'intl'},
+    {id:'chg_i',cat:'charging',name:'Charging point, Gates 103–107',sub:'South corridor seating',x:250,y:935,zone:'intl',feat:['bolt']},
+    {id:'water',cat:'water',name:'Drinking water',sub:'South corridor',x:150,y:995,zone:'intl',feat:['water']},
+    {id:'lounge',cat:'lounge',name:'PAGSS Lounge',sub:'Level 4 · lifts marked “Airline Lounges”',x:75,y:620,zone:'intl',level:4,via:'lift',hours:'24 h',price:'Walk-in pass',featured:true,desc:'Buffet, showers and a smoking room. Access with eligible cards, business class tickets or a walk-in pass.',tags:['Walk-in pass','Membership cards','Smoking room'],items:['Buffet','Showers','Quiet zone']},
+    {id:'lounge_mh',cat:'lounge',name:'Marhaba Lounge',sub:'Level 4',x:75,y:620,zone:'intl',level:4,via:'lift',hours:'24 h',price:'Walk-in pass',desc:'Commercial lounge on Level 4.',tags:['Walk-in pass'],items:['Buffet','Drinks','Wi-Fi']},
+    {id:'lounge_cx',cat:'lounge',name:'Cathay Pacific Lounge',sub:'Level 4',x:75,y:620,zone:'intl',level:4,via:'lift',hours:'Flight times',price:'Eligible passengers',desc:'Airline lounge for eligible Cathay Pacific and oneworld passengers.',tags:['Business class','Status members'],items:['Dining','Showers','Bar']},
+    {id:'lounge_sq',cat:'lounge',name:'SilverKris Lounge',sub:'Level 4',x:75,y:620,zone:'intl',level:4,via:'lift',hours:'Flight times',price:'Eligible passengers',desc:'Singapore Airlines lounge for eligible passengers.',tags:['Business class','Status members'],items:['Dining','Showers','Quiet zone']}
+  ],
+  spots:[
+    {id:'s_isec',kind:'counters',name:'Exit from immigration and security',sub:'International side · Level 3',node:'isec'},
+    {id:'s_df',kind:'shops',name:'Duty free',sub:'International central hall',x:200,y:640,zone:'intl'},
+    {id:'s_105',kind:'gates',name:'Gates 105 and 106',sub:'Twin aerobridges · south corridor',x:300,y:820,zone:'intl'},
+    {id:'s_walk',kind:'signs',name:'Start of the moving walkway',sub:'Signs to the southern gates',node:'i2'},
+    {id:'s_112',kind:'gates',name:'Gate 112',sub:'South-east finger',x:330,y:1135,zone:'intl'},
+    {id:'s_dsec',kind:'counters',name:'Exit from domestic security',sub:'Domestic side · Level 3',node:'dsec'},
+    {id:'s_cafe',kind:'shops',name:'Café and pastry shop',sub:'Domestic hall',x:140,y:450,zone:'dom'},
+    {id:'s_118',kind:'gates',name:'Gate 118',sub:'North pier',x:260,y:300,zone:'dom'}
+  ],
+  defaultSpot:'s_isec'
+ },
+ '1':{
+  name:'Terminal 1', short:'T1', mPerU:0.6, vb:[-15,150,930,380],
+  zones:{intl:'International side'},
+  nodes:{ msec:[450,470,'intl'],m1:[450,390,'intl'],mc:[450,300,'intl'],mw:[350,300,'intl'],w1:[280,300,'intl'],w2:[210,300,'intl'],hw:[120,300,'intl'],
+          me:[550,300,'intl'],e1:[620,300,'intl'],e2:[690,300,'intl'],he:[780,300,'intl'] },
+  edges:[['msec','m1'],['m1','mc'],['mc','mw'],['mw','w1'],['w1','w2'],['w2','hw'],['mc','me'],['me','e1'],['e1','e2'],['e2','he']],
+  shapes:[
+    {k:'rect',x:355,y:240,w:190,h:260,r:22},
+    {k:'rect',x:190,y:268,w:170,h:64,r:10},{k:'rect',x:540,y:268,w:170,h:64,r:10},
+    {k:'circle',cx:120,cy:300,r:108},{k:'circle',cx:780,cy:300,r:108}
+  ],
+  walls:[], walkways:[],
+  labels:[{x:450,y:262,t:'MID-SECTION'},{x:275,y:262,t:'WEST ARM'},{x:625,y:262,t:'EAST ARM'},{x:120,y:422,t:'WEST HUB'},{x:780,y:422,t:'EAST HUB'}],
+  nodeNames:{hw:'the West hub',he:'the East hub',mc:'the concourse junction'},
+  levelMarks:[{x:450,y:470,t:'Immigration & security exit'}],
+  gates:[
+    {g:16,x:395,y:238,at:'mc',zone:'intl',level:'lower',via:'stairs'},{g:1,x:505,y:238,at:'mc',zone:'intl',level:'lower',via:'stairs'},
+    {g:9,x:280,y:236,at:'w1',zone:'intl',level:'lower',via:'stairs'},{g:15,x:230,y:362,at:'w2',zone:'intl',level:'lower',via:'stairs'},
+    {g:10,x:120,y:212,at:'hw',zone:'intl'},{g:11,x:55,y:240,at:'hw',zone:'intl'},{g:12,x:33,y:300,at:'hw',zone:'intl'},{g:13,x:55,y:360,at:'hw',zone:'intl'},{g:14,x:120,y:388,at:'hw',zone:'intl'},{g:17,x:178,y:370,at:'hw',zone:'intl'},
+    {g:2,x:620,y:236,at:'e1',zone:'intl',level:'lower',via:'stairs'},{g:7,x:670,y:362,at:'e2',zone:'intl',level:'lower',via:'stairs'},
+    {g:3,x:780,y:212,at:'he',zone:'intl'},{g:4,x:845,y:240,at:'he',zone:'intl'},{g:5,x:867,y:300,at:'he',zone:'intl'},{g:6,x:845,y:360,at:'he',zone:'intl'}
+  ],
+  pois:[
+    {id:'dutyfree',cat:'dutyfree',name:'Duty free',sub:'Mid-section, after security',x:450,y:345,zone:'intl',hours:'04:00–00:00',price:'₱₱₱',featured:true,desc:'Duty free shops between security and the two concourse arms.',tags:['Cards accepted','Boarding pass needed'],items:['Dried mangoes','Local rum','Fragrance']},
+    {id:'food',cat:'dining',name:'Cafés and sandwich shop',sub:'Mid-section waiting area',x:395,y:425,zone:'intl',hours:'04:00–00:00',price:'₱₱',desc:'Coffee, sandwiches and snacks in the mid-section waiting area.',tags:['Cards accepted','Seating'],items:['Brewed coffee','Club sandwich','Muffin']},
+    {id:'fx',cat:'atm',name:'Bureau de change',sub:'Mid-section',x:505,y:425,zone:'intl',feat:['card']},
+    {id:'souvenir',cat:'retail',name:'Souvenir shops',sub:'Mid-section',x:400,y:345,zone:'intl',hours:'04:00–23:00',price:'₱₱',desc:'Local snacks, crafts and gift boxes.',tags:['Cards accepted'],items:['Polvoron','Woven bags','Coffee beans']},
+    {id:'lounge_ofw',cat:'lounge',name:'OFW Lounge',sub:'Mid-section · up the stairs',x:505,y:345,zone:'intl',level:'upper',via:'stairs',hours:'24 h',price:'For OFWs',desc:'Free lounge for Overseas Filipino Workers.',tags:['OFW ID needed'],items:['Seating','Water','Charging']},
+    {id:'cafe',cat:'dining',name:'Café near Gate 15',sub:'West arm',x:245,y:320,zone:'intl',hours:'04:00–23:00',price:'₱₱',featured:true,desc:'Café-restaurant on the West arm, handy for Gates 9–17.',tags:['Cards accepted','Seating'],items:['Latte','Pastries','Rice meals']},
+    {id:'store',cat:'retail',name:'Convenience store',sub:'West arm',x:315,y:282,zone:'intl',hours:'04:00–00:00',price:'₱',desc:'Snacks, drinks, reading material and travel basics.',tags:['Cards accepted'],items:['Water','Snacks','Magazines']},
+    {id:'lounge',cat:'lounge',name:'PAL Mabuhay Lounge',sub:'West arm',x:200,y:282,zone:'intl',hours:'Flight times',price:'Eligible passengers',featured:true,desc:'Philippine Airlines lounge for eligible passengers on the West arm.',tags:['Business class','Status members'],items:['Dining','Showers','Quiet zone']},
+    {id:'lounge_jal',cat:'lounge',name:'JAL Sakura Lounge',sub:'West arm',x:300,y:320,zone:'intl',hours:'Flight times',price:'Eligible passengers',desc:'Japan Airlines lounge for eligible passengers.',tags:['Business class','Status members'],items:['Dining','Drinks','Wi-Fi']},
+    {id:'lounge_mh',cat:'lounge',name:'Marhaba Lounge',sub:'West arm',x:345,y:282,zone:'intl',hours:'24 h',price:'Walk-in pass',desc:'Commercial lounge on the West arm.',tags:['Walk-in pass'],items:['Buffet','Drinks','Wi-Fi']},
+    {id:'lounge_a',cat:'lounge',name:'“A” Lounge',sub:'East arm',x:655,y:282,zone:'intl',hours:'24 h',price:'Walk-in pass',desc:'Commercial lounge on the East arm.',tags:['Walk-in pass'],items:['Buffet','Drinks','Wi-Fi']},
+    {id:'lounge_pg',cat:'lounge',name:'PAGSS Lounge',sub:'East arm, near Gates 2 and 7',x:690,y:320,zone:'intl',hours:'24 h',price:'Walk-in pass',desc:'Commercial lounge near Gates 2 and 7.',tags:['Walk-in pass'],items:['Buffet','Showers','Wi-Fi']},
+    {id:'wc_w',cat:'toilets',name:'Toilets, West hub',sub:'Middle of the hub · Gates 10–14, 17',x:120,y:300,zone:'intl',feat:['access']},
+    {id:'wc_e',cat:'toilets',name:'Toilets, East hub',sub:'Middle of the hub · Gates 3–6',x:780,y:300,zone:'intl',feat:['access']},
+    {id:'wc_m',cat:'toilets',name:'Toilets, mid-section',sub:'None inside the Gate 1 and 16 holding areas',x:505,y:460,zone:'intl',feat:['access','baby']},
+    {id:'info',cat:'info',name:'Information desk',sub:'Mid-section',x:395,y:460,zone:'intl',feat:['info']},
+    {id:'chg_w',cat:'charging',name:'Charging point, West arm',sub:'Seating near Gate 9',x:265,y:282,zone:'intl',feat:['bolt']},
+    {id:'chg_e',cat:'charging',name:'Charging point, East arm',sub:'Seating near Gate 2',x:600,y:320,zone:'intl',feat:['bolt']}
+  ],
+  spots:[
+    {id:'s_msec',kind:'counters',name:'Exit from immigration and security',sub:'Mid-section',node:'msec'},
+    {id:'s_df1',kind:'shops',name:'Duty free',sub:'Mid-section',x:450,y:345,zone:'intl'},
+    {id:'s_hw',kind:'gates',name:'West hub',sub:'Gates 10–14 and 17 around you',node:'hw'},
+    {id:'s_he',kind:'gates',name:'East hub',sub:'Gates 3–6 around you',node:'he'},
+    {id:'s_cafe1',kind:'shops',name:'Café near Gate 15',sub:'West arm',x:245,y:320,zone:'intl'}
+  ],
+  defaultSpot:'s_msec'
+ }
+};
+
+/* attach every place to its nearest corridor node */
+function d2(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1]);}
+Object.values(TERMS).forEach(t=>{
+  const near=(x,y,zone)=>{let best=null,bd=1e9;Object.entries(t.nodes).forEach(([id,n])=>{if(n[2]!==zone)return;const d=d2([x,y],n);if(d<bd){bd=d;best=id;}});return best;};
+  t.gates.forEach(g=>{g.type='gate';g.name='Gate '+g.g;});
+  t.pois.forEach(p=>{p.at=p.at||(p.level&&p.via==='lift'?'ilift':near(p.x,p.y,p.zone));});
+  t.spots.forEach(s=>{if(s.node){const n=t.nodes[s.node];s.x=n[0];s.y=n[1];s.zone=n[2];s.at=s.node;}else s.at=near(s.x,s.y,s.zone);});
+  t.POI=Object.fromEntries(t.pois.map(p=>[p.id,p]));
+  t.GATE=Object.fromEntries(t.gates.map(g=>[g.g,g]));
+  t.SPOT=Object.fromEntries(t.spots.map(s=>[s.id,s]));
+  t.adj={};Object.keys(t.nodes).forEach(k=>t.adj[k]=[]);
+  t.edges.forEach(([a,b])=>{const w=d2(t.nodes[a],t.nodes[b]);t.adj[a].push([b,w]);t.adj[b].push([a,w]);});
+  t.cache={};
+});
+const T=()=>TERMS[state.terminal];
+const POIX=id=>T().POI[id];
+function dijkstra(t,src){if(t.cache[src])return t.cache[src];const dist={},prev={},q=new Set(Object.keys(t.nodes));Object.keys(t.nodes).forEach(k=>dist[k]=Infinity);dist[src]=0;
+  while(q.size){let u=null;q.forEach(k=>{if(u===null||dist[k]<dist[u])u=k;});q.delete(u);if(dist[u]===Infinity)break;t.adj[u].forEach(([v,w])=>{if(dist[u]+w<dist[v]){dist[v]=dist[u]+w;prev[v]=u;}});}
+  return t.cache[src]={dist,prev};}
+
+/* ================= routing ================= */
+const LVL={G:'ground level','lower':'lower level','upper':'upper level',4:'Level 4'};
+function viaText(p){
+  if(p.via==='esc')return 'Take the escalators down to the '+LVL[p.level]+(p.level==='G'?', past the Level 2 arrivals concourse':'');
+  if(p.via==='lift')return (state.stepFree?'Take the lift':'Take the lifts marked “Airline Lounges”')+' up to '+LVL[p.level];
+  if(p.via==='stairs')return (state.stepFree?'Ask staff for the lift':'Take the stairs')+(p.level==='upper'?' up':' down')+' to the '+(p.type==='gate'?'holding area':LVL[p.level]);
+  return '';
+}
+function destObj(dest){const t=T();return dest.type==='gate'?t.GATE[dest.id]:t.POI[dest.id];}
+function walkPath(A,B){ // A,B: {x,y,zone,at}
+  const t=T(); if(!A||!B||A.zone!==B.zone)return null;
+  const {dist,prev}=dijkstra(t,A.at); if(dist[B.at]===Infinity)return null;
+  const chain=[];let c=B.at;while(c){chain.unshift(c);c=prev[c];}
+  let pts=[[A.x,A.y]].concat(chain.map(k=>[t.nodes[k][0],t.nodes[k][1]]),[[B.x,B.y]]);
+  pts=pts.filter((p,i)=>i===0||d2(p,pts[i-1])>2);
+  // drop a first node if we'd walk backwards past it
+  if(pts.length>2){const a=pts[0],b=pts[1],c2=pts[2];if(d2(a,c2)<d2(b,c2)&&d2(a,b)<60)pts.splice(1,1);}
+  let u=0;for(let i=1;i<pts.length;i++)u+=d2(pts[i],pts[i-1]);
+  return {pts,chain,units:u,m:Math.round(u*t.mPerU)};
+}
+function walkInfo(o){const w=walkPath(state.loc,o);if(!w)return null;const extra=(o.level&&o.level!==3)?1:0;return {m:w.m,mins:Math.max(1,Math.ceil(w.m/70))+extra};}
+function wm(o){const w=walkInfo(o);return w?w.mins:null;}
+const COMPASS=['east','south-east','south','south-west','west','north-west','north','north-east'];
+function heading(a,b){const ang=Math.atan2(b[1]-a[1],b[0]-a[0]);return ((Math.round(ang/(Math.PI/4))%8)+8)%8;}
+function gatesNear(nodeIds,exclude){const t=T();return t.gates.filter(g=>!g.level&&nodeIds.includes(g.at)&&g.g!==exclude).map(g=>g.g).sort((a,b)=>a-b);}
+function gateRange(gs){if(!gs.length)return '';if(gs.length===1)return 'Gate '+gs[0];if(gs.length===2)return 'Gates '+gs[0]+' and '+gs[1];return 'Gates '+gs[0]+'–'+gs[gs.length-1];}
+function route(dest){
+  const t=T(), o=destObj(dest); if(!o)return null;
+  const w=walkPath(state.loc,o);
+  if(!w)return {blocked:true,o,name:o.name};
+  const pts=w.pts, steps=[];
+  // merge into legs by heading
+  const legs=[];for(let i=1;i<pts.length;i++){const h=heading(pts[i-1],pts[i]);const len=d2(pts[i-1],pts[i]);const L=legs[legs.length-1];if(L&&L.h===h){L.to=i;L.len+=len;}else legs.push({h,from:i-1,to:i,len});}
+  // node ids per point (skip first/last)
+  const ptNode=pts.map(p=>{const k=Object.keys(t.nodes).find(k=>t.nodes[k][0]===p[0]&&t.nodes[k][1]===p[1]);return k||null;});
+  const finalLeg=legs.length>1?legs.pop():null; // short hop into the gate/place
+  legs.forEach((L,i)=>{
+    const passed=gatesNear(ptNode.slice(L.from+1,L.to+1).filter(Boolean).filter(k=>k!==o.at),dest.type==='gate'?dest.id:null);
+    const endName=(t.nodeNames||{})[ptNode[L.to]];
+    const mins=Math.max(1,Math.round(L.len*t.mPerU/70));
+    let txt;
+    if(i===0) txt='Head '+COMPASS[L.h];
+    else { const prevL=legs[i-1]; const turn=((L.h-prevL.h)+8)%8; txt=(turn===1||turn===2?(turn===1?'Bear right':'Turn right'):turn===7||turn===6?(turn===7?'Bear left':'Turn left'):'Continue')+' and head '+COMPASS[L.h]; }
+    if(passed.length) txt+=', past '+gateRange(passed);
+    if(endName&&!(i===legs.length-1&&o.at===ptNode[L.to]&&!endName)) txt+=(passed.length?', to ':' to ')+endName;
+    steps.push({t:txt,m:mins,meters:Math.round(L.len*t.mPerU)});
+  });
+  if(!steps.length) steps.push({t:'You’re right next to it',m:1});
+  if(o.level&&o.level!==3) steps.push({t:viaText(o),m:1});
+  // side of final target
+  let side='ahead';
+  if(finalLeg){const a=pts[finalLeg.from-1]||pts[0],b=pts[finalLeg.from],c=pts[finalLeg.to];const cr=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);side=Math.abs(cr)<1?'straight ahead':(cr>0?'on your right':'on your left');}
+  const last=o.type==='gate'?(o.level?'The Gate '+o.g+' holding area is '+(o.via==='esc'?'at the foot of the escalators':'at the bottom of the stairs'):'Gate '+o.g+' is '+side):(o.level&&o.level!==3?o.name+' is signposted from there':o.name+' is '+side);
+  steps.push({t:last,m:1});
+  const mins=Math.max(1,Math.ceil(w.m/70))+((o.level&&o.level!==3)?1:0);
+  return {pts,mins,m:w.m,steps,o,name:o.name};
+}
+
+/* ================= map drawing ================= */
+const FONT='DM Sans,sans-serif';
+function floorSVG(opt){
+  opt=opt||{}; const t=T();
+  const vb=opt.vb||t.vb.join(' ');
+  let s='<svg viewBox="'+vb+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(opt.label||(t.name+' Level 3 departures map'))+'">';
+  s+='<rect x="-2000" y="-2000" width="5000" height="5000" fill="#EEF1F8"/>';
+  s+='<g stroke="#E1E6F0" stroke-width="1">';for(let i=-200;i<1600;i+=100)s+='<path d="M-200 '+i+'H1200"/>';for(let i=-200;i<1200;i+=100)s+='<path d="M'+i+' -200V1600"/>';s+='</g>';
+  t.shapes.forEach(sh=>{
+    const st='fill="#F8FAFE" stroke="#C4CCDF" stroke-width="1.6"';
+    if(sh.k==='rect')s+='<rect x="'+sh.x+'" y="'+sh.y+'" width="'+sh.w+'" height="'+sh.h+'" rx="'+sh.r+'" '+st+'/>';
+    if(sh.k==='circle')s+='<circle cx="'+sh.cx+'" cy="'+sh.cy+'" r="'+sh.r+'" '+st+'/>';
+    if(sh.k==='poly')s+='<polygon points="'+sh.pts+'" '+st+' stroke-linejoin="round"/>';
+  });
+  // corridors
+  let cor='';t.edges.forEach(([a,b])=>{const A=t.nodes[a],B=t.nodes[b];cor+='M'+A[0]+' '+A[1]+' L'+B[0]+' '+B[1]+' ';});
+  s+='<path d="'+cor+'" stroke="#DCE3F1" stroke-width="40" stroke-linecap="round" fill="none"/><path d="'+cor+'" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" fill="none"/>';
+  t.walkways.forEach(w=>{s+='<line x1="'+w.x1+'" y1="'+w.y1+'" x2="'+w.x2+'" y2="'+w.y2+'" stroke="#8FA3D1" stroke-width="5" stroke-dasharray="10 6" stroke-linecap="round"/>';
+    s+='<text x="'+(w.x1+10)+'" y="'+((w.y1+w.y2)/2)+'" font-size="9.5" font-weight="700" fill="#8FA3D1" font-family="'+FONT+'" transform="rotate(90 '+(w.x1+10)+' '+((w.y1+w.y2)/2)+')" text-anchor="middle" letter-spacing=".5">'+w.label.toUpperCase()+' ↓</text>';});
+  t.walls.forEach(w=>{s+='<line x1="'+w.x1+'" y1="'+w.y1+'" x2="'+w.x2+'" y2="'+w.y2+'" stroke="#52649A" stroke-width="4"/><line x1="'+w.x1+'" y1="'+w.y1+'" x2="'+w.x2+'" y2="'+w.y2+'" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="3 5"/>';
+    s+='<text x="'+((w.x1+w.x2)/2)+'" y="'+(w.y1-8)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#52649A" font-family="'+FONT+'">'+esc(w.label)+'</text>';});
+  t.labels.forEach(l=>{s+='<text x="'+l.x+'" y="'+l.y+'" text-anchor="middle" font-size="10" font-weight="800" fill="#A3AAC0" font-family="'+FONT+'" letter-spacing="1">'+esc(l.t)+'</text>';});
+  // gates
+  const dg=opt.destGate, drawnBus={};
+  t.gates.forEach(g=>{
+    if(g.group){ if(drawnBus[g.group])return; drawnBus[g.group]=1;
+      const on=dg&&t.GATE[dg]&&t.GATE[dg].group===g.group;
+      s+='<rect x="'+(g.x-4)+'" y="'+(g.y-44)+'" width="92" height="30" rx="8" fill="'+(on?'#D3DEF3':'#FFFFFF')+'" stroke="'+(on?'#001F60':'#C9D0E2')+'" stroke-width="'+(on?2:1)+'"/>';
+      s+='<text x="'+(g.x+42)+'" y="'+(g.y-25)+'" text-anchor="middle" font-size="11" font-weight="'+(on?800:700)+'" fill="'+(on?'#001F60':'#5C6480')+'" font-family="'+FONT+'">131–134 ↓G</text>';return;}
+    const on=g.g===dg, old=g.g===opt.oldGate;
+    const w=g.level?40:46,h=g.level?26:30;
+    s+='<rect x="'+(g.x-w/2)+'" y="'+(g.y-h/2)+'" width="'+w+'" height="'+h+'" rx="8" fill="'+(on?'#D3DEF3':(g.level?'#F2F4F9':'#FFFFFF'))+'" stroke="'+(on?'#001F60':'#C9D0E2')+'" stroke-width="'+(on?2.2:1)+'"'+(g.level&&!on?' stroke-dasharray="3 2"':'')+'/>';
+    s+='<text x="'+g.x+'" y="'+(g.y+4.5)+'" text-anchor="middle" font-size="'+(g.g>99?12:13)+'" font-weight="'+(on?800:600)+'" fill="'+(on?'#001F60':(old?'#B0B6C8':'#5C6480'))+'" font-family="'+FONT+'"'+(old?' text-decoration="line-through"':'')+'>'+g.g+'</text>';
+  });
+  // level marks
+  t.levelMarks.forEach(m=>{ if(m.t.startsWith('↓ Gates'))return; s+='<text x="'+m.x+'" y="'+(m.y+24)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#8A91AB" font-family="'+FONT+'">'+esc(m.t)+'</text>';});
+  // pois
+  const shopCats=['dining','retail','lounge','dutyfree'];
+  const seen={};
+  t.pois.forEach(p=>{
+    const key=p.x+','+p.y; const hi=opt.destPoi===p.id; if(seen[key]&&!hi)return; seen[key]=1;
+    const shop=shopCats.includes(p.cat);
+    s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(hi?9:5)+'" fill="'+(hi?'#001F60':(shop?'#8FA3D1':'#52649A'))+'" stroke="#fff" stroke-width="2"/>';
+    if(opt.labels!==false&&(hi||shop)&&!p.level)s+='<text x="'+p.x+'" y="'+(p.y-10)+'" text-anchor="middle" font-size="9.5" font-weight="'+(hi?800:600)+'" fill="'+(hi?'#001F60':'#8A91AB')+'" font-family="'+FONT+'">'+esc(p.name.split(/[ ,]/).slice(0,2).join(' '))+'</text>';
+  });
+  if(opt.route){
+    const d='M'+opt.route.pts.map(p=>p.map(v=>v.toFixed(1)).join(' ')).join(' L ');
+    s+='<path d="'+d+'" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>';
+    s+='<path d="'+d+'" fill="none" stroke="#001F60" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 10"/>';
+    const e=opt.route.pts[opt.route.pts.length-1];
+    s+='<circle cx="'+e[0]+'" cy="'+e[1]+'" r="11" fill="#FFFFFF" stroke="#001F60" stroke-width="3.5"/><circle cx="'+e[0]+'" cy="'+e[1]+'" r="4" fill="#001F60"/>';
+  }
+  if(opt.you!==false&&state.loc){const L=state.loc;
+    s+='<circle cx="'+L.x+'" cy="'+L.y+'" r="18" fill="#001F60" opacity=".16"/><circle cx="'+L.x+'" cy="'+L.y+'" r="9" fill="#001F60" stroke="#fff" stroke-width="3"/>';
+    s+='<text x="'+L.x+'" y="'+(L.y+30)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#001F60" font-family="'+FONT+'">You</text>';}
+  return s+'</svg>';
+}
+function fitVB(pts,topPad,botPad){
+  const W=390,H=844;const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+  let x0=Math.min(...xs)-55,x1=Math.max(...xs)+55,y0=Math.min(...ys)-55,y1=Math.max(...ys)+55;
+  const bw=x1-x0,bh=y1-y0,availH=H-topPad-botPad;
+  let s=Math.min(W/bw,availH/bh,1.35);s=Math.max(s,0.34);
+  const vw=W/s,vh=H/s,vx=x0-(vw-bw)/2,vy=y0-topPad/s-(availH/s-bh)/2;
+  return vx.toFixed(1)+' '+vy.toFixed(1)+' '+vw.toFixed(1)+' '+vh.toFixed(1);
+}
+
+/* ================= simulated flight feed (Cirium Flight Status shape) ================= */
+const FEED=[
+  {carrierFsCode:'PR',flightNumber:'102',airlineName:'Philippine Airlines',departureAirportFsCode:'MNL',arrivalAirportFsCode:'SIN',departureCity:'Manila',arrivalCity:'Singapore',status:'S',
+   departureDate:{dateLocal:'2026-09-28T14:40'},arrivalDate:{dateLocal:'2026-09-28T18:25'},boardingLocal:'14:05',airportResources:{departureTerminal:'3',departureGate:'112'}},
+  {carrierFsCode:'Z2',flightNumber:'330',airlineName:'Philippines AirAsia',departureAirportFsCode:'MNL',arrivalAirportFsCode:'NRT',departureCity:'Manila',arrivalCity:'Tokyo Narita',status:'S',
+   departureDate:{dateLocal:'2026-09-28T16:20'},arrivalDate:{dateLocal:'2026-09-28T21:30'},boardingLocal:'15:40',airportResources:{departureTerminal:'3',departureGate:'104'}},
+  {carrierFsCode:'5J',flightNumber:'453',airlineName:'Cebu Pacific',departureAirportFsCode:'MNL',arrivalAirportFsCode:'DVO',departureCity:'Manila',arrivalCity:'Davao',status:'S',
+   departureDate:{dateLocal:'2026-09-28T15:45'},arrivalDate:{dateLocal:'2026-09-28T17:40'},boardingLocal:'15:10',airportResources:{departureTerminal:'3',departureGate:'118'}},
+  {carrierFsCode:'PR',flightNumber:'2811',airlineName:'Philippine Airlines',departureAirportFsCode:'MNL',arrivalAirportFsCode:'ILO',departureCity:'Manila',arrivalCity:'Iloilo',status:'D',delayMinutes:40,
+   departureDate:{dateLocal:'2026-09-28T13:50'},arrivalDate:{dateLocal:'2026-09-28T15:05'},boardingLocal:'13:15',airportResources:{departureTerminal:'3',departureGate:'132'}},
+  {carrierFsCode:'PR',flightNumber:'300',airlineName:'Philippine Airlines',departureAirportFsCode:'MNL',arrivalAirportFsCode:'HKG',departureCity:'Manila',arrivalCity:'Hong Kong',status:'S',
+   departureDate:{dateLocal:'2026-09-28T15:10'},arrivalDate:{dateLocal:'2026-09-28T17:25'},boardingLocal:'14:30',airportResources:{departureTerminal:'1',departureGate:'11'}},
+  {carrierFsCode:'UO',flightNumber:'553',airlineName:'HK Express',departureAirportFsCode:'MNL',arrivalAirportFsCode:'HKG',departureCity:'Manila',arrivalCity:'Hong Kong',status:'S',
+   departureDate:{dateLocal:'2026-09-28T17:05'},arrivalDate:{dateLocal:'2026-09-28T19:20'},boardingLocal:'16:25',airportResources:{departureTerminal:'1',departureGate:'2'}}
+];
+const NOW='13:02';
+function hm(s){const [h,m]=s.split(':').map(Number);return h*60+m;}
+function fmt(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function dur(m){if(m<=0)return 'no time';const h=Math.floor(m/60),r=m%60;return ((h?h+' h ':'')+(r?r+' min':'')).trim();}
+function adapt(raw){const dep=raw.departureDate.dateLocal.slice(11,16),arr=raw.arrivalDate.dateLocal.slice(11,16),d=raw.delayMinutes||0;
+  return {code:raw.carrierFsCode+' '+raw.flightNumber,key:(raw.carrierFsCode+raw.flightNumber).toUpperCase(),airline:raw.airlineName,from:raw.departureAirportFsCode,to:raw.arrivalAirportFsCode,fromCity:raw.departureCity,toCity:raw.arrivalCity,
+    dep:fmt(hm(dep)+d),arr:fmt(hm(arr)+d),boarding:fmt(hm(raw.boardingLocal)+d),delayed:d>0,delayMin:d,gate:Number(raw.airportResources.departureGate),terminal:raw.airportResources.departureTerminal,updated:raw._updated||NOW,prevGate:raw._prevGate||null};}
+function findFlight(q){const k=q.replace(/\s+/g,'').toUpperCase();const r=state.feed.find(f=>(f.carrierFsCode+f.flightNumber).toUpperCase()===k);return r?adapt(r):null;}
+function flightGate(f){return TERMS[f.terminal].GATE[f.gate];}
+function flightHere(f){return f&&f.terminal===state.terminal;}
+
+/* ================= state ================= */
+function spotLoc(term,id){const s=TERMS[term].SPOT[id];return {x:s.x,y:s.y,zone:s.zone,at:s.at,spot:s.id,label:s.name};}
+const initial=()=>({stack:['home'],params:{},terminal:'3',loc:spotLoc('3','s_isec'),feed:JSON.parse(JSON.stringify(FEED)),flight:null,flightInput:'',flightErr:'',alertOn:true,
+  nav:null,stepsOpen:true,stepFree:false,sheet:null,q:'',amenCat:'toilets',amenQ:'',shopCat:'all',shopQ:'',svcQ:'',pickTerm:'3',pickKind:'all',pickQ:'',pickSel:'s_isec',
+  chat:[],typing:false,chatIn:'',miniStep:0,miniVeh:'sedan',miniDest:'',toast:null});
+let state=initial();
+const cur=()=>state.stack[state.stack.length-1];
+function go(scr,params){state.stack.push(scr);state.params=Object.assign({},state.params,params||{});state.sheet=null;render(true);}
+function tab(scr){state.stack=[scr];state.sheet=null;render(true);}
+function back(){if(state.stack.length>1)state.stack.pop();else state.stack=['home'];state.sheet=null;render(true);}
+function toast(t){state.toast=t;render();clearTimeout(toast._t);toast._t=setTimeout(()=>{state.toast=null;render();},2400);}
+function setTerminal(k){if(state.terminal===k)return;state.terminal=k;state.loc=spotLoc(k,TERMS[k].defaultSpot);state.pickSel=TERMS[k].defaultSpot;state.nav=null;}
+function zoneName(z){return (T().zones||{})[z]||'';}
+function locShort(){return state.loc.label;}
+
+/* ================= shared chrome ================= */
+function header(title,sub,extra){return '<header class="top"><div class="toprow"><button class="back" type="button" data-act="back" aria-label="Back">'+ic('back',22,'#fff')+'</button><div style="flex:1;min-width:0"><div class="t-title">'+title+'</div>'+(sub?'<div class="t-sub">'+sub+'</div>':'')+'</div></div>'+(extra||'')+'</header>';}
+function bar(active){
+  const b=(id,icn,l)=>'<button type="button" data-tab="'+id+'"'+(active===id?' aria-current="page"':'')+'>'+ic(icn,20,active===id?'#001F60':'#52649A')+l+'</button>';
+  return '<nav class="bar" aria-label="Main">'+b('home','home','Home')+b('amenities','compass','Explore')+'<button type="button" class="fab" data-act="fab" aria-label="Search a place and navigate">'+ic('search',26,'#fff',2.6)+'</button>'+b('chat','chat','Chat')+b('services','grid','Services')+'</nav>';}
+function searchInput(id,val,ph,onlight){return '<label class="searchbox'+(onlight?' onlight':'')+'" for="'+id+'">'+ic('search',18,'#5C6480')+'<span class="sr">'+ph+'</span><input id="'+id+'" type="search" autocomplete="off" placeholder="'+esc(ph)+'" value="'+esc(val)+'" data-input="'+id+'">'+(val?'<button type="button" class="x" data-clear="'+id+'" aria-label="Clear">'+ic('close',16,'#5C6480',2.5)+'</button>':'')+'</label>';}
+function distCell(o){const w=walkInfo(o);return w?'<div class="dist"><b>'+w.mins+' min</b><span>'+w.m+' m</span></div>':'<div class="dist"><span class="pill tint" style="height:22px;font-size:10px">Other side</span></div>';}
+function kv(k,v,big){return '<div style="display:flex;flex-direction:column;gap:2px"><span class="label" style="font-size:10px">'+k+'</span><span style="font-size:'+(big?22:18)+'px;font-weight:800;color:'+(big?'#001F60':'inherit')+';font-variant-numeric:tabular-nums">'+v+'</span></div>';}
+function statusPill(f){return f.delayed?'<span class="pill warn">Delayed '+f.delayMin+' min</span>':'<span class="pill ok">On time</span>';}
+function catIcon(c){return ({toilets:'wc',charging:'bolt',prayer:'prayer',medical:'plus',atm:'card',water:'water',info:'info',baby:'baby',smoking:'smoke',dining:'cup',retail:'bag',lounge:'sofa',dutyfree:'gift',place:'pin'})[c]||'pin';}
+function nearestOf(cat){return T().pois.filter(p=>p.cat===cat&&p.zone===state.loc.zone).map(p=>[p,walkInfo(p)]).filter(x=>x[1]).sort((a,b)=>a[1].m-b[1].m).map(x=>x[0])[0];}
+
+/* ================= screens ================= */
+const S={};
+S.home=()=>{
+  const f=state.flight;
+  let flightBlock;
+  if(f){const here=flightHere(f);const r=here?route({type:'gate',id:f.gate}):null;
+    flightBlock='<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div class="label">Your flight</div><div style="font-size:20px;font-weight:800;margin-top:2px">'+f.code+' <span style="font-size:14px;font-weight:600;color:var(--muted)">to '+f.toCity+'</span></div></div>'+statusPill(f)+'</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">'+kv('Gate',(here?'':'T'+f.terminal+' · ')+f.gate,true)+kv('Boarding',f.boarding)+kv('Walk',!here?'Other terminal':(r&&!r.blocked?r.mins+' min':'Other side'))+'</div>'+
+      '<div style="display:flex;gap:8px"><button type="button" class="btn" style="height:46px;font-size:14.5px" data-act="navGate">'+ic('nav',17,'#fff',2.5)+'Take me there</button><button type="button" class="btn line" style="height:46px;width:auto;padding:0 16px;font-size:14px" data-go="flight">Details</button></div></div>'+
+      '<button type="button" class="btn text" style="height:28px;font-size:12.5px;align-self:flex-start;width:auto;padding:0" data-act="clearFlight">Look up a different flight</button>';
+  } else flightBlock='<form data-form="flight" style="display:flex;flex-direction:column;gap:8px" novalidate>'+
+      '<label for="flightno" style="font-size:15px;font-weight:800">Find my gate</label>'+
+      '<div style="display:flex;gap:8px"><input id="flightno" data-input="flightno" autocomplete="off" autocapitalize="characters" value="'+esc(state.flightInput)+'" placeholder="Flight number, e.g. PR 102" style="flex:1;min-width:0;height:50px;padding:0 14px;font-size:16px;border:1.5px solid '+(state.flightErr?'#B3261E':'#D5DAE8')+';border-radius:12px;background:#fff" aria-describedby="flighterr">'+
+      '<button type="submit" class="btn" style="width:78px;height:50px">Go</button></div>'+
+      '<div id="flighterr" style="font-size:12px;color:'+(state.flightErr?'#B3261E':'var(--muted)')+'">'+(state.flightErr||'Printed on your boarding pass. Sample data: try PR 102.')+'</div></form>';
+  return '<div class="screen"><div class="scroll">'+
+    '<div style="position:relative;height:250px;background:#0A2E7A;color:#fff;overflow:hidden">'+
+      '<div style="position:absolute;inset:0">'+photo('Photo: '+T().name+' departures hall',250,'plane','dark','hero')+'</div>'+
+      '<div style="position:absolute;left:0;right:0;bottom:0;height:150px;background:linear-gradient(180deg,rgba(0,31,96,0),rgba(0,31,96,.92) 70%)"></div>'+
+      '<div style="position:relative;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">'+
+        '<div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800"><span style="width:24px;height:24px;border-radius:7px;background:#fff;display:inline-flex;align-items:center;justify-content:center">'+ic('nav',14,'#001F60',2.6)+'</span>Airport Navi</div>'+
+        '<button type="button" data-act="lang" style="height:32px;padding:0 12px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:999px;font-size:12px;font-weight:700" aria-label="Language: English">EN</button></div>'+
+      '<div style="position:absolute;left:20px;right:20px;bottom:40px;display:flex;flex-direction:column;gap:10px">'+
+        '<button type="button" data-go="location" style="align-self:flex-start;display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:999px;color:#fff;font-size:12px;font-weight:700">NAIA · '+T().name+ic('down',14,'#fff',2.5)+'</button>'+
+        '<div style="font-size:25px;font-weight:800;line-height:1.15;text-wrap:balance">Mabuhay. Where to?</div></div></div>'+
+    '<div class="body" style="margin-top:-22px;position:relative;padding-top:0">'+
+      '<button type="button" data-go="location" class="row" style="padding:12px 14px;box-shadow:0 6px 20px rgba(0,31,96,.12);border:0"><span style="width:36px;height:36px;border-radius:999px;background:var(--tint);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('pin',18,'#001F60')+'</span><span class="grow"><span class="label">You are here · '+esc(zoneName(state.loc.zone))+'</span><span class="t">'+esc(locShort())+'</span></span><span style="font-size:12px;font-weight:700;color:var(--navy)">Change</span></button>'+
+      flightBlock+
+      '<div class="grid2">'+homeTile('amenities','Amenities','Toilets, charging, prayer','Photo: restroom signage','wc','restroom')+homeTile('shops','Shops & lounges','Food, retail, lounges','Photo: café counter','cup','cafe')+homeTile('links','Travel forms','eTravel, customs','Photo: passport and phone','doc','passport')+homeTile('services','Services','Taxi, WiFi, car rental','Photo: taxi bay','taxi','taxi')+'</div>'+
+      '<button type="button" data-tab="chat" class="row" style="background:var(--navy);border-color:var(--navy);color:#fff;padding:12px 14px"><span style="width:38px;height:38px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('chat',18,'#001F60')+'</span><span class="grow"><span class="t">Ask the concierge</span><span class="s" style="color:#C9D3F0">“Is my flight on time?” · “Nearest lounge?”</span></span>'+ic('chev',18,'#fff')+'</button>'+
+    '</div></div>'+bar('home')+'</div>';
+};
+function homeTile(g,t,s,cap,icon,img){return '<button type="button" data-go="'+g+'" style="display:flex;flex-direction:column;background:#fff;border:0;border-radius:14px;overflow:hidden;padding:0;text-align:left;box-shadow:0 2px 8px rgba(0,31,96,.06);color:inherit">'+photo(cap,88,icon,'',img)+'<span style="padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:800">'+t+'</span><span style="font-size:11.5px;color:var(--muted)">'+s+'</span></span></button>';}
+
+S.location=()=>{
+  const t=TERMS[state.pickTerm];
+  const kinds=[['all','All'],['gates','Gates'],['shops','Shops'],['counters','Counters'],['signs','Signs']];
+  const q=state.pickQ.trim().toLowerCase();
+  const list=t.spots.filter(s=>(state.pickKind==='all'||s.kind===state.pickKind)&&(!q||(s.name+' '+s.sub).toLowerCase().includes(q)));
+  const terms=[['1',true],['2',false],['3',true],['4',false]];
+  const sel=t.SPOT[state.pickSel];
+  return '<div class="screen">'+
+    '<header class="top"><div class="toprow"><button class="back" type="button" data-act="back" aria-label="Close">'+ic('close',22,'#fff')+'</button><div class="t-title">Where are you?</div></div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px"><div class="label" style="color:#C9D3F0">Terminal</div>'+
+    '<div role="radiogroup" aria-label="Terminal" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:4px;background:rgba(255,255,255,.12);border-radius:12px">'+
+      terms.map(([k,en])=>'<button type="button" role="radio" aria-checked="'+(state.pickTerm===k)+'" '+(en?'data-term="'+k+'"':'disabled')+' style="height:38px;border:0;border-radius:9px;background:'+(state.pickTerm===k?'#fff':'transparent')+';color:'+(state.pickTerm===k?'#001F60':(en?'#C9D3F0':'rgba(201,211,240,.45)'))+';font-size:13px;font-weight:'+(state.pickTerm===k?800:600)+'">T'+k+(en?'':'<span style="display:block;font-size:9px;font-weight:600;margin-top:-2px">soon</span>')+'</button>').join('')+
+    '</div></div></header>'+
+    '<div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:800">What do you see around you?</div>'+searchInput('pickq',state.pickQ,'Gate number, shop, sign, counter',true)+
+      '<div class="chips">'+kinds.map(([k,l])=>'<button type="button" class="chip" data-pick-kind="'+k+'" aria-pressed="'+(state.pickKind===k)+'">'+l+'</button>').join('')+'</div></div>'+
+    '<div class="scroll" style="padding:12px 20px;display:flex;flex-direction:column;gap:8px">'+
+      (list.length?list.map(s=>'<button type="button" class="row" data-spot="'+s.id+'" aria-pressed="'+(state.pickSel===s.id)+'" style="'+(state.pickSel===s.id?'border:2px solid #001F60;padding:9px':'')+'"><div style="width:60px;height:46px;border-radius:9px;overflow:hidden;flex-shrink:0">'+photo('',46,s.kind==='gates'?'plane':s.kind==='shops'?'bag':s.kind==='counters'?'info':'pin','',s.kind==='gates'?'gate':s.kind==='shops'?'cafe':'escalator')+'</div><span class="grow"><span class="t">'+esc(s.name)+'</span><span class="s">'+esc(s.sub)+(t.zones[s.zone]&&Object.keys(t.zones).length>1?' · '+t.zones[s.zone]:'')+'</span></span>'+(state.pickSel===s.id?ic('check',20,'#001F60',2.6):'')+'</button>').join('')
+        :'<div class="empty">No match for “'+esc(state.pickQ)+'”. Try a gate number or the name on a nearby sign.</div>')+
+    '</div>'+
+    '<div style="padding:12px 20px 20px;background:#fff;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px">'+
+      '<button type="button" class="btn" data-act="confirmLoc"'+(sel?'':' disabled')+'>'+(sel?'Confirm: I’m at '+esc(sel.name):'Pick a place')+'</button>'+
+      '<button type="button" class="btn text" data-act="scanInfo">'+ic('scan',18,'#001F60')+'Scan a poster instead</button></div></div>';
+};
+
+S.flight=()=>{
+  const f=state.flight; if(!f)return S.home();
+  const here=flightHere(f), g=flightGate(f);
+  const r=here?route({type:'gate',id:f.gate}):null;
+  const until=hm(f.boarding)-hm(NOW);
+  const wc=here&&r&&!r.blocked?nearestOf('toilets'):null;
+  const food=here?(T().pois.filter(p=>p.cat==='dining'&&p.zone===state.loc.zone)[0]):null;
+  let walkCard;
+  if(!here) walkCard='<div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;border-color:#C9D6F0;background:var(--tint)">'+ic('warn',22,'#001F60')+'<div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="font-size:14.5px;font-weight:800">'+f.code+' departs from Terminal '+f.terminal+'</div><div class="muted" style="font-size:12.5px;line-height:1.45">You’re in '+T().name+'. Allow time for the inter-terminal transfer, then scan a poster at Terminal '+f.terminal+'.</div><button type="button" class="btn line" style="height:40px;font-size:13px" data-act="switchToFlightTerm">I’m at Terminal '+f.terminal+' now</button></div></div>';
+  else if(r.blocked) walkCard='<div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;border-color:#C9D6F0;background:var(--tint)">'+ic('wall',22,'#001F60')+'<div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="font-size:14.5px;font-weight:800">Gate '+f.gate+' is on the '+(g.zone==='dom'?'domestic':'international')+' side</div><div class="muted" style="font-size:12.5px;line-height:1.45">You’re on the '+zoneName(state.loc.zone).toLowerCase()+'. A glass partition separates the two, so there’s no walking route from here. Check your boarding pass, or tell us where you are.</div><button type="button" class="btn line" style="height:40px;font-size:13px" data-go="location">Change my location</button></div></div>';
+  else walkCard='<div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:12px;background:var(--tint);display:flex;align-items:center;justify-content:center">'+ic('walk',22,'#001F60')+'</span><div style="flex:1"><div style="font-size:15px;font-weight:800">'+r.mins+' min walk to Gate '+f.gate+'</div><div class="muted" style="font-size:12px">'+r.m+' m · '+(g.level?'via '+(g.via==='esc'?'escalators to the ground level':'stairs')+' · ':'Level 3 · ')+(until>0?dur(until)+' until boarding':'Boarding now')+'</div></div></div>';
+  return '<div class="screen"><div class="scroll">'+
+    '<header class="top" style="padding-bottom:70px"><div class="toprow"><button class="back" type="button" data-act="back" aria-label="Back">'+ic('back',22,'#fff')+'</button><div class="t-title">Your flight</div></div></header>'+
+    '<div class="body" style="margin-top:-54px;position:relative;padding-top:0;gap:14px">'+
+      '<div class="card" style="border:0;box-shadow:0 8px 24px rgba(0,31,96,.14);overflow:hidden">'+
+        '<div style="padding:18px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px dashed var(--line-2)"><div><div style="font-size:28px;font-weight:800;letter-spacing:-.01em">'+f.code+'</div><div class="muted" style="font-size:13px">'+f.airline+'</div></div>'+statusPill(f)+'</div>'+
+        '<div style="padding:14px 18px;display:flex;align-items:center;gap:12px"><div><div style="font-size:22px;font-weight:800">'+f.from+'</div><div class="muted" style="font-size:12px">'+f.fromCity+' · '+f.dep+'</div></div><div style="flex:1;display:flex;align-items:center;gap:6px"><div style="flex:1;height:2px;background:var(--line-2)"></div>'+ic('plane',18,'#001F60')+'<div style="flex:1;height:2px;background:var(--line-2)"></div></div><div style="text-align:right"><div style="font-size:22px;font-weight:800">'+f.to+'</div><div class="muted" style="font-size:12px">'+f.toCity+' · '+f.arr+'</div></div></div>'+
+        '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--ground);border-top:1px solid var(--line)">'+
+          '<div style="padding:12px 18px">'+kv('Gate',f.gate+(f.prevGate?' <span style="font-size:11px;color:#8A91AB;text-decoration:line-through">'+f.prevGate+'</span>':''),true)+'</div>'+
+          '<div style="padding:12px;border-left:1px solid var(--line)">'+kv('Boarding',f.boarding,true)+'</div>'+
+          '<div style="padding:12px;border-left:1px solid var(--line)">'+kv('Terminal',f.terminal,true)+'</div></div></div>'+
+      '<div class="notice">'+ic('info',14,'#5C6480')+'<span>Last updated '+f.updated+', 28 Sep · Source: simulated flight feed (Cirium format). Always confirm on the airport flight displays and your boarding pass.</span></div>'+
+      walkCard+
+      (here&&!r.blocked?'<button type="button" class="btn" data-act="navGate">'+ic('nav',18,'#fff',2.5)+'Take me there</button>':'')+
+      (wc||food?'<div style="display:flex;gap:10px">'+(wc?miniCard('Nearest toilets',wm(wc)+' min','poi',wc.id,'wc','restroom'):'')+(food?miniCard(food.name,wm(food)+' min','shop',food.id,'cup',poiImg(food)):'')+'</div>':'')+
+      '<label style="display:flex;align-items:center;gap:10px;font-size:13.5px;padding:2px"><input type="checkbox" id="alerts" data-act="alerts"'+(state.alertOn?' checked':'')+' style="width:20px;height:20px;accent-color:#001F60">Alert me if the gate or time changes</label>'+
+    '</div></div>'+bar(null)+'</div>';
+};
+function miniCard(t,s,kind,id,icon,img){return '<button type="button" data-open-'+kind+'="'+id+'" style="flex:1;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;padding:0;text-align:left;color:inherit">'+photo('',64,icon,'',img)+'<span style="padding:8px 10px;display:flex;flex-direction:column;gap:1px"><span style="font-size:12.5px;font-weight:800">'+esc(t)+'</span><span style="font-size:11px;color:var(--muted)">'+s+'</span></span></button>';}
+
+S.search=()=>{
+  const t=T(), q=state.q.trim().toLowerCase(), f=state.flight, mine=f&&flightHere(f)?f.gate:null;
+  let results=[];
+  if(q){
+    const digits=q.replace(/\D/g,'');
+    t.gates.forEach(g=>{if((digits&&String(g.g).startsWith(digits))||(!digits&&'gate'.startsWith(q.split(' ')[0])&&q.startsWith('gate')))results.push({kind:'gate',id:g.g,o:g,t:'Gate '+g.g+(mine===g.g?' · your flight':''),s:(mine===g.g?f.code+' to '+f.toCity+' · boards '+f.boarding:(t.zones[g.zone]||'')+(g.level?' · '+LVL[g.level]:'')),mine:mine===g.g});});
+    const syn={toilet:'toilets',cr:'toilets',restroom:'toilets',comfort:'toilets',food:'dining',eat:'dining',coffee:'dining',cafe:'dining',café:'dining',charg:'charging',atm:'atm',cash:'atm',money:'atm',lounge:'lounge',pray:'prayer',smok:'smoking',vap:'smoking',info:'info',water:'water',shop:'retail',duty:'dutyfree'};
+    t.pois.forEach(p=>{const hay=(p.name+' '+p.cat+' '+(p.sub||'')).toLowerCase();if(hay.includes(q)||Object.entries(syn).some(([w,c])=>q.includes(w)&&p.cat===c))results.push({kind:'poi',id:p.id,o:p,t:p.name,s:p.sub||''});});
+    results.forEach(r=>r.w=walkInfo(r.o));
+    results.sort((a,b)=>(b.mine?1:0)-(a.mine?1:0)||((a.w?a.w.m:1e6)-(b.w?b.w.m:1e6)));
+    results=results.slice(0,7);
+  }
+  const quick=[mine?['gate',mine,'My gate · '+mine]:null,['q','toilet','Toilets'],['q','food','Food'],['q','lounge','Lounges'],['q','charg','Charging']].filter(Boolean);
+  const nb=t.vb;
+  return '<div class="screen"><div class="mapwrap" style="opacity:.9">'+floorSVG({labels:false,destGate:mine,vb:state.terminal==='3'?'-30 280 460 1000':'-20 120 940 1100'})+'</div>'+
+    '<div style="position:absolute;left:0;right:0;top:0;background:#fff;border-radius:0 0 22px 22px;box-shadow:0 10px 30px rgba(0,31,96,.18);padding:12px 16px 16px;display:flex;flex-direction:column;gap:12px;max-height:660px;z-index:2">'+
+      '<div style="display:flex;align-items:center;gap:6px"><button class="back" type="button" data-act="back" aria-label="Back" style="color:#001F60;margin-left:-8px">'+ic('back',22,'#001F60')+'</button>'+
+      '<label class="searchbox" for="navq" style="flex:1;background:var(--ground);border:2px solid #001F60;height:50px">'+ic('search',18,'#001F60',2.4)+'<span class="sr">Search a place</span><input id="navq" type="search" autocomplete="off" data-input="navq" value="'+esc(state.q)+'" placeholder="Search gate, shop, toilet in '+t.short+'" style="font-weight:600;font-size:16px">'+(state.q?'<button type="button" class="x" data-clear="navq" aria-label="Clear search">'+ic('close',16,'#5C6480',2.5)+'</button>':'')+'</label></div>'+
+      (q&&mine&&state.q===('Gate '+mine)?'<div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);padding-left:44px">'+ic('plane',12,'#001F60')+'Filled in from your flight '+f.code+'</div>':'')+
+      (q?('<div style="display:flex;flex-direction:column;gap:8px;overflow-y:auto">'+(results.length?results.map(r=>
+        '<button type="button" class="row" data-dest="'+r.kind+':'+r.id+'" style="'+(r.mine?'background:var(--tint);border-color:var(--tint)':'')+'"><span style="width:44px;height:44px;border-radius:12px;background:'+(r.mine?'#001F60':'var(--ground)')+';color:'+(r.mine?'#fff':'#001F60')+';display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:800;flex-shrink:0">'+(r.kind==='gate'?r.id:ic(catIcon(r.o.cat),20,'#001F60'))+'</span><span class="grow"><span class="t">'+esc(r.t)+'</span><span class="s">'+esc(r.s)+'</span></span>'+
+        (r.mine&&r.w?'<span class="pill navy" style="height:34px;padding:0 12px;font-size:12.5px">Go · '+r.w.mins+' min</span>':(r.w?'<span class="dist"><b>'+r.w.mins+' min</b></span>':'<span class="pill tint" style="height:22px;font-size:10px">Other side</span>'))+'</button>').join('')
+        :'<div class="empty">Nothing called “'+esc(state.q)+'” in '+t.name+'. Try a gate number, “toilet” or “coffee”.</div>')+'</div>')
+       :('<div style="display:flex;flex-direction:column;gap:10px"><div class="label">Quick picks</div><div style="display:flex;flex-wrap:wrap;gap:8px">'+quick.map((k,i)=>'<button type="button" class="chip" data-quick="'+k[0]+':'+k[1]+'"'+(i===0&&mine?' aria-pressed="true"':'')+'>'+esc(k[2])+'</button>').join('')+'</div></div>'))+
+    '</div>'+
+    '<button type="button" class="fbtn" data-go="location" style="position:absolute;right:16px;bottom:24px;z-index:2;max-width:330px">'+ic('pin',16,'#001F60')+'<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">From: '+esc(locShort())+'</span></button></div>';
+};
+
+S.navigate=()=>{
+  const d=state.nav; if(!d)return S.search();
+  const r=route(d); if(!r)return S.search();
+  const f=state.flight; const isFlight=d.type==='gate'&&f&&flightHere(f)&&f.gate===d.id;
+  const t=T();
+  if(r.blocked){
+    const o=r.o;
+    return '<div class="screen"><div class="mapwrap">'+floorSVG({destGate:d.type==='gate'?d.id:null,destPoi:d.type==='poi'?d.id:null,vb:fitVB([[state.loc.x,state.loc.y],[o.x,o.y]],150,300)})+'</div>'+
+      '<div class="float-top"><button class="back" type="button" data-act="back" aria-label="Back" style="margin-left:0">'+ic('back',22,'#fff')+'</button><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800">To '+esc(o.name)+'</div><div style="font-size:11px;color:#C9D3F0">No walking route from here</div></div></div>'+
+      '<div class="steps" style="padding:16px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:12px;align-items:flex-start">'+ic('wall',22,'#001F60')+'<div style="flex:1"><div style="font-size:15px;font-weight:800">'+esc(o.name)+' is on the '+(o.zone==='dom'?'domestic':'international')+' side</div><div class="muted" style="font-size:12.5px;line-height:1.45;margin-top:4px">You’re on the '+zoneName(state.loc.zone).toLowerCase()+'. The glass partition in the central hall can’t be crossed after security. If your boarding pass shows this gate, speak to airline staff.</div></div></div>'+
+      '<div style="display:flex;gap:8px"><button type="button" class="btn line" style="height:44px;font-size:13.5px" data-go="location">Change my location</button>'+(nearestOf('info')?'<button type="button" class="btn" style="height:44px;font-size:13.5px" data-dest="poi:'+nearestOf('info').id+'">Information desk</button>':'')+'</div></div></div>';
+  }
+  const cardH=state.stepsOpen?96+54*(r.steps.length-1)+44:78;
+  const vb=fitVB(r.pts,150,cardH+26);
+  const first=r.steps[0],rest=r.steps.slice(1),arrive=fmt(hm(NOW)+r.mins);
+  const lvl=r.o.level&&r.o.level!==3?'L3 → '+(r.o.level==='G'?'G':r.o.level===4?'L4':(r.o.level==='lower'?'↓':'↑')):'L3';
+  return '<div class="screen"><div class="mapwrap">'+floorSVG({route:r,destGate:d.type==='gate'?d.id:null,destPoi:d.type==='poi'?d.id:null,oldGate:isFlight?f.prevGate:null,vb:vb,label:'Route to '+r.name})+'</div>'+
+    '<div class="float-top"><button class="back" type="button" data-act="back" aria-label="Back" style="margin-left:0">'+ic('back',22,'#fff')+'</button><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">To '+esc(r.name)+'</div><div style="font-size:11px;color:#C9D3F0">'+(isFlight?f.code+' · boards '+f.boarding+' · ':'')+r.mins+' min · '+r.m+' m</div></div><span class="pill" style="background:#fff;color:#001F60;height:30px;font-size:12px;font-weight:800">'+t.short+' · '+lvl+'</span></div>'+
+    '<div style="position:absolute;right:16px;top:84px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;z-index:3">'+
+      '<button type="button" class="fbtn" data-go="location">'+ic('pin',16,'#001F60')+'Where am I?</button>'+
+      '<button type="button" class="fbtn" data-act="stepFree" aria-pressed="'+state.stepFree+'">'+ic('access',16,state.stepFree?'#fff':'#001F60')+'Step-free</button></div>'+
+    (isFlight?'<div class="simtag">SIM<button type="button" data-act="simGate">gate change</button><button type="button" data-act="simDelay">delay</button></div>':'')+
+    '<div class="steps">'+
+      '<button type="button" class="stephead" data-act="toggleSteps" aria-expanded="'+state.stepsOpen+'"><span class="num on">1</span><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:800">'+esc(first.t)+'</span><span class="muted" style="font-size:12px">'+(first.meters?first.meters+' m · ':'')+first.m+' min'+(rest.length?' · then '+rest.length+' more step'+(rest.length>1?'s':''):'')+'</span></span>'+ic(state.stepsOpen?'down':'up',20,'#5C6480')+'</button>'+
+      (state.stepsOpen?rest.map((s,i)=>'<div class="steprow"><span class="num">'+(i+2)+'</span><span style="flex:1">'+esc(s.t)+'</span><span class="muted" style="font-size:12px;white-space:nowrap">'+s.m+' min</span></div>').join('')+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px 12px;border-top:1px solid #F0F2F7;font-size:11.5px;color:var(--muted)"><span>Arrive ~'+arrive+(isFlight?' · boarding '+f.boarding:'')+' · schematic map, not to scale</span><button type="button" data-act="endRoute" style="border:0;background:transparent;font-weight:800;color:#001F60;font-size:12.5px;padding:6px 0;white-space:nowrap">End route</button></div>':'')+
+    '</div>'+(state.sheet==='gate'?gateSheet():'')+'</div>';
+};
+function gateSheet(){
+  const f=state.flight;const r=route({type:'gate',id:f.gate});const until=hm(f.boarding)-hm(NOW)-(r&&!r.blocked?r.mins:0);
+  return '<div class="sheet-bg" role="dialog" aria-modal="true" aria-labelledby="gch"><div class="sheet"><div class="grab"></div>'+
+    '<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:12px;background:#001F60;display:flex;align-items:center;justify-content:center">'+ic('warn',22,'#fff')+'</span><div><div id="gch" style="font-size:20px;font-weight:800">Gate changed</div><div class="muted" style="font-size:12px">'+f.code+' · updated '+f.updated+'</div></div></div>'+
+    '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--ground);border-radius:14px"><div style="flex:1;text-align:center"><div class="label">Was</div><div style="font-size:26px;font-weight:800;color:#8A91AB;text-decoration:line-through">'+f.prevGate+'</div></div>'+ic('chev',22,'#5C6480')+'<div style="flex:1;text-align:center"><div class="label">Now</div><div style="font-size:26px;font-weight:800;color:#001F60">'+f.gate+'</div></div><div style="width:1px;height:40px;background:var(--line-2)"></div><div style="flex:1;text-align:center"><div class="label">Boarding</div><div style="font-size:20px;font-weight:800">'+f.boarding+'</div></div></div>'+
+    '<div style="font-size:14px;line-height:1.45">'+(r&&!r.blocked?'New walking time is <b>about '+r.mins+' min</b> ('+r.m+' m). You still have '+dur(Math.max(0,until))+' before boarding.':'The new gate is on the other side of the partition. Please speak to airline staff.')+'</div>'+
+    '<button type="button" class="btn" data-act="reroute">'+ic('nav',18,'#fff',2.5)+'Re-route to Gate '+f.gate+'</button><button type="button" class="btn text" data-act="gateDetails">View flight details</button>'+
+    '<div class="small" style="text-align:center">Source: simulated flight feed · confirm on the airport displays</div></div></div>';
+}
+
+const AMEN_CATS=[['toilets','Toilets','wc'],['charging','Charging','bolt'],['prayer','Prayer','prayer'],['atm','Money','card'],['water','Water','water'],['info','Info','info'],['smoking','Smoking','smoke'],['medical','Medical','plus']];
+S.amenities=()=>{
+  const t=T(), q=state.amenQ.trim().toLowerCase();
+  let list=t.pois.filter(p=>AMEN_CATS.some(c=>c[0]===p.cat));
+  list=q?list.filter(p=>(p.name+' '+(p.sub||'')+' '+p.cat).toLowerCase().includes(q)):list.filter(p=>p.cat===state.amenCat);
+  const rows=list.map(p=>[p,walkInfo(p)]).sort((a,b)=>(a[1]?a[1].m:1e6)-(b[1]?b[1].m:1e6));
+  const catName=(AMEN_CATS.find(c=>c[0]===state.amenCat)||[])[1];
+  return '<div class="screen">'+header('Amenities',t.name+' · nearest first from '+esc(locShort()),searchInput('amenq',state.amenQ,'Search toilets, charging, ATM'))+
+    '<div class="scroll"><div class="body" style="gap:14px">'+
+      '<div class="grid4" role="group" aria-label="Categories">'+AMEN_CATS.map(([id,l,icn])=>'<button type="button" class="tileicon" data-amen-cat="'+id+'" aria-pressed="'+(!q&&state.amenCat===id)+'"><span class="sq">'+ic(icn,24,(!q&&state.amenCat===id)?'#fff':'#001F60')+'</span><span class="l">'+l+'</span></button>').join('')+'</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center"><div class="h3">'+(q?'Results for “'+esc(state.amenQ)+'”':catName)+' · '+rows.length+'</div><span class="pill tint">Sorted by distance</span></div>'+
+      (rows.length?rows.map(([p])=>'<button type="button" class="row" data-open-poi="'+p.id+'"><div style="width:72px;height:60px;border-radius:10px;overflow:hidden;flex-shrink:0">'+photo('',60,catIcon(p.cat),'',poiImg(p))+'</div><span class="grow"><span class="t">'+esc(p.name)+'</span><span class="s">'+esc(p.sub||'')+'</span></span>'+distCell(p)+'</button>').join('')
+        :'<div class="empty">'+(q?'No amenity matches “'+esc(state.amenQ)+'”. Try “toilet”, “charging” or “ATM”.':'No '+(catName||'').toLowerCase()+' mapped in '+t.name+' yet.')+'</div>')+
+    '</div></div>'+bar('amenities')+'</div>';
+};
+
+S.poi=()=>{
+  const p=POIX(state.params.poi); if(!p)return S.amenities();
+  const r=route({type:'poi',id:p.id}); const ok=r&&!r.blocked;
+  const vb=ok?(()=>{const xs=r.pts.map(q=>q[0]),ys=r.pts.map(q=>q[1]);const x0=Math.min(...xs)-40,y0=Math.min(...ys)-40,w=Math.max(...xs)-x0+40,h=Math.max(...ys)-y0+40;return x0+' '+y0+' '+w+' '+h;})():null;
+  return '<div class="screen"><div class="scroll" style="padding-bottom:96px">'+
+    '<div style="position:relative">'+photo('Photo: '+p.name,250,catIcon(p.cat),'',poiImg(p))+'<button type="button" data-act="back" aria-label="Back" style="position:absolute;left:12px;top:12px;width:44px;height:44px;border-radius:999px;background:rgba(255,255,255,.92);border:0;display:flex;align-items:center;justify-content:center">'+ic('back',22,'#001F60')+'</button></div>'+
+    '<div style="margin-top:-20px;position:relative;background:var(--ground);border-radius:20px 20px 0 0;padding:20px;display:flex;flex-direction:column;gap:16px">'+
+      '<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill navy">'+esc((AMEN_CATS.find(c=>c[0]===p.cat)||['','Place'])[1])+'</span><span class="pill tint">'+esc(T().short+' · '+(zoneName(p.zone)||''))+'</span></div>'+
+      '<h2 style="margin:0;font-size:22px;font-weight:800;line-height:1.2">'+esc(p.name)+'</h2><div class="muted" style="font-size:13px">'+esc(p.sub||'')+(ok?' · '+r.m+' m from you':'')+'</div></div>'+
+      (p.feat?'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">'+p.feat.map(k=>'<div class="card" style="padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px">'+ic(FEAT[k][0],22,'#001F60')+'<span style="font-size:11px;font-weight:600;text-align:center">'+FEAT[k][1]+'</span></div>').join('')+'</div>':'')+
+      '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div class="h3">How to get there</div>'+
+        (ok?'<ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);line-height:1.45">'+r.steps.map(s=>'<li>'+esc(s.t)+'</li>').join('')+'</ol><div style="height:130px;border-radius:10px;overflow:hidden;background:#EEF1F8">'+floorSVG({route:r,destPoi:p.id,labels:false,vb:vb})+'</div>'
+            :'<div class="muted" style="font-size:13px;line-height:1.5">This is on the other side of the glass partition, so there’s no walking route from where you are.</div>')+'</div>'+
+      '<button type="button" data-act="report" style="display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:0;font-size:12.5px;font-weight:700;color:#001F60">'+ic('warn',16,'#5C6480')+'Report a problem (closed, wrong location)</button>'+
+    '</div></div>'+
+    '<div style="position:absolute;left:0;right:0;bottom:0;padding:12px 20px 22px;background:#fff;border-top:1px solid var(--line);display:flex;gap:10px">'+
+      '<button type="button" class="btn" data-dest="poi:'+p.id+'"'+(ok?'':' disabled')+'>'+ic('nav',18,'#fff',2.5)+(ok?'Navigate · '+r.mins+' min':'No route from here')+'</button>'+
+      '<button type="button" class="btn line" style="width:52px;flex-shrink:0;padding:0" data-ask="Tell me about the '+esc(p.name.toLowerCase())+'" aria-label="Ask the concierge about this place">'+ic('chat',20,'#001F60')+'</button></div></div>';
+};
+const FEAT={access:['access','Accessible'],baby:['baby','Baby change'],water:['water','Water nearby'],bolt:['bolt','Power sockets'],card:['card','Cards & cash'],info:['info','Staffed']};
+
+S.links=()=>{
+  const dep=state.params.linksDir!=='arr';
+  const req=dep?['eTravel declaration','etravel.gov.ph · Bureau of Immigration · about 5 min']:['eTravel arrival declaration','etravel.gov.ph · required for all arriving passengers'];
+  const items=dep?[['doc','Customs declaration','Bureau of Customs','https://customs.gov.ph'],['plane','Airline check-in',state.flight?'From your flight: '+state.flight.airline:'Find your airline',null],['board','NAIA flight board','Live departures & arrivals','https://www.miaa.gov.ph'],['card','Travel tax counter','Where to pay, in '+T().short,null]]
+    :[['doc','Customs declaration','Declare goods on arrival','https://customs.gov.ph'],['info','Bureau of Immigration','Visa and entry rules','https://immigration.gov.ph'],['taxi','Getting to the city','Taxi, ride-hail and bus',null],['board','NAIA flight board','Live departures & arrivals','https://www.miaa.gov.ph']];
+  const inner=it=>'<span style="width:40px;height:40px;border-radius:12px;background:var(--tint);display:flex;align-items:center;justify-content:center">'+ic(it[0],20,'#001F60')+'</span><span style="font-size:14px;font-weight:800">'+it[1]+'</span><span class="muted" style="font-size:11.5px">'+esc(it[2])+'</span>';
+  const tile=it=>it[3]?'<a href="'+it[3]+'" target="_blank" rel="noopener" class="card" style="display:flex;flex-direction:column;gap:10px;padding:14px;text-decoration:none;color:inherit">'+inner(it)+'</a>':'<button type="button" class="card" data-link-local="'+it[1]+'" style="display:flex;flex-direction:column;gap:10px;padding:14px;text-align:left;color:inherit">'+inner(it)+'</button>';
+  return '<div class="screen">'+header('Travel forms & links','Official portals open in your browser','<div role="tablist" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:4px;background:rgba(255,255,255,.12);border-radius:12px">'+[['dep','Departing'],['arr','Arriving']].map(([k,l])=>{const on=(k==='dep')===dep;return '<button type="button" role="tab" aria-selected="'+on+'" data-links-dir="'+k+'" style="height:38px;border:0;border-radius:9px;background:'+(on?'#fff':'transparent')+';color:'+(on?'#001F60':'#C9D3F0')+';font-size:13px;font-weight:'+(on?800:600)+'">'+l+'</button>';}).join('')+'</div>')+
+    '<div class="scroll"><div class="body">'+
+      '<a href="https://etravel.gov.ph" target="_blank" rel="noopener" class="card" style="display:flex;flex-direction:column;overflow:hidden;border:2px solid #001F60;text-decoration:none;color:inherit"><div style="position:relative">'+photo('Photo: eTravel QR at the immigration counter',110,'phone','','passport')+'<span class="pill navy" style="position:absolute;left:12px;top:12px">Required</span></div><div style="padding:14px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font-size:16px;font-weight:800">'+req[0]+'</div><div class="muted" style="font-size:12px;margin-top:3px">'+req[1]+'</div></div>'+ic('ext',20,'#001F60')+'</div></a>'+
+      '<div class="label">Good to have</div><div class="grid2">'+items.map(tile).join('')+'</div>'+
+      '<div class="notice" style="border-style:dashed">'+ic('lock',14,'#5C6480')+'<span>External sites open in a new tab. Airport Navi never asks for your passport or payment details.</span></div>'+
+    '</div></div>'+bar('amenities')+'</div>';
+};
+
+const SHOP_CATS=[['all','All','grid'],['dining','Dining','cup'],['retail','Retail','bag'],['lounge','Lounges','sofa'],['dutyfree','Duty free','gift']];
+S.shops=()=>{
+  const t=T(), q=state.shopQ.trim().toLowerCase(), cats=['dining','retail','lounge','dutyfree'];
+  let list=t.pois.filter(p=>cats.includes(p.cat)&&(state.shopCat==='all'||p.cat===state.shopCat)&&(!q||(p.name+' '+(p.sub||'')+' '+(p.desc||'')+' '+(p.items||[]).join(' ')).toLowerCase().includes(q)));
+  const rows=list.map(p=>[p,walkInfo(p)]).sort((a,b)=>(a[1]?a[1].m:1e6)-(b[1]?b[1].m:1e6));
+  const feat=t.pois.filter(p=>p.featured);
+  const ad=t.POI.souvenir;
+  return '<div class="screen">'+header('Shops & lounges',t.name+' · sorted by walk time',searchInput('shopq',state.shopQ,'Coffee, pharmacy, pasalubong'))+
+    '<div class="scroll"><div style="padding:14px 0 110px;display:flex;flex-direction:column;gap:16px">'+
+      '<div style="padding:0 20px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px">'+SHOP_CATS.map(([id,l,icn])=>'<button type="button" data-shop-cat="'+id+'" aria-pressed="'+(state.shopCat===id)+'" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;padding:0;color:inherit"><span style="width:100%;height:54px;border-radius:12px;overflow:hidden;'+(state.shopCat===id?'outline:2.5px solid #001F60;outline-offset:1px':'')+'">'+photo('',54,icn,'',({all:'hero',dining:'food',retail:'souvenir',lounge:'lounge',dutyfree:'dutyfree'})[id])+'</span><span style="font-size:11px;font-weight:'+(state.shopCat===id?800:600)+'">'+l+'</span></button>').join('')+'</div>'+
+      (!q&&state.shopCat==='all'?('<div style="display:flex;flex-direction:column;gap:8px"><div style="padding:0 20px" class="h3">Featured</div><div class="chips" style="padding:0 20px 4px;gap:10px">'+feat.map(p=>{const w=walkInfo(p);return '<button type="button" data-open-shop="'+p.id+'" style="flex-shrink:0;width:200px;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;padding:0;text-align:left;color:inherit"><span style="position:relative;display:block">'+photo('Photo: '+p.name,100,catIcon(p.cat),'',poiImg(p))+'<span class="pill" style="position:absolute;left:8px;top:8px;background:#fff;color:#001F60;height:20px;font-size:10px">Featured</span></span><span style="padding:10px 12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:13.5px;font-weight:800">'+esc(p.name)+'</span><span class="muted" style="font-size:11px">'+esc(p.hours||'')+' · '+(w?w.mins+' min':'other side')+'</span></span></button>';}).join('')+'</div></div>'+
+        (ad?'<button type="button" data-open-shop="'+ad.id+'" style="margin:0 20px;display:flex;align-items:center;gap:12px;padding:10px;background:var(--tint);border:1px solid #C9D6F0;border-radius:14px;text-align:left;color:inherit"><span style="width:72px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0">'+photo('',56,'gift','','souvenir')+'</span><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="label" style="font-size:10px">Sponsored</span><span style="font-size:13.5px;font-weight:800">10% off gift boxes before you fly</span><span class="muted" style="font-size:11px">Show this screen at '+esc(ad.name)+' · until 30 Sep</span></span></button>':'')):'')+
+      '<div style="padding:0 20px;display:flex;flex-direction:column;gap:8px"><div class="h3">'+(q?'Results for “'+esc(state.shopQ)+'”':'Nearest to you')+'</div>'+
+      (rows.length?rows.map(([p])=>'<button type="button" class="row" data-open-shop="'+p.id+'"><span style="width:64px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0">'+photo('',56,catIcon(p.cat),'',poiImg(p))+'</span><span class="grow"><span class="t">'+esc(p.name)+'</span><span class="s">'+esc(p.sub||'')+(p.hours?' · '+esc(p.hours):'')+'</span></span>'+distCell(p)+'</button>').join(''):'<div class="empty">No shop matches “'+esc(state.shopQ)+'”.</div>')+'</div>'+
+    '</div></div>'+bar('amenities')+'</div>';
+};
+S.shop=()=>{
+  const p=POIX(state.params.shop); if(!p)return S.shops();
+  const r=route({type:'poi',id:p.id}); const ok=r&&!r.blocked;
+  return '<div class="screen"><div class="scroll" style="padding-bottom:96px">'+
+    '<div style="position:relative">'+photo('Photo: '+p.name,250,catIcon(p.cat),'',poiImg(p))+'<button type="button" data-act="back" aria-label="Back" style="position:absolute;left:12px;top:12px;width:44px;height:44px;border-radius:999px;background:rgba(255,255,255,.92);border:0;display:flex;align-items:center;justify-content:center">'+ic('back',22,'#001F60')+'</button></div>'+
+    '<div style="margin-top:-20px;position:relative;background:var(--ground);border-radius:20px 20px 0 0;padding:20px;display:flex;flex-direction:column;gap:14px">'+
+      '<div style="display:flex;gap:12px;align-items:flex-start"><span style="width:56px;height:56px;border-radius:14px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(catIcon(p.cat),26,'#001F60')+'</span><div style="flex:1;display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:21px;font-weight:800;line-height:1.15">'+esc(p.name)+'</h2><div class="muted" style="font-size:12px">'+esc(p.sub||'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill ok">Open now</span><span class="pill tint">'+esc(T().short+' · '+zoneName(p.zone))+'</span></div></div></div>'+
+      '<div class="card" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr))"><div style="padding:12px">'+kv('Walk',ok?r.mins+' min':'—',true)+'</div><div style="padding:12px;border-left:1px solid var(--line)">'+kv('Hours',p.hours||'—')+'</div><div style="padding:12px;border-left:1px solid var(--line)">'+kv('Price',p.price||'—')+'</div></div>'+
+      '<p style="margin:0;font-size:13.5px;line-height:1.55;color:var(--muted)">'+esc(p.desc||'')+'</p>'+
+      (p.items?'<div style="display:flex;flex-direction:column;gap:8px"><div class="h3">'+(p.cat==='lounge'?'Facilities':'Popular')+'</div><div style="display:flex;gap:10px">'+p.items.map(it=>'<div class="card" style="flex:1;overflow:hidden">'+photo('',70,catIcon(p.cat),'',poiImg(p))+'<div style="padding:8px 10px;font-size:12px;font-weight:700">'+esc(it)+'</div></div>').join('')+'</div></div>':'')+
+      (p.tags?'<div style="display:flex;flex-wrap:wrap;gap:6px">'+p.tags.map(tg=>'<span class="chip" style="height:28px;font-size:11.5px">'+esc(tg)+'</span>').join('')+'</div>':'')+
+    '</div></div>'+
+    '<div style="position:absolute;left:0;right:0;bottom:0;padding:12px 20px 22px;background:#fff;border-top:1px solid var(--line);display:flex;gap:10px">'+
+      '<button type="button" class="btn" data-dest="poi:'+p.id+'"'+(ok?'':' disabled')+'>'+ic('nav',18,'#fff',2.5)+(ok?'Navigate · '+r.mins+' min':'Other side of the partition')+'</button>'+
+      '<button type="button" class="btn line" style="width:52px;flex-shrink:0;padding:0" data-ask="Tell me about the '+esc(p.name.toLowerCase())+'" aria-label="Ask the concierge about this place">'+ic('chat',20,'#001F60')+'</button></div></div>';
+};
+
+/* ---------- concierge ---------- */
+const FAQ=['Is my flight on time?','Where can I buy a SIM card?','What liquids can I bring on board?','Where is the nearest lounge?'];
+function answer(qRaw){
+  const q=qRaw.toLowerCase(), f=state.flight, t=T();
+  const m=q.match(/tell me about the (.+)/);
+  if(m){const p=t.pois.find(p=>p.name.toLowerCase()===m[1]);if(p){const w=walkInfo(p);return {text:esc(p.desc||(p.name+'. '+(p.sub||'')))+(w?' It’s about '+w.mins+' min from you.':' It’s on the other side of the partition from you.'),cards:w?[{kind:'dest',dest:'poi:'+p.id,t:p.name,s:p.sub||'',icon:'nav',label:'Navigate'}]:[],src:t.name+' directory (sample)'};}}
+  if(/flight|on time|delay|gate|board/.test(q)){
+    if(!f)return {text:'I don’t know your flight yet. Enter your flight number on the home screen and I’ll track its gate and boarding time.',cards:[{kind:'go',go:'home',t:'Find my gate',s:'Enter your flight number',icon:'plane',label:'Open'}],src:'Flight feed (simulated)'};
+    const here=flightHere(f);const r=here?route({type:'gate',id:f.gate}):null;
+    return {text:'<b>'+f.code+' to '+f.toCity+' is '+(f.delayed?'delayed by '+f.delayMin+' min':'on time')+'.</b> Boarding '+f.boarding+' at Terminal '+f.terminal+', Gate '+f.gate+'. '+(!here?'You’re in '+t.name+', so allow time to transfer.':(r.blocked?'That gate is on the other side of the partition from you.':'It’s about '+r.mins+' minutes from you.')),cards:here&&!r.blocked?[{kind:'dest',dest:'gate:'+f.gate,t:'Gate '+f.gate,s:t.short+' · '+r.mins+' min walk',icon:'nav',label:'Navigate'}]:[],src:'Flight feed (simulated), as of '+f.updated};
+  }
+  if(/sim|esim|wifi|internet|data/.test(q)){const ph=t.POI.pharmacy||t.POI.store;return {text:'You can get a local eSIM without leaving the app, or pick up pocket WiFi at the arrivals counters.'+(ph?' The '+ph.name.toLowerCase()+' also sells prepaid SIM cards.':''),cards:[{kind:'svc',svc:'esim',t:'eSIM',s:'Demo partner · activate in minutes',icon:'esim',label:'Open service'}].concat(ph&&walkInfo(ph)?[{kind:'shop',id:ph.id,t:ph.name,s:ph.sub+' · '+wm(ph)+' min',icon:'bag',label:'View'}]:[]),src:t.name+' directory (sample)'};}
+  if(/liquid|bottle|carry|cabin/.test(q))return {text:'For international flights, liquids in your cabin bag must be in containers of 100 ml or less, all in one clear, resealable 1-litre bag. Sealed duty-free liquids bought after security are fine. Domestic rules can differ, so check with your airline.',cards:[],src:'MIAA passenger guide (sample)'};
+  if(/taxi|makati|ride|grab|transport|city/.test(q))return {text:'Metered airport taxis and a Grab pickup point are outside the arrivals area on the ground floor. You can also book ahead in Services.',cards:[{kind:'svc',svc:'taxi',t:'Book a taxi',s:'Demo partner · arrivals pickup',icon:'taxi',label:'Open service'}],src:'Public terminal guides'};
+  if(/lounge/.test(q)){const ls=t.pois.filter(p=>p.cat==='lounge').map(p=>[p,walkInfo(p)]).filter(x=>x[1]).sort((a,b)=>a[1].m-b[1].m).slice(0,2);
+    return ls.length?{text:'Nearest lounges to you: '+ls.map(([p,w])=>'<b>'+esc(p.name)+'</b> ('+esc(p.sub||'')+', '+w.mins+' min)').join(' and ')+'.',cards:ls.map(([p,w])=>({kind:'shop',id:p.id,t:p.name,s:(p.sub||'')+' · '+w.mins+' min',icon:'sofa',label:'View'})),src:t.name+' lounge list (public guides)'}:{text:'There are no lounges on your side of the terminal.',cards:[],src:t.name};}
+  if(/toilet|restroom|\bcr\b|comfort/.test(q)){const w=nearestOf('toilets');return w?{text:'The nearest toilets are <b>'+esc(w.name.toLowerCase())+'</b>, about '+wm(w)+' min away.',cards:[{kind:'dest',dest:'poi:'+w.id,t:w.name,s:w.sub||'',icon:'nav',label:'Navigate'}],src:t.name+' map'}:{text:'I can’t find toilets on your side yet.',cards:[],src:t.name};}
+  if(/coffee|food|eat|hungry|restaurant/.test(q)){const ds=t.pois.filter(p=>p.cat==='dining').map(p=>[p,walkInfo(p)]).filter(x=>x[1]).sort((a,b)=>a[1].m-b[1].m).slice(0,2);return {text:ds.length?'Closest to you: '+ds.map(([p,w])=>esc(p.name)+' ('+w.mins+' min)').join(' and ')+'.':'No food mapped on your side yet.',cards:ds.map(([p,w])=>({kind:'shop',id:p.id,t:p.name,s:w.mins+' min',icon:'cup',label:'View'})),src:t.name+' directory (sample)'};}
+  if(/etravel|form|immigration|customs/.test(q))return {text:'Every departing and arriving passenger needs an eTravel declaration. It takes about five minutes on etravel.gov.ph, and you show the QR code at immigration.',cards:[{kind:'go',go:'links',t:'Travel forms & links',s:'eTravel, customs',icon:'doc',label:'Open'}],src:'Bureau of Immigration (sample)'};
+  const inf=nearestOf('info');
+  return {text:'I’m not sure about that yet. The information desk can help, and staff there speak English and Filipino.',cards:inf?[{kind:'dest',dest:'poi:'+inf.id,t:inf.name,s:(inf.sub||'')+' · '+wm(inf)+' min',icon:'nav',label:'Navigate'}]:[],src:'Fallback'};
+}
+function ask(text){if(!text.trim())return;state.chat.push({me:true,text:esc(text)});state.chatIn='';state.typing=true;if(cur()!=='chat')state.stack.push('chat');render(true);scrollChat();
+  setTimeout(()=>{state.typing=false;state.chat.push(Object.assign({me:false},answer(text)));render();scrollChat();},700);}
+function scrollChat(){requestAnimationFrame(()=>{const el=document.getElementById('chatlog');if(el)el.scrollTop=el.scrollHeight;});}
+S.chat=()=>{
+  const card=c=>{const attr=c.kind==='dest'?'data-dest="'+c.dest+'"':c.kind==='svc'?'data-open-svc="'+c.svc+'"':c.kind==='shop'?'data-open-shop="'+c.id+'"':c.kind==='poi'?'data-open-poi="'+c.id+'"':'data-go="'+c.go+'"';
+    return '<button type="button" class="rcard" '+attr+'><span style="width:88px;flex-shrink:0;align-self:stretch">'+photo('',88,c.icon,'',c.kind==='svc'?(c.svc==='taxi'?'taxi':'phone'):c.kind==='shop'?poiImg(POIX(c.id)):c.kind==='go'&&c.go==='links'?'passport':c.kind==='go'?'hero':null)+'</span><span style="padding:10px 12px;display:flex;flex-direction:column;gap:3px;flex:1"><span class="label" style="font-size:10px">'+(c.kind==='svc'?'Service':c.kind==='go'?'Page':'Place')+'</span><span style="font-size:14px;font-weight:800">'+esc(c.t)+'</span><span class="muted" style="font-size:11.5px">'+esc(c.s)+'</span><span style="font-size:12.5px;font-weight:800;color:#001F60">'+c.label+' →</span></span></button>';};
+  const log=state.chat.map(m=>m.me?'<div class="msg me">'+m.text+'</div>':'<div style="display:flex;flex-direction:column;gap:8px;align-self:flex-start;max-width:320px"><div class="msg bot">'+m.text+'</div>'+(m.cards||[]).map(card).join('')+'<div class="small" style="font-size:10.5px">Source: '+esc(m.src)+'</div></div>').join('');
+  return '<div class="screen"><header class="top" style="padding-bottom:14px"><div class="toprow"><button class="back" type="button" data-act="back" aria-label="Back">'+ic('back',22,'#fff')+'</button><span style="width:36px;height:36px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center">'+ic('chat',18,'#001F60')+'</span><div style="flex:1"><div class="t-title" style="font-size:16px">Concierge</div><div class="t-sub">NAIA guides + live flight data</div></div></div></header>'+
+    '<div class="scroll" id="chatlog" style="padding:14px 16px 170px;display:flex;flex-direction:column;gap:12px"><div class="msg bot" style="max-width:320px">Hi! You’re in <b>'+T().name+'</b>, '+esc(locShort().toLowerCase())+'. Popular questions:<ul class="faq">'+FAQ.map(q=>'<li><button type="button" data-ask="'+esc(q)+'">'+esc(q)+'</button></li>').join('')+'</ul></div>'+log+(state.typing?'<div class="msg bot" aria-label="Concierge is typing"><span class="typing"><i></i><i></i><i></i></span></div>':'')+'</div>'+
+    '<form data-form="chat" style="position:absolute;left:0;right:0;bottom:92px;padding:10px 16px;background:linear-gradient(180deg,rgba(245,246,250,0),#F5F6FA 30%);display:flex;gap:8px;align-items:center" novalidate><label class="sr" for="chatin">Message</label><input id="chatin" data-input="chatin" autocomplete="off" value="'+esc(state.chatIn)+'" placeholder="Ask anything about the airport" style="flex:1;min-width:0;height:48px;padding:0 16px;font-size:15px;border:1.5px solid var(--line-2);border-radius:999px;background:#fff"><button type="submit" aria-label="Send" style="width:48px;height:48px;border-radius:999px;background:#001F60;border:0;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('send',18,'#fff')+'</button></form>'+bar('chat')+'</div>';
+};
+
+/* ---------- services ---------- */
+const SVCS=[{id:'taxi',g:'Getting around',n:'Taxi',icon:'taxi',kw:'cab ride makati'},{id:'ride',g:'Getting around',n:'Ride-hail',icon:'ride',kw:'grab car'},{id:'carrental',g:'Getting around',n:'Car rental',icon:'car',kw:'drive'},{id:'bus',g:'Getting around',n:'Airport bus',icon:'bus',kw:'p2p shuttle'},
+  {id:'wifi',g:'Stay connected',n:'Pocket WiFi',icon:'wifi',kw:'internet data'},{id:'esim',g:'Stay connected',n:'eSIM',icon:'esim',kw:'sim data internet'},{id:'sim',g:'Stay connected',n:'SIM card',icon:'phone',kw:'prepaid load'},{id:'power',g:'Stay connected',n:'Power bank',icon:'bolt',kw:'charge battery'},
+  {id:'hotel',g:'Travel help',n:'Hotel',icon:'hotel',kw:'stay room'},{id:'porter',g:'Travel help',n:'Porter',icon:'porter',kw:'luggage bags'},{id:'wrap',g:'Travel help',n:'Bag wrap',icon:'wrap',kw:'luggage'},{id:'fx',g:'Travel help',n:'Money exchange',icon:'money',kw:'currency peso dollar'}];
+const SVC=Object.fromEntries(SVCS.map(s=>[s.id,s]));
+S.services=()=>{
+  const q=state.svcQ.trim().toLowerCase(), list=SVCS.filter(s=>!q||(s.n+' '+s.kw+' '+s.g).toLowerCase().includes(q)), groups=[...new Set(list.map(s=>s.g))];
+  return '<div class="screen">'+header('Services','Book airport services without another app',searchInput('svcq',state.svcQ,'Search taxi, WiFi, hotel'))+
+    '<div class="scroll"><div class="body" style="gap:20px">'+
+      (groups.length?groups.map(g=>'<div style="display:flex;flex-direction:column;gap:10px"><div class="h3" style="font-size:13px">'+g+'</div><div class="grid4">'+list.filter(s=>s.g===g).map(s=>'<button type="button" class="tileicon" data-open-svc="'+s.id+'"><span class="sq"'+(s.id==='taxi'?' style="background:#001F60;border-color:#001F60"':'')+'>'+ic(s.icon,26,s.id==='taxi'?'#fff':'#001F60',2)+'</span><span class="l">'+s.n+'</span></button>').join('')+'</div></div>').join(''):'<div class="empty">No service matches “'+esc(state.svcQ)+'”.</div>')+
+      (!q?'<button type="button" data-open-svc="taxi" style="display:flex;background:#001F60;border:0;border-radius:16px;overflow:hidden;color:#fff;padding:0;text-align:left"><span style="padding:14px 16px;display:flex;flex-direction:column;gap:4px;flex:1"><span class="label" style="color:#C9D3F0;font-size:10px">Just landed?</span><span style="font-size:15px;font-weight:800">Book your ride before baggage claim</span><span style="font-size:12px;color:#C9D3F0">Taxi · arrivals pickup, ground floor</span></span><span style="width:110px;flex-shrink:0;align-self:stretch">'+photo('',120,'taxi','dark','taxi')+'</span></button>':'')+
+      '<div class="notice" style="border-style:dashed">'+ic('info',14,'#5C6480')+'<span>No partners are signed yet. Every service here opens the same demo mini program to show how partners will plug in.</span></div>'+
+    '</div></div>'+bar('services')+'</div>';
+};
+S.mini=()=>{
+  const s=SVC[state.params.svc]||SVC.taxi, isRide=['taxi','ride','carrental','bus'].includes(s.id), done=state.miniStep===1;
+  const body=done?'<div style="padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center"><span style="width:64px;height:64px;border-radius:999px;background:var(--ok-bg);display:flex;align-items:center;justify-content:center">'+ic('check',30,'#1B5E20',2.6)+'</span><div style="font-size:18px;font-weight:800">Request sent to the demo partner</div><div class="muted" style="font-size:13.5px;line-height:1.5">In the real service, the partner confirms the booking and handles payment. Nothing was booked or charged.</div><button type="button" class="btn text" data-act="miniReset">Start over</button></div>'
+   :isRide?'<div style="position:relative">'+photo('Partner map: arrivals pickup',190,'car','','taxi')+'<span class="pill" style="position:absolute;left:12px;top:12px;background:rgba(18,24,58,.55);color:#fff">Partner content</span></div>'+
+     '<form data-form="mini" style="padding:18px 20px;display:flex;flex-direction:column;gap:12px" novalidate><div class="card"><div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #F0F2F7"><span style="width:10px;height:10px;border-radius:5px;background:#001F60"></span><div><div class="label" style="font-size:10px">Pickup · from Airport Navi</div><div style="font-size:14px;font-weight:800">NAIA '+T().short+' Arrivals, ground floor</div></div></div>'+
+     '<label for="minidest" style="display:flex;align-items:center;gap:12px;padding:12px 14px"><span style="width:10px;height:10px;border:2px solid #001F60;border-radius:2px"></span><span class="sr">Destination</span><input id="minidest" data-input="minidest" value="'+esc(state.miniDest)+'" placeholder="Where to? e.g. Makati" style="flex:1;border:0;outline:0;font-size:14.5px;background:transparent"></label></div>'+
+     '<div class="grid2" role="radiogroup" aria-label="Vehicle">'+[['sedan','Sedan','Up to 4 · sample fare ₱450'],['van','Van','Up to 7 · sample fare ₱750']].map(([k,tt,sub])=>'<button type="button" role="radio" aria-checked="'+(state.miniVeh===k)+'" data-veh="'+k+'" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;background:#fff;border:'+(state.miniVeh===k?'2px solid #001F60':'1px solid var(--line)')+';border-radius:12px;text-align:left"><span style="font-size:13.5px;font-weight:800">'+tt+'</span><span class="muted" style="font-size:11px">'+sub+'</span></button>').join('')+'</div>'+
+     '<button type="submit" class="btn" style="background:#1A3C85"'+(state.miniDest.trim()?'':' disabled')+'>Continue with demo partner</button><div class="small" style="text-align:center">Payment and booking are handled by the partner. Airport Navi shares only your terminal, pickup point and language.</div></form>'
+   :'<div style="position:relative">'+photo('Partner banner: '+s.n,170,s.icon,'',({wifi:'phone',esim:'phone',sim:'phone',power:'charging',hotel:'lounge',porter:'gate',wrap:'gate',fx:'passport'})[s.id]||null)+'<span class="pill" style="position:absolute;left:12px;top:12px;background:rgba(18,24,58,.55);color:#fff">Partner content</span></div><div style="padding:18px 20px;display:flex;flex-direction:column;gap:10px"><div style="font-size:17px;font-weight:800">'+s.n+' at NAIA '+T().short+'</div>'+['Standard','Plus','Premium'].map((tt,i)=>'<button type="button" class="row" data-act="miniPick"><span class="grow"><span class="t">'+s.n+' · '+tt+'</span><span class="s">Sample option '+(i+1)+' · price set by partner</span></span>'+ic('chev',18,'#5C6480')+'</button>').join('')+'<div class="small">Payment and booking are handled by the partner. Airport Navi shares only your terminal and language.</div></div>';
+  return '<div class="screen" style="background:#fff"><header style="padding:10px 12px;background:#001F60;color:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0"><button type="button" class="back" data-act="back" aria-label="Close service" style="margin-left:0">'+ic('close',22,'#fff')+'</button><span style="width:32px;height:32px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center">'+ic(s.icon,18,'#001F60')+'</span><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800">'+s.n+'</div><div style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:#C9D3F0">'+ic('lock',10,'#C9D3F0',2.5)+'by Demo Partner · sandboxed</div></div><button type="button" class="back" data-act="miniReset" aria-label="Reload" style="margin:0;width:40px">'+ic('reload',18,'#fff')+'</button><button type="button" class="back" data-act="miniMore" aria-label="More actions" style="margin:0;width:40px">'+ic('dots',18,'#fff')+'</button></header><div class="scroll" style="border-top:3px solid var(--tint);background:#FAFAFB">'+body+'</div></div>';
+};
+
+/* ================= render ================= */
+const SCREEN_LIST=[['home','Home'],['location','Where are you?'],['flight','Flight found'],['search','Search & navigate'],['navigate','Guide to gate'],['amenities','Amenities'],['poi','Amenity detail'],['links','Travel forms'],['shops','Shops & lounges'],['shop','Shop profile'],['chat','Concierge'],['services','Services'],['mini','Mini program']];
+const phone=document.getElementById('phone');
+function render(resetScroll){
+  const a=document.activeElement,fid=a&&a.id&&phone.contains(a)?a.id:null,sel=fid&&a.selectionStart!=null?a.selectionStart:null;
+  const sc=phone.querySelector('.scroll'),top=sc&&!resetScroll?sc.scrollTop:0;
+  const name=cur(),fn=S[name]||S.home;
+  phone.innerHTML=fn()+(state.toast?'<div class="toast" role="status">'+esc(state.toast)+'</div>':'');
+  const sc2=phone.querySelector('.scroll');if(sc2&&name!=='chat')sc2.scrollTop=top;
+  if(fid){const el=document.getElementById(fid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel);}catch(e){}}}
+  document.getElementById('jump').innerHTML=SCREEN_LIST.map(([k,l])=>'<button type="button" data-jump="'+k+'" aria-current="'+(name===k)+'">'+l+'</button>').join('');
+  document.getElementById('samples').innerHTML=state.feed.map(r=>{const f=adapt(r);return '<div style="display:flex;justify-content:space-between;gap:8px"><button type="button" data-sample="'+f.code+'" style="border:0;background:transparent;padding:0;text-align:left"><code>'+f.code+'</code> <span class="muted">to '+f.toCity+'</span></button><span class="muted" style="white-space:nowrap">T'+f.terminal+' · Gate '+f.gate+(f.delayed?' · delayed':'')+'</span></div>';}).join('');
+}
+
+/* ================= actions ================= */
+function setFlight(f){state.flight=f;state.flightErr='';state.q='Gate '+f.gate;}
+function mutateFeed(fn){if(!state.flight){toast('Enter a flight first, e.g. PR 102');return false;}const raw=state.feed.find(r=>(r.carrierFsCode+r.flightNumber).toUpperCase()===state.flight.key);fn(raw);raw._updated=fmt(hm(NOW)+7);state.flight=adapt(raw);return true;}
+function simGate(){
+  const f0=state.flight; if(!f0){toast('Enter a flight first, e.g. PR 102');return;}
+  const tm=TERMS[f0.terminal], g0=tm.GATE[f0.gate];
+  const pool=tm.gates.filter(g=>g.zone===g0.zone&&g.g!==g0.g&&!g.group===!g0.group);
+  const ng=pool.sort((a,b)=>Math.abs(b.g-g0.g)-Math.abs(a.g-g0.g))[0]; if(!ng)return;
+  mutateFeed(raw=>{raw._prevGate=g0.g;raw.airportResources.departureGate=String(ng.g);});
+  state.q='Gate '+state.flight.gate;
+  if(state.alertOn&&flightHere(state.flight)){state.nav={type:'gate',id:state.flight.prevGate};if(cur()!=='navigate')state.stack.push('navigate');state.sheet='gate';render(true);}
+  else toast('Gate changed to '+state.flight.gate);
+}
+function simDelay(){if(!mutateFeed(raw=>{raw.status='D';raw.delayMinutes=(raw.delayMinutes||0)+35;}))return;toast(state.flight.code+' delayed · boards '+state.flight.boarding);}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a,[data-act]');if(!t)return;const d=t.dataset;
+  if(d.tab){if(state.flight&&flightHere(state.flight))state.q='Gate '+state.flight.gate;tab(d.tab);return;}
+  if(d.jump){const k=d.jump;
+    if(['flight','navigate'].includes(k)&&!state.flight)setFlight(findFlight('PR102'));
+    if(k==='navigate'){if(!flightHere(state.flight))setTerminal(state.flight.terminal);state.nav={type:'gate',id:state.flight.gate};state.stepsOpen=true;}
+    if(k==='poi')state.params.poi=(POIX(state.params.poi)?state.params.poi:(nearestOf('toilets')||{}).id);
+    if(k==='shop')state.params.shop=(POIX(state.params.shop)?state.params.shop:(T().pois.find(p=>p.featured)||{}).id);
+    if(k==='mini'){state.params.svc=state.params.svc||'taxi';state.miniStep=0;}
+    if(k==='location'){state.pickSel=state.loc.spot;state.pickTerm=state.terminal;}
+    state.stack=k==='home'?['home']:['home',k];state.sheet=null;render(true);return;}
+  if(d.sample){state.flightInput=d.sample;setFlight(findFlight(d.sample));state.stack=['home','flight'];render(true);return;}
+  if(d.go){if(d.go==='location'){state.pickSel=state.loc.spot;state.pickTerm=state.terminal;state.pickQ='';}go(d.go);return;}
+  if(d.dest){const [k,id]=d.dest.split(':');state.nav={type:k,id:k==='gate'?Number(id):id};state.stepsOpen=true;go('navigate');return;}
+  if(d.openPoi){go('poi',{poi:d.openPoi});return;}
+  if(d.openShop){go('shop',{shop:d.openShop});return;}
+  if(d.openSvc){state.miniStep=0;state.miniDest='';go('mini',{svc:d.openSvc});return;}
+  if(d.ask){ask(d.ask);return;}
+  if(d.quick){const [k,v]=d.quick.split(':');if(k==='gate'){state.nav={type:'gate',id:Number(v)};state.stepsOpen=true;go('navigate');}else{state.q=v;render();}return;}
+  if(d.clear){const map={navq:'q',amenq:'amenQ',shopq:'shopQ',svcq:'svcQ',pickq:'pickQ'};state[map[d.clear]]='';render();const el=document.getElementById(d.clear);if(el)el.focus();return;}
+  if(d.amenCat){state.amenCat=d.amenCat;state.amenQ='';render();return;}
+  if(d.shopCat){state.shopCat=d.shopCat;render();return;}
+  if(d.pickKind){state.pickKind=d.pickKind;render();return;}
+  if(d.spot){state.pickSel=d.spot;render();return;}
+  if(d.term){state.pickTerm=d.term;state.pickSel=TERMS[d.term].SPOT[state.pickSel]?state.pickSel:TERMS[d.term].defaultSpot;render();return;}
+  if(d.linksDir){state.params.linksDir=d.linksDir;render();return;}
+  if(d.linkLocal){toast(d.linkLocal+': opens a guide page in the full app');return;}
+  if(d.veh){state.miniVeh=d.veh;render();return;}
+  switch(d.act){
+    case 'panel':setPanel(true);break;
+    case 'panelClose':setPanel(false);break;
+    case 'back':back();break;
+    case 'fab':state.q=state.flight&&flightHere(state.flight)?'Gate '+state.flight.gate:'';go('search');break;
+    case 'navGate':{const f=state.flight;if(!flightHere(f)){go('flight');break;}state.nav={type:'gate',id:f.gate};state.stepsOpen=true;go('navigate');break;}
+    case 'switchToFlightTerm':setTerminal(state.flight.terminal);state.q='Gate '+state.flight.gate;render();toast('Switched to '+T().name+' map');break;
+    case 'clearFlight':state.flight=null;state.flightInput='';state.q='';render();setTimeout(()=>{const el=document.getElementById('flightno');if(el)el.focus();});break;
+    case 'toggleSteps':state.stepsOpen=!state.stepsOpen;render();break;
+    case 'stepFree':state.stepFree=!state.stepFree;render();break;
+    case 'endRoute':state.nav=null;tab('home');toast('Route ended');break;
+    case 'simGate':simGate();break;
+    case 'simDelay':simDelay();break;
+    case 'reroute':state.nav={type:'gate',id:state.flight.gate};state.sheet=null;state.stepsOpen=true;render(true);break;
+    case 'gateDetails':state.sheet=null;state.stack=['home','flight'];render(true);break;
+    case 'confirmLoc':{const tm=TERMS[state.pickTerm],s=tm.SPOT[state.pickSel];if(!s)break;if(state.terminal!==state.pickTerm){state.terminal=state.pickTerm;state.nav=null;}state.loc={x:s.x,y:s.y,zone:s.zone,at:s.at,spot:s.id,label:s.name};back();toast('Location updated');break;}
+    case 'scanInfo':toast('Opens the camera to scan a poster QR');break;
+    case 'lang':toast('Language switch: English only in the pilot');break;
+    case 'report':toast('Thanks. Your report goes to MIAA ops.');break;
+    case 'alerts':state.alertOn=t.checked;break;
+    case 'miniReset':state.miniStep=0;state.miniDest='';render();break;
+    case 'miniMore':toast('Share · Report · About this partner');break;
+    case 'miniPick':state.miniStep=1;render(true);break;
+    case 'reset':state=initial();render(true);toast('Prototype reset');break;
+  }
+});
+document.addEventListener('input',e=>{
+  const k=e.target.dataset&&e.target.dataset.input;if(!k)return;
+  const map={navq:'q',amenq:'amenQ',shopq:'shopQ',svcq:'svcQ',pickq:'pickQ',flightno:'flightInput',chatin:'chatIn',minidest:'miniDest'};
+  state[map[k]]=e.target.value;
+  if(k==='flightno'){if(state.flightErr){state.flightErr='';e.target.style.borderColor='#D5DAE8';const h=document.getElementById('flighterr');if(h){h.style.color='var(--muted)';h.textContent='Printed on your boarding pass. Sample data: try PR 102.';}}return;}
+  if(k==='chatin')return;
+  render();
+});
+document.addEventListener('submit',e=>{
+  const f=e.target.dataset.form;if(!f)return;e.preventDefault();
+  if(f==='flight'){const v=state.flightInput.trim();if(!v){state.flightErr='Enter the flight number from your boarding pass, e.g. PR 102.';render();return;}
+    const fl=findFlight(v);if(!fl){state.flightErr='We couldn’t find '+v.toUpperCase()+' departing NAIA today. Check your boarding pass, or try PR 102.';render();return;}
+    setFlight(fl);go('flight');}
+  if(f==='chat')ask(state.chatIn);
+  if(f==='mini'&&state.miniDest.trim()){state.miniStep=1;render(true);}
+});
+function setPanel(open){const p=document.getElementById('panel'),t=document.getElementById('demoTab'),s=document.getElementById('scrim');p.classList.toggle('open',open);s.classList.toggle('open',open);t.setAttribute('aria-expanded',String(open));try{localStorage.setItem('navi-panel',open?'1':'0');}catch(e){}if(open){setTimeout(()=>{const c=p.querySelector('.panel-close');if(c)c.focus();},50);}else t.focus();}
+try{if(localStorage.getItem('navi-panel')==='1')setPanel(true);}catch(e){}
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(state.sheet){state.sheet=null;render();}else if(document.getElementById('panel').classList.contains('open'))setPanel(false);});
+document.getElementById('credits').innerHTML='Sample photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>, loaded from their public links: '+Object.values(IMG).map(v=>'<a href="'+v.page+'" target="_blank" rel="noopener">'+esc(v.by)+'</a>').join(', ')+' (Unsplash License).';
+render(true);
+})();
+</script>
+
+</body>
+</html>
