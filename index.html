@@ -6,7 +6,7 @@
 <meta name="description" content="Airport Navi: interactive prototype of a no-install, QR-launched wayfinding web app for NAIA Terminal 1 and Terminal 3. Simulated data.">
 <meta name="theme-color" content="#001F60">
 <meta property="og:title" content="Airport Navi Prototype">
-<meta property="og:description" content="Scan a QR, find your gate. Interactive wayfinding prototype for NAIA T1 and T3.">
+<meta property="og:description" content="Scan a QR, find your gate or your bags. Interactive wayfinding prototype for NAIA T1 and T3.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23001F60'/%3E%3Cpolygon points='14 30 50 13 33 49 29 35' fill='%23fff'/%3E%3C/svg%3E">
 <title>Airport Navi Prototype</title>
@@ -130,7 +130,7 @@ a{color:var(--navy)}
 
 /* map screen */
 .mapwrap{position:absolute;inset:0;background:#EEF1F8}
-.mapwrap svg{width:100%;height:100%;display:block}
+.mapwrap>svg,.minimap>svg{width:100%;height:100%;display:block}
 .float-top{position:absolute;left:16px;right:16px;top:14px;display:flex;align-items:center;gap:10px;height:56px;padding:0 8px 0 4px;background:var(--navy);color:#fff;border-radius:28px;box-shadow:0 8px 24px rgba(0,31,96,.3);z-index:3}
 .fbtn{display:flex;align-items:center;gap:6px;height:40px;padding:0 14px;background:var(--paper);border:0;border-radius:999px;box-shadow:0 4px 14px rgba(0,31,96,.18);font-size:12px;font-weight:700;color:var(--navy)}
 .fbtn[aria-pressed="true"]{background:var(--navy);color:#fff}
@@ -159,8 +159,62 @@ a{color:var(--navy)}
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 @keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.typing i{animation:none}}
-</style>
 
+/* ---------- v4: map rendering, motion, scanner ---------- */
+.mapwrap.pan{touch-action:none;cursor:grab}
+.mapwrap.pan.dragging{cursor:grabbing}
+.zoomctl{position:absolute;right:16px;display:flex;flex-direction:column;background:var(--paper);border-radius:14px;box-shadow:0 4px 14px rgba(0,31,96,.18);overflow:hidden;z-index:3}
+.zoomctl button{width:44px;height:42px;border:0;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--navy)}
+.zoomctl button+button{border-top:1px solid var(--line)}
+@keyframes youPulse{0%{transform:scale(.7);opacity:.5}100%{transform:scale(2.6);opacity:0}}
+.you-pulse{transform-box:fill-box;transform-origin:center;animation:youPulse 2.2s ease-out infinite}
+@keyframes flow{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.route-flow{animation:flow 2.8s linear infinite}
+.route-draw{stroke-dasharray:1;animation:flow 1.2s cubic-bezier(.45,0,.2,1) both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.fade-late{animation:fadeIn .5s 1s both}
+@keyframes ghostOut{0%{opacity:.95}100%{opacity:.3}}
+.route-ghost{animation:ghostOut 1.4s ease both}
+@keyframes popIn{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.18);opacity:1}100%{transform:scale(1);opacity:1}}
+.pop{transform-box:fill-box;transform-origin:center;animation:popIn .5s 1s both}
+@keyframes etaFlash{0%,100%{background:#E6ECF8}35%{background:#BFD0F2}}
+.eta{display:flex;align-items:center;gap:10px;margin:0 16px 2px;padding:10px 12px;border-radius:12px;background:var(--tint);font-size:13px;color:var(--navy-ink)}
+.eta b{font-size:17px;color:var(--navy);font-variant-numeric:tabular-nums}
+.eta.flash{animation:etaFlash 1.3s ease 2}
+.cue{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--navy);color:#fff;font-size:13.5px;font-weight:700}
+.cue button{margin-left:auto;height:30px;padding:0 12px;border:1px solid rgba(255,255,255,.4);border-radius:999px;background:transparent;color:#fff;font-size:12px;font-weight:700}
+@keyframes swapIn{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:none}}
+.swap-in .mapwrap{animation:swapIn .5s ease both}
+@keyframes badgeInOut{0%{opacity:0;transform:translate(-50%,8px)}15%,75%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
+.swap-badge{position:absolute;left:50%;top:46%;transform:translate(-50%,0);z-index:6;display:flex;align-items:center;gap:8px;padding:12px 18px;border-radius:16px;background:var(--navy);color:#fff;font-size:15px;font-weight:800;box-shadow:0 12px 30px rgba(0,31,96,.35);animation:badgeInOut 1.8s ease both;pointer-events:none;white-space:nowrap}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;background:var(--tint);border-radius:12px}
+.seg button{height:36px;border:0;border-radius:9px;background:transparent;color:var(--blue-2);font-size:13px;font-weight:600}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--navy);font-weight:800;box-shadow:0 1px 4px rgba(0,31,96,.12)}
+.bagsteps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bagsteps div{display:flex;flex-direction:column;gap:6px;font-size:10.5px;font-weight:600;color:var(--faint);line-height:1.25}
+.bagsteps i{display:block;height:5px;border-radius:3px;background:var(--line-2)}
+.bagsteps .on{color:var(--navy)}.bagsteps .on i{background:var(--navy)}
+.bagsteps .now i{background:linear-gradient(90deg,var(--navy) 0 50%,#8FA3D1 50% 100%);background-size:200% 100%;animation:bagrun 1.4s linear infinite}
+@keyframes bagrun{from{background-position:100% 0}to{background-position:0 0}}
+.ride{display:flex;flex-direction:column;gap:10px;padding:14px;background:#fff;border:1.5px solid var(--line);border-radius:16px;text-align:left;width:100%;color:inherit}
+.ride[aria-checked="true"]{border:2px solid var(--navy);padding:13.5px;box-shadow:0 6px 18px rgba(0,31,96,.12)}
+.ride .rtop{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:800;color:#fff;background:var(--navy-2)}
+.tagrow{display:flex;gap:6px;flex-wrap:wrap}
+.scanview{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 40%,#2A3350 0%,#11162A 60%,#080B16 100%);display:flex;flex-direction:column;color:#fff}
+.scanview .cam{position:absolute;inset:0;opacity:.35;background:repeating-linear-gradient(100deg,transparent 0 60px,rgba(255,255,255,.04) 60px 62px),linear-gradient(180deg,rgba(255,255,255,.06),transparent 40%)}
+.finder{position:relative;width:240px;height:240px;margin:0 auto}
+.finder i{position:absolute;width:44px;height:44px;border:4px solid #fff}
+.finder i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;border-radius:14px 0 0 0}
+.finder i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;border-radius:0 14px 0 0}
+.finder i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;border-radius:0 0 0 14px}
+.finder i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;border-radius:0 0 14px 0}
+.scanline{position:absolute;left:14px;right:14px;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,#8FB0FF,transparent);box-shadow:0 0 14px #8FB0FF;animation:scanline 2.4s ease-in-out infinite}
+@keyframes scanline{0%{top:10%}50%{top:88%}100%{top:10%}}
+.poster{flex-shrink:0;width:132px;display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid rgba(255,255,255,.22);border-radius:14px;background:rgba(255,255,255,.08);color:#fff;text-align:left}
+.qrhero{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--navy);border:0;border-radius:16px;color:#fff;text-align:left;width:100%;box-shadow:0 8px 22px rgba(0,31,96,.25)}
+@media (prefers-reduced-motion:reduce){.you-pulse,.route-flow,.route-draw,.fade-late,.route-ghost,.pop,.eta.flash,.swap-in .mapwrap,.scanline,.swap-badge,.bagsteps .now i{animation:none!important}.route-draw{stroke-dasharray:none}.route-flow{display:none}}
+</style>
 <style>html{-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -181,16 +235,31 @@ a{color:var(--navy)}
     <div class="pcard">
       <h2>Try a flight number</h2>
       <div class="samples" id="samples"></div>
-      <div class="small">Simulated in the Cirium Flight Status format. Clock fixed at 13:02, 28 Sep.</div>
+      <div class="small">Simulated in the Cirium Flight Status format. Clock fixed at 13:02, 28 Sep. Bag status is sample data; in production it comes from NAIA's baggage system.</div>
     </div>
     <div class="pcard">
       <h2>Simulate</h2>
       <div class="sim">
         <button type="button" data-act="simGate">Gate change</button>
         <button type="button" data-act="simDelay">Delay flight</button>
+        <button type="button" data-act="simBag">Next bag status</button>
         <button type="button" class="ghost" data-act="reset">Reset prototype</button>
       </div>
-      <div class="small">Enter a flight first. A gate change re-routes you and shows the alert sheet.</div>
+      <div class="small">Enter a flight first. A gate change re-routes you and shows the alert sheet. On any route, use “Walk” on the map to move the You-are-here dot.</div>
+    </div>
+    <div class="pcard">
+      <h2>Phone compass</h2>
+      <div class="sim">
+        <button type="button" data-act="rotL" aria-label="Turn 45 degrees left">⟲ 45°</button>
+        <button type="button" data-act="rotR" aria-label="Turn 45 degrees right">⟳ 45°</button>
+        <button type="button" class="ghost" data-act="faceRoute">Face the route</button>
+      </div>
+      <div class="small" id="headingNote">The cone on the blue dot shows which way the passenger is facing.</div>
+    </div>
+    <div class="pcard">
+      <h2>Admin &amp; business portal</h2>
+      <div class="small" style="color:var(--muted)">Where NNIC and merchants manage maps, listings, promotions, analytics and partner integrations.</div>
+      <div class="sim"><a id="portalLink" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--navy);background:var(--navy);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;text-decoration:none">Open the portal mock-up ↗</a></div>
     </div>
     <div class="pcard">
       <h2>Jump to screen</h2>
@@ -202,7 +271,7 @@ a{color:var(--navy)}
     </div>
     <div class="pcard">
       <h2>About the maps</h2>
-      <div class="small" style="color:var(--muted)">Schematic, not to scale. Built from public airside guides: T3 domestic gates 117–120 north of the glass partition with bus gates 131–134 at ground level; international gates south along the moving walkway and the south-eastern finger; lounges on Level 4. T1 mid-section with West arm (Gates 9, 15 and hub 10–14, 17) and East arm (Gates 2, 7 and hub 3–6); Gates 1 and 16 down stairs. International gate order in T3 and shop positions are placeholders until MIAA plans arrive.</div>
+      <div class="small" style="color:var(--muted)">Schematic, not to scale. Built from public airside guides: T3 domestic gates 117–120 north of the glass partition with bus gates 131–134 at ground level; international gates south along the moving walkway and the south-eastern finger; lounges on Level 4. T1 mid-section with West arm (Gates 9, 15 and hub 10–14, 17) and East arm (Gates 2, 7 and hub 3–6); Gates 1 and 16 down stairs. Arrivals maps show Level 2 (arrival corridor, immigration) and Level 1 (baggage claim, customs, arrivals hall, pick-up bays) unfolded on one sheet; carousel and bay positions are assumed. International gate order in T3 and shop positions are placeholders until official plans arrive. Drag to pan, scroll or pinch to zoom.</div>
     </div>
   </div>
 </aside>
@@ -259,7 +328,17 @@ const P = {
   scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
   walk:'<circle cx="13" cy="4" r="2"/><path d="m9 20 2-6 3 3v5"/><path d="M7 11l3-3 3 1 2 3h3"/>',
   wall:'<path d="M4 4v16"/><path d="M20 4v16"/><path d="M4 12h16"/>',
-  smoke:'<path d="M3 16h14v4H3z"/><path d="M19 16v4"/><path d="M17 8c0-2 2-2 2-4"/>'
+  smoke:'<path d="M3 16h14v4H3z"/><path d="M19 16v4"/><path d="M17 8c0-2 2-2 2-4"/>',
+  target:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+  minus:'<path d="M5 12h14"/>',
+  qr:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z"/><path d="M20.5 14v.01"/><path d="M14 20.5h.01"/><path d="M17.5 20.5h3v-3"/>',
+  belt:'<rect x="2" y="9" width="20" height="8" rx="4"/><path d="M6 9V6h5v3"/><path d="M13 9V5h5v4"/>',
+  luggage:'<rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V4h6v3"/><path d="M10 11v5"/><path d="M14 11v5"/>',
+  exit:'<path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/>',
+  star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  stamp:'<path d="M9 3h6l-1 7h-4z"/><path d="M4 14h16v4H4z"/><path d="M6 21h12"/>',
+  play:'<path d="m7 4 13 8-13 8z"/>'
 };
 function ic(n,s,c,w){s=s||20;c=c||'currentColor';w=w||2.2;const solid=(n==='plane'||n==='dots');
   return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="'+(solid?c:'none')+'" stroke="'+(solid?'none':c)+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+P[n]+'</svg>';}
@@ -393,21 +472,140 @@ const TERMS = {
  }
 };
 
+/* ---------- v4: arrivals maps (Level 2 arrival corridor + Level 1 claim/hall/curb, shown unfolded) ----------
+   Carousel, bay, desk and toilet positions are ASSUMED — verify with the terminal plans. */
+TERMS['3'].rooms=[{x:92,y:422,w:56,h:36,t:'Café'},{x:82,y:494,w:54,h:32,t:'Gifts'},{x:230,y:489,w:54,h:32,t:'Food'},{x:274,y:419,w:52,h:30,t:'Lounge'},{x:258,y:648,w:56,h:34,t:'Food'},{x:98,y:684,w:54,h:32,t:'Café'},{x:282,y:690,w:48,h:30,t:'Pharmacy'}];
+TERMS['1'].rooms=[{x:374,y:331,w:50,h:28,t:'Gifts'},{x:366,y:410,w:56,h:30,t:'Cafés'}];
+TERMS['3'].searchVB='-30 280 460 1000';TERMS['1'].searchVB='-20 120 940 1100';
+const T3G=[[101,78,790,'a2'],[102,78,850,'a3'],[103,78,910,'a4'],[104,78,970,'a5'],[105,322,790,'a2'],[106,322,850,'a3'],[107,322,910,'a4'],[108,322,970,'a5'],[109,168,1075,'f1'],[110,352,1075,'f1'],[111,168,1135,'f2'],[112,352,1135,'f2'],[113,168,1195,'f3'],[114,352,1195,'f3'],[115,168,1250,'f4'],[116,352,1250,'f4']];
+TERMS['3a']={
+  name:'Terminal 3', short:'T3', arr:true, mPerU:1.0, vb:[-10,-2,420,1312], searchVB:'-30 0 460 1320',
+  zones:{arr:'Arriving · before customs',land:'Arrivals hall'},
+  panels:[{x:5,y:16,w:390,h:514,t:'BAGGAGE CLAIM · ARRIVALS HALL · CURB',l:'L1'},{x:5,y:544,w:390,h:754,t:'ARRIVALS · IMMIGRATION',l:'L2'}],
+  nodes:{k1:[60,72,'land',1],k2:[130,72,'land',1],k3:[200,72,'land',1],k4:[270,72,'land',1],k5:[340,72,'land',1],
+    exA:[130,112,'land',1],exB:[270,112,'land',1],h1:[130,170,'land',1],h2:[200,170,'land',1],h3:[270,170,'land',1],
+    cus_n:[200,222,'land',1],cus_s:[200,272,'arr',1],c0:[200,300,'arr',1],c1:[200,360,'arr',1],c2:[200,420,'arr',1],c3:[200,475,'arr',1],esc1:[200,508,'arr',1],
+    esc2:[200,576,'arr',2],imm_n:[200,612,'arr',2],imm_s:[200,700,'arr',2],
+    a1:[200,745,'arr',2],a2:[200,790,'arr',2],a3:[200,850,'arr',2],a4:[200,910,'arr',2],a5:[200,970,'arr',2],a6:[200,1015,'arr',2],
+    f1:[260,1075,'arr',2],f2:[260,1135,'arr',2],f3:[260,1195,'arr',2],f4:[260,1250,'arr',2]},
+  edges:[['k1','k2'],['k2','k3'],['k3','k4'],['k4','k5'],['k2','exA'],['k4','exB'],['exA','h1'],['exB','h3'],['h1','h2'],['h2','h3'],['cus_n','h2'],
+    ['cus_s','cus_n',{oneway:1,kind:'customs',len:40,wait:2}],['c0','cus_s'],['c1','c0'],['c2','c1'],['c3','c2'],['esc1','c3'],
+    ['esc2','esc1',{oneway:1,kind:'esc',len:30}],['imm_n','esc2'],['imm_s','imm_n',{oneway:1,kind:'imm',len:60,wait:10}],
+    ['a1','imm_s'],['a2','a1'],['a3','a2'],['a4','a3'],['a5','a4'],['a6','a5'],['f1','a6'],['f2','f1'],['f3','f2'],['f4','f3']],
+  shapes:[{k:'curb',x:15,y:32,w:370,h:64},{k:'rect',x:15,y:102,w:370,h:136,r:14},{k:'rect',x:15,y:248,w:370,h:272,r:14},
+    {k:'rect',x:15,y:558,w:370,h:166,r:18},{k:'rect',x:45,y:724,w:310,h:311,r:18},{k:'poly',pts:'150,1010 370,1010 385,1285 135,1285'}],
+  checks:[{x1:15,y1:243,x2:385,y2:243,label:'Customs · one way ↑'},{x1:15,y1:656,x2:385,y2:656,label:'Immigration counters · one way ↑',booths:1}],
+  walls:[], walkways:[{x1:222,y1:1005,x2:222,y2:755,label:'Moving walkway',arrow:'↑'}],
+  labels:[{x:305,y:128,t:'ARRIVALS HALL'},{x:305,y:266,t:'BAGGAGE CLAIM'},{x:305,y:585,t:'IMMIGRATION HALL'},{x:300,y:745,t:'ARRIVAL CORRIDOR'},{x:210,y:1275,t:'SOUTH-EAST FINGER'},{x:200,y:93,t:'PICK-UP CURB',small:1}],
+  nodeNames:{esc1:'the escalators',a1:'the immigration hall',f1:'the moving walkway',h2:'the meeting area',exA:'Exit A',exB:'Exit B',cus_s:'the customs exit'},
+  levelMarks:[],
+  doors:[{x:130,y:102,t:'Exit A'},{x:270,y:102,t:'Exit B'}],
+  belts:[[1,95,475],[2,95,420],[3,95,360],[4,95,300],[5,305,475],[6,305,420],[7,305,360],[8,305,300]],
+  bays:{n:13,y:50,x0:36,dx:27.3,kinds:{4:'Ride-hail',7:'Taxi',10:'Bus'}},
+  gates:T3G.map(([g,x,y,at])=>({g,x,y,at,zone:'arr'})),
+  pois:[
+    {id:'c1',cat:'carousel',name:'Carousel 1',sub:'Baggage claim · Level 1',x:150,y:475,zone:'arr'},{id:'c2',cat:'carousel',name:'Carousel 2',sub:'Baggage claim · Level 1',x:150,y:420,zone:'arr'},
+    {id:'c3',cat:'carousel',name:'Carousel 3',sub:'Baggage claim · Level 1',x:150,y:360,zone:'arr'},{id:'c4',cat:'carousel',name:'Carousel 4',sub:'Baggage claim · Level 1',x:150,y:300,zone:'arr'},
+    {id:'c5',cat:'carousel',name:'Carousel 5',sub:'Baggage claim · Level 1',x:250,y:475,zone:'arr'},{id:'c6',cat:'carousel',name:'Carousel 6',sub:'Baggage claim · Level 1',x:250,y:420,zone:'arr'},
+    {id:'c7',cat:'carousel',name:'Carousel 7',sub:'Baggage claim · Level 1',x:250,y:360,zone:'arr'},{id:'c8',cat:'carousel',name:'Carousel 8',sub:'Baggage claim · Level 1',x:250,y:300,zone:'arr'},
+    {id:'bay4',cat:'pickup',name:'Pick-up Bay 4',sub:'Ride-hail pick-up · outside Exit A',x:118,y:50,zone:'land'},
+    {id:'bay7',cat:'taxi',name:'Taxi queue · Bay 7',sub:'Metered and coupon taxis',x:200,y:50,zone:'land'},
+    {id:'bay10',cat:'bus',name:'Airport bus · Bay 10',sub:'City buses and hotel shuttles',x:282,y:50,zone:'land'},
+    {id:'exitA',cat:'exit',name:'Exit A',sub:'To pick-up Bays 1–6',x:130,y:104,zone:'land'},{id:'exitB',cat:'exit',name:'Exit B',sub:'To Bays 7–13',x:270,y:104,zone:'land'},
+    {id:'wc_c',cat:'toilets',name:'Toilets near Carousels 5–6',sub:'Baggage claim · accessible',x:352,y:448,zone:'arr',feat:['access','baby']},
+    {id:'wc_c1',cat:'toilets',name:'Toilets near Carousels 1–2',sub:'Baggage claim',x:48,y:448,zone:'arr',feat:['access']},
+    {id:'bagsvc',cat:'info',name:'Baggage services · lost & found',sub:'Baggage claim, by Carousel 4',x:48,y:272,zone:'arr',feat:['info']},
+    {id:'fx_c',cat:'atm',name:'Currency exchange, baggage claim',sub:'By Carousel 8',x:352,y:272,zone:'arr',feat:['card']},
+    {id:'simdesk',cat:'retail',name:'SIM and pocket WiFi counters',sub:'Arrivals hall, left of Exit A',x:52,y:140,zone:'land',hours:'24 h',price:'₱',desc:'Prepaid SIM cards, eSIM help and pocket WiFi rental.',tags:['Cards accepted','E-wallets'],items:['Tourist SIM','Pocket WiFi','Load']},
+    {id:'fx',cat:'atm',name:'Money exchange and ATMs',sub:'Arrivals hall',x:348,y:150,zone:'land',feat:['card']},
+    {id:'info',cat:'info',name:'Information and transport desk',sub:'Arrivals hall, facing the customs exit',x:262,y:208,zone:'land',feat:['info']},
+    {id:'wc_h',cat:'toilets',name:'Toilets, arrivals hall',sub:'Accessible · baby change',x:348,y:212,zone:'land',feat:['access','baby']},
+    {id:'meet',cat:'place',name:'Meeting area',sub:'Arrivals hall, between Exits A and B',x:200,y:132,zone:'land'},
+    {id:'cafe_h',cat:'dining',name:'Coffee kiosk, arrivals hall',sub:'Landside · open to greeters',x:60,y:208,zone:'land',hours:'24 h',price:'₱₱',desc:'Coffee, bread and bottled water for arrivals and the people meeting them.',tags:['Cards accepted','E-wallets'],items:['Brewed coffee','Pandesal','Bottled water']},
+    {id:'wc_l2',cat:'toilets',name:'Toilets, arrival corridor',sub:'Near Gates 106–107',x:290,y:880,zone:'arr',feat:['access']},
+    {id:'etravel',cat:'info',name:'eTravel help desk',sub:'Before the immigration counters',x:335,y:700,zone:'arr',feat:['info']}
+  ],
+  spots:[
+    {id:'s_g110',kind:'gates',name:'Gate 110 arrival bridge',sub:'Level 2 · south-east finger',x:330,y:1075,zone:'arr',face:270,qr:'T3-L2-G110'},
+    {id:'s_g104',kind:'gates',name:'Gate 104 arrival bridge',sub:'Level 2 · south corridor',x:104,y:970,zone:'arr',face:90,qr:'T3-L2-G104'},
+    {id:'s_imm',kind:'counters',name:'After the immigration counters',sub:'Level 2 · arrivals',node:'imm_n',face:0,qr:'T3-L2-IM1'},
+    {id:'s_esc',kind:'signs',name:'Foot of the escalators, baggage claim',sub:'Level 1',node:'esc1',face:0,qr:'T3-L1-E01'},
+    {id:'s_c5',kind:'signs',name:'Carousel 5',sub:'Baggage claim · Level 1',x:238,y:475,zone:'arr',face:90,qr:'T3-L1-C05'},
+    {id:'s_hall',kind:'counters',name:'Customs exit, arrivals hall',sub:'Level 1 · landside',node:'cus_n',face:0,qr:'T3-L1-H01'},
+    {id:'s_exA',kind:'signs',name:'Exit A',sub:'Level 1 · to the pick-up bays',node:'exA',face:0,qr:'T3-L1-XA'}
+  ],
+  defaultSpot:'s_esc', rideBay:{hail:'bay4',taxi:'bay7'}
+};
+TERMS['1a']={
+  name:'Terminal 1', short:'T1', arr:true, mPerU:0.6, vb:[-15,-6,930,650], searchVB:'-20 -200 940 1100',
+  zones:{arr:'Arriving · before customs',land:'Arrivals hall'},
+  panels:[{x:10,y:12,w:880,h:330,t:'BAGGAGE CLAIM · ARRIVALS HALL · CURB',l:'L1'},{x:10,y:354,w:880,h:282,t:'ARRIVALS · IMMIGRATION',l:'L2'}],
+  nodes:{k1:[230,62,'land',1],kA:[330,62,'land',1],k2:[450,62,'land',1],kB:[570,62,'land',1],k3:[670,62,'land',1],
+    exA:[330,94,'land',1],exB:[570,94,'land',1],h1:[330,126,'land',1],h2:[450,126,'land',1],h3:[570,126,'land',1],
+    cus_n:[450,152,'land',1],cus_s:[450,190,'arr',1],cl0:[450,215,'arr',1],cl1:[450,285,'arr',1],esc1:[450,320,'arr',1],
+    esc2:[450,390,'arr',2],imm_n:[450,418,'arr',2],imm_s:[450,480,'arr',2],
+    mc:[450,520,'arr',2],aw1:[350,520,'arr',2],aw2:[240,520,'arr',2],hw:[120,520,'arr',2],ae1:[550,520,'arr',2],ae2:[660,520,'arr',2],he:[780,520,'arr',2]},
+  edges:[['k1','kA'],['kA','k2'],['k2','kB'],['kB','k3'],['kA','exA'],['kB','exB'],['exA','h1'],['exB','h3'],['h1','h2'],['h2','h3'],['cus_n','h2'],
+    ['cus_s','cus_n',{oneway:1,kind:'customs',len:40,wait:2}],['cl0','cus_s'],['cl1','cl0'],['esc1','cl1'],
+    ['esc2','esc1',{oneway:1,kind:'esc',len:30}],['imm_n','esc2'],['imm_s','imm_n',{oneway:1,kind:'imm',len:50,wait:10}],
+    ['mc','imm_s'],['aw1','mc'],['aw2','aw1'],['hw','aw2'],['ae1','mc'],['ae2','ae1'],['he','ae2']],
+  shapes:[{k:'curb',x:180,y:32,w:540,h:56},{k:'rect',x:180,y:96,w:540,h:66,r:12},{k:'rect',x:250,y:174,w:400,h:160,r:12},
+    {k:'rect',x:380,y:370,w:140,h:180,r:16},{k:'rect',x:200,y:490,w:500,h:60,r:10},{k:'circle',cx:120,cy:520,r:104},{k:'circle',cx:780,cy:520,r:104}],
+  checks:[{x1:180,y1:168,x2:720,y2:168,label:'Customs · one way ↑'},{x1:380,y1:450,x2:520,y2:450,label:'Immigration · one way ↑',booths:1}],
+  walls:[], walkways:[],
+  labels:[{x:640,y:112,t:'ARRIVALS HALL'},{x:600,y:192,t:'BAGGAGE CLAIM'},{x:120,y:402,t:'WEST HUB'},{x:780,y:402,t:'EAST HUB'},{x:450,y:84,t:'PICK-UP CURB',small:1}],
+  nodeNames:{esc1:'the escalators',mc:'immigration',hw:'the West hub',he:'the East hub',exA:'Exit A',exB:'Exit B',h2:'the meeting area'},
+  levelMarks:[],
+  doors:[{x:330,y:96,t:'Exit A'},{x:570,y:96,t:'Exit B'}],
+  belts:[[1,330,285],[2,330,215],[3,570,285],[4,570,215]],
+  bays:{n:6,y:46,x0:230,dx:88,kinds:{2:'Bus',4:'Ride-hail',6:'Taxi'}},
+  gates:[[10,120,432],[11,55,460],[12,33,520],[13,55,580],[14,120,608],[17,178,590]].map(([g,x,y])=>({g,x,y,at:'hw',zone:'arr'})).concat([[3,780,432],[4,845,460],[5,867,520],[6,845,580]].map(([g,x,y])=>({g,x,y,at:'he',zone:'arr'}))),
+  pois:[
+    {id:'c1',cat:'carousel',name:'Carousel 1',sub:'Baggage claim · Level 1',x:385,y:285,zone:'arr'},{id:'c2',cat:'carousel',name:'Carousel 2',sub:'Baggage claim · Level 1',x:385,y:215,zone:'arr'},
+    {id:'c3',cat:'carousel',name:'Carousel 3',sub:'Baggage claim · Level 1',x:515,y:285,zone:'arr'},{id:'c4',cat:'carousel',name:'Carousel 4',sub:'Baggage claim · Level 1',x:515,y:215,zone:'arr'},
+    {id:'bay4',cat:'pickup',name:'Pick-up Bay 4',sub:'Ride-hail pick-up · outside Exit B',x:494,y:46,zone:'land'},
+    {id:'bay6',cat:'taxi',name:'Taxi queue · Bay 6',sub:'Metered and coupon taxis',x:670,y:46,zone:'land'},
+    {id:'bay2',cat:'bus',name:'Airport bus · Bay 2',sub:'City buses and hotel shuttles',x:318,y:46,zone:'land'},
+    {id:'exitA',cat:'exit',name:'Exit A',sub:'To Bays 1–3',x:330,y:98,zone:'land'},{id:'exitB',cat:'exit',name:'Exit B',sub:'To Bays 4–6',x:570,y:98,zone:'land'},
+    {id:'wc_c',cat:'toilets',name:'Toilets near Carousels 3–4',sub:'Baggage claim · accessible',x:628,y:318,zone:'arr',feat:['access','baby']},
+    {id:'bagsvc',cat:'info',name:'Baggage services · lost & found',sub:'Baggage claim, by Carousel 1',x:272,y:318,zone:'arr',feat:['info']},
+    {id:'simdesk',cat:'retail',name:'SIM and pocket WiFi counters',sub:'Arrivals hall',x:640,y:140,zone:'land',hours:'24 h',price:'₱',desc:'Prepaid SIM cards, eSIM help and pocket WiFi rental.',tags:['Cards accepted','E-wallets'],items:['Tourist SIM','Pocket WiFi','Load']},
+    {id:'fx',cat:'atm',name:'Money exchange and ATMs',sub:'Arrivals hall',x:250,y:140,zone:'land',feat:['card']},
+    {id:'info',cat:'info',name:'Information and transport desk',sub:'Arrivals hall',x:520,y:146,zone:'land',feat:['info']},
+    {id:'wc_h',cat:'toilets',name:'Toilets, arrivals hall',sub:'Accessible',x:205,y:126,zone:'land',feat:['access']},
+    {id:'meet',cat:'place',name:'Meeting area',sub:'Arrivals hall, between the exits',x:450,y:108,zone:'land'},
+    {id:'wc_l2',cat:'toilets',name:'Toilets, west arrival corridor',sub:'Level 2',x:300,y:566,zone:'arr',feat:['access']}
+  ],
+  spots:[
+    {id:'s_g12',kind:'gates',name:'Gate 12 arrival bridge',sub:'Level 2 · West hub',x:72,y:520,zone:'arr',face:90,qr:'T1-L2-G12'},
+    {id:'s_imm',kind:'counters',name:'After the immigration counters',sub:'Level 2 · arrivals',node:'imm_n',face:0,qr:'T1-L2-IM1'},
+    {id:'s_esc',kind:'signs',name:'Foot of the escalators, baggage claim',sub:'Level 1',node:'esc1',face:0,qr:'T1-L1-E01'},
+    {id:'s_hall',kind:'counters',name:'Customs exit, arrivals hall',sub:'Level 1 · landside',node:'cus_n',face:0,qr:'T1-L1-H01'}
+  ],
+  defaultSpot:'s_esc', rideBay:{hail:'bay4',taxi:'bay6'}
+};
+/* QR anchors on the departures maps: code + the way the poster faces (0 = map up) */
+[['3',{s_isec:[270,'T3-L3-S01'],s_df:[180,'T3-L3-D01'],s_105:[180,'T3-L3-G105'],s_walk:[180,'T3-L3-W01'],s_112:[90,'T3-L3-G112'],s_dsec:[270,'T3-L3-S02'],s_cafe:[0,'T3-L3-C01'],s_118:[0,'T3-L3-G118']}],
+ ['1',{s_msec:[0,'T1-L3-S01'],s_df1:[0,'T1-L3-D01'],s_hw:[90,'T1-L3-W01'],s_he:[270,'T1-L3-E01'],s_cafe1:[270,'T1-L3-C15']}]].forEach(([k,m])=>TERMS[k].spots.forEach(s=>{if(m[s.id]){s.face=m[s.id][0];s.qr=m[s.id][1];}}));
+
 /* attach every place to its nearest corridor node */
 function d2(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1]);}
 Object.values(TERMS).forEach(t=>{
+  Object.values(t.nodes).forEach(n=>{if(n[3]==null)n[3]=3;});
   const near=(x,y,zone)=>{let best=null,bd=1e9;Object.entries(t.nodes).forEach(([id,n])=>{if(n[2]!==zone)return;const d=d2([x,y],n);if(d<bd){bd=d;best=id;}});return best;};
   t.gates.forEach(g=>{g.type='gate';g.name='Gate '+g.g;});
-  t.pois.forEach(p=>{p.at=p.at||(p.level&&p.via==='lift'?'ilift':near(p.x,p.y,p.zone));});
-  t.spots.forEach(s=>{if(s.node){const n=t.nodes[s.node];s.x=n[0];s.y=n[1];s.zone=n[2];s.at=s.node;}else s.at=near(s.x,s.y,s.zone);});
+  t.pois.forEach(p=>{p.at=p.at||(p.level&&p.via==='lift'?'ilift':near(p.x,p.y,p.zone));p.flr=t.nodes[p.at][3];});
+  t.spots.forEach(s=>{if(s.node){const n=t.nodes[s.node];s.x=n[0];s.y=n[1];s.zone=n[2];s.at=s.node;}else s.at=near(s.x,s.y,s.zone);s.level=t.nodes[s.at][3];});
   t.POI=Object.fromEntries(t.pois.map(p=>[p.id,p]));
   t.GATE=Object.fromEntries(t.gates.map(g=>[g.g,g]));
   t.SPOT=Object.fromEntries(t.spots.map(s=>[s.id,s]));
-  t.adj={};Object.keys(t.nodes).forEach(k=>t.adj[k]=[]);
-  t.edges.forEach(([a,b])=>{const w=d2(t.nodes[a],t.nodes[b]);t.adj[a].push([b,w]);t.adj[b].push([a,w]);});
+  t.adj={};t.emeta={};Object.keys(t.nodes).forEach(k=>t.adj[k]=[]);
+  t.edges.forEach(([a,b,o])=>{o=o||{};const w=o.len!=null?o.len:d2(t.nodes[a],t.nodes[b]);t.adj[a].push([b,w]);t.emeta[a+'>'+b]=o;if(!o.oneway){t.adj[b].push([a,w]);t.emeta[b+'>'+a]=o;}});
+  t.rooms=t.rooms||[];t.panels=t.panels||[];t.checks=t.checks||[];t.doors=t.doors||[];t.belts=t.belts||[];
   t.cache={};
 });
-const T=()=>TERMS[state.terminal];
+const mk=(term,level)=>TERMS[level==='arr'?term+'a':term];
+const T=()=>mk(state.terminal,state.level);
 const POIX=id=>T().POI[id];
 function dijkstra(t,src){if(t.cache[src])return t.cache[src];const dist={},prev={},q=new Set(Object.keys(t.nodes));Object.keys(t.nodes).forEach(k=>dist[k]=Infinity);dist[src]=0;
   while(q.size){let u=null;q.forEach(k=>{if(u===null||dist[k]<dist[u])u=k;});q.delete(u);if(dist[u]===Infinity)break;t.adj[u].forEach(([v,w])=>{if(dist[u]+w<dist[v]){dist[v]=dist[u]+w;prev[v]=u;}});}
@@ -421,22 +619,30 @@ function viaText(p){
   if(p.via==='stairs')return (state.stepFree?'Ask staff for the lift':'Take the stairs')+(p.level==='upper'?' up':' down')+' to the '+(p.type==='gate'?'holding area':LVL[p.level]);
   return '';
 }
+function specialText(m){
+  if(m.kind==='esc')return state.stepFree?'Take the lift down to Level 1 (next to the escalators)':'Take the escalators down to Level 1, baggage claim';
+  if(m.kind==='imm')return 'Queue at arrivals immigration. Have your passport and eTravel QR ready';
+  if(m.kind==='customs')return 'Go through customs: green lane if you have nothing to declare';
+  return '';
+}
 function destObj(dest){const t=T();return dest.type==='gate'?t.GATE[dest.id]:t.POI[dest.id];}
-function walkPath(A,B){ // A,B: {x,y,zone,at}
-  const t=T(); if(!A||!B||A.zone!==B.zone)return null;
+function walkPath(A,B,tm){ // A,B: {x,y,zone,at}
+  const t=tm||T(); if(!A||!B||!A.at||!B.at)return null;
   const {dist,prev}=dijkstra(t,A.at); if(dist[B.at]===Infinity)return null;
   const chain=[];let c=B.at;while(c){chain.unshift(c);c=prev[c];}
   let pts=[[A.x,A.y]].concat(chain.map(k=>[t.nodes[k][0],t.nodes[k][1]]),[[B.x,B.y]]);
   pts=pts.filter((p,i)=>i===0||d2(p,pts[i-1])>2);
-  // drop a first node if we'd walk backwards past it
-  if(pts.length>2){const a=pts[0],b=pts[1],c2=pts[2];if(d2(a,c2)<d2(b,c2)&&d2(a,b)<60)pts.splice(1,1);}
+  // drop a first node if we'd walk backwards past it (never the start of a checkpoint or level change)
+  if(pts.length>2&&!(chain.length>1&&t.emeta[chain[0]+'>'+chain[1]]&&t.emeta[chain[0]+'>'+chain[1]].kind)){const a=pts[0],b=pts[1],c2=pts[2];if(d2(a,c2)<d2(b,c2)&&d2(a,b)<60)pts.splice(1,1);}
   let u=0;for(let i=1;i<pts.length;i++)u+=d2(pts[i],pts[i-1]);
-  return {pts,chain,units:u,m:Math.round(u*t.mPerU)};
+  let extra=0;for(let i=1;i<chain.length;i++){const m=t.emeta[chain[i-1]+'>'+chain[i]];if(m&&m.kind){if(m.len!=null)u+=m.len-d2(t.nodes[chain[i-1]],t.nodes[chain[i]]);extra+=(m.wait||0)+(m.kind==='esc'?1:0);}}
+  return {pts,chain,units:u,m:Math.round(u*t.mPerU),extra};
 }
-function walkInfo(o){const w=walkPath(state.loc,o);if(!w)return null;const extra=(o.level&&o.level!==3)?1:0;return {m:w.m,mins:Math.max(1,Math.ceil(w.m/70))+extra};}
+function walkInfo(o,from){const w=walkPath(from||state.loc,o);if(!w)return null;const extra=w.extra+((o.level&&o.level!==3)?1:0);return {m:w.m,mins:Math.max(1,Math.ceil(w.m/70))+extra,extra:w.extra};}
 function wm(o){const w=walkInfo(o);return w?w.mins:null;}
 const COMPASS=['east','south-east','south','south-west','west','north-west','north','north-east'];
 function heading(a,b){const ang=Math.atan2(b[1]-a[1],b[0]-a[0]);return ((Math.round(ang/(Math.PI/4))%8)+8)%8;}
+function bearing(a,b){return (Math.atan2(b[0]-a[0],-(b[1]-a[1]))*180/Math.PI+360)%360;}
 function gatesNear(nodeIds,exclude){const t=T();return t.gates.filter(g=>!g.level&&nodeIds.includes(g.at)&&g.g!==exclude).map(g=>g.g).sort((a,b)=>a-b);}
 function gateRange(gs){if(!gs.length)return '';if(gs.length===1)return 'Gate '+gs[0];if(gs.length===2)return 'Gates '+gs[0]+' and '+gs[1];return 'Gates '+gs[0]+'–'+gs[gs.length-1];}
 function route(dest){
@@ -444,88 +650,149 @@ function route(dest){
   const w=walkPath(state.loc,o);
   if(!w)return {blocked:true,o,name:o.name};
   const pts=w.pts, steps=[];
-  // merge into legs by heading
-  const legs=[];for(let i=1;i<pts.length;i++){const h=heading(pts[i-1],pts[i]);const len=d2(pts[i-1],pts[i]);const L=legs[legs.length-1];if(L&&L.h===h){L.to=i;L.len+=len;}else legs.push({h,from:i-1,to:i,len});}
-  // node ids per point (skip first/last)
+  // node ids per point
   const ptNode=pts.map(p=>{const k=Object.keys(t.nodes).find(k=>t.nodes[k][0]===p[0]&&t.nodes[k][1]===p[1]);return k||null;});
-  const finalLeg=legs.length>1?legs.pop():null; // short hop into the gate/place
+  // merge into legs by heading; checkpoints and level changes are legs of their own
+  const legs=[];for(let i=1;i<pts.length;i++){const a=ptNode[i-1],b=ptNode[i],meta=a&&b?t.emeta[a+'>'+b]:null;const len=d2(pts[i-1],pts[i]);
+    if(meta&&meta.kind){legs.push({special:meta,from:i-1,to:i,len:meta.len!=null?meta.len:len});continue;}
+    const h=heading(pts[i-1],pts[i]);const L=legs[legs.length-1];if(L&&!L.special&&L.h===h){L.to=i;L.len+=len;}else legs.push({h,from:i-1,to:i,len});}
+  const finalLeg=legs.length>1&&!legs[legs.length-1].special?legs.pop():null; // short hop into the gate/place
   legs.forEach((L,i)=>{
-    const passed=gatesNear(ptNode.slice(L.from+1,L.to+1).filter(Boolean).filter(k=>k!==o.at),dest.type==='gate'?dest.id:null);
+    if(L.special){steps.push({t:specialText(L.special),m:(L.special.wait||1),meters:Math.round(L.len*t.mPerU),kind:L.special.kind});return;}
+    const passed=gatesNear(ptNode.slice(L.from+1,L.to+1).filter(Boolean).filter(k=>k!==o.at&&!(i===0&&k===state.loc.at)),dest.type==='gate'?dest.id:null);
     const endName=(t.nodeNames||{})[ptNode[L.to]];
     const mins=Math.max(1,Math.round(L.len*t.mPerU/70));
+    const prevL=legs[i-1];
     let txt;
     if(i===0) txt='Head '+COMPASS[L.h];
-    else { const prevL=legs[i-1]; const turn=((L.h-prevL.h)+8)%8; txt=(turn===1||turn===2?(turn===1?'Bear right':'Turn right'):turn===7||turn===6?(turn===7?'Bear left':'Turn left'):'Continue')+' and head '+COMPASS[L.h]; }
+    else if(prevL.special) txt=(prevL.special.kind==='esc'?'At the bottom, head ':prevL.special.kind==='imm'?'After the counters, head ':'Into the arrivals hall, head ')+COMPASS[L.h];
+    else { const turn=((L.h-prevL.h)+8)%8; txt=(turn===1||turn===2?(turn===1?'Bear right':'Turn right'):turn===7||turn===6?(turn===7?'Bear left':'Turn left'):'Continue')+' and head '+COMPASS[L.h]; }
     if(passed.length) txt+=', past '+gateRange(passed);
-    if(endName&&!(i===legs.length-1&&o.at===ptNode[L.to]&&!endName)) txt+=(passed.length?', to ':' to ')+endName;
-    steps.push({t:txt,m:mins,meters:Math.round(L.len*t.mPerU)});
+    if(endName&&!(legs[i+1]&&legs[i+1].special)) txt+=(passed.length?', to ':' to ')+endName;
+    steps.push({t:txt,m:mins,meters:Math.round(L.len*t.mPerU),h:L.h});
   });
   if(!steps.length) steps.push({t:'You’re right next to it',m:1});
   if(o.level&&o.level!==3) steps.push({t:viaText(o),m:1});
   // side of final target
   let side='ahead';
   if(finalLeg){const a=pts[finalLeg.from-1]||pts[0],b=pts[finalLeg.from],c=pts[finalLeg.to];const cr=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);side=Math.abs(cr)<1?'straight ahead':(cr>0?'on your right':'on your left');}
-  const last=o.type==='gate'?(o.level?'The Gate '+o.g+' holding area is '+(o.via==='esc'?'at the foot of the escalators':'at the bottom of the stairs'):'Gate '+o.g+' is '+side):(o.level&&o.level!==3?o.name+' is signposted from there':o.name+' is '+side);
+  const last=o.type==='gate'?(o.level?'The Gate '+o.g+' holding area is '+(o.via==='esc'?'at the foot of the escalators':'at the bottom of the stairs'):'Gate '+o.g+' is '+side)
+    :(o.level&&o.level!==3?o.name+' is signposted from there':o.cat==='pickup'||o.cat==='taxi'||o.cat==='bus'?o.name.replace(/^Taxi queue · /,'The taxi queue at ')+' is '+side+' at the curb':o.name+' is '+side);
   steps.push({t:last,m:1});
-  const mins=Math.max(1,Math.ceil(w.m/70))+((o.level&&o.level!==3)?1:0);
-  return {pts,mins,m:w.m,steps,o,name:o.name};
+  const mins=Math.max(1,Math.ceil(w.m/70))+w.extra+((o.level&&o.level!==3)?1:0);
+  const first=legs.find(L=>!L.special);
+  return {pts,mins,m:w.m,steps,o,name:o.name,extra:w.extra,startBearing:pts.length>1?bearing(pts[0],pts[1]):null,endBearing:pts.length>1?bearing(pts[pts.length-2],pts[pts.length-1]):null,hasFirst:!!first};
 }
-
+function blockedMsg(o){
+  if(o.zone==='arr'&&state.loc.zone==='land')return {h:o.name+' is back through customs',p:'You’ve already left baggage claim. It can’t be re-entered from the arrivals hall; for a missing bag, ask the information desk to call Baggage Services.'};
+  if(state.loc.zone==='arr'&&o.zone==='arr')return {h:'No route to '+o.name,p:'Arrival corridors are one way toward immigration. Follow the “Arrivals” signs, or ask airport staff.'};
+  return {h:o.name+' is on the '+(o.zone==='dom'?'domestic':'international')+' side',p:'You’re on the '+(zoneName(state.loc.zone)||'other side').toLowerCase()+'. The glass partition in the central hall can’t be crossed after security. If your boarding pass shows this gate, speak to airline staff.'};
+}
 /* ================= map drawing ================= */
 const FONT='DM Sans,sans-serif';
+function vbArr(vb){return String(vb).trim().split(/[ ,]+/).map(Number);}
+function halo(){return ' paint-order="stroke" stroke="#F4F6FB" stroke-width="3.2" stroke-linejoin="round"';}
+function glyph(n,x,y,sz,col){return '<svg x="'+(x-sz/2)+'" y="'+(y-sz/2)+'" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" overflow="visible">'+P[n]+'</svg>';}
+function conePath(r,a){const q=a*Math.PI/180,x=r*Math.sin(q),y=-r*Math.cos(q);return 'M0 0L'+(-x).toFixed(2)+' '+y.toFixed(2)+'A'+r.toFixed(2)+' '+r.toFixed(2)+' 0 0 1 '+x.toFixed(2)+' '+y.toFixed(2)+'Z';}
+function pathD(pts){return 'M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L');}
+function youHeading(r){return state.heading!=null?state.heading:(r&&r.startBearing!=null?r.startBearing:0);}
 function floorSVG(opt){
-  opt=opt||{}; const t=T();
-  const vb=opt.vb||t.vb.join(' ');
-  let s='<svg viewBox="'+vb+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(opt.label||(t.name+' Level 3 departures map'))+'">';
-  s+='<rect x="-2000" y="-2000" width="5000" height="5000" fill="#EEF1F8"/>';
-  s+='<g stroke="#E1E6F0" stroke-width="1">';for(let i=-200;i<1600;i+=100)s+='<path d="M-200 '+i+'H1200"/>';for(let i=-200;i<1200;i+=100)s+='<path d="M'+i+' -200V1600"/>';s+='</g>';
+  opt=opt||{}; const t=T(), u=opt.uid||'m';
+  const vbs=opt.vb||t.vb.join(' '), V=vbArr(vbs);
+  const k=Math.max(V[2]/(opt.pw||390),V[3]/(opt.ph||844)); // map units per screen pixel
+  let s='<svg viewBox="'+vbs+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(opt.label||(t.name+(t.arr?' arrivals map, Levels 1 and 2':' Level 3 departures map')))+'">';
+  s+='<defs><filter id="'+u+'sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#001F60" flood-opacity=".10"/></filter>'+
+     '<pattern id="'+u+'dt" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" fill="#D6DCEA"/></pattern>'+
+     '<radialGradient id="'+u+'cone"><stop offset="0" stop-color="#2B55B8" stop-opacity=".55"/><stop offset="1" stop-color="#2B55B8" stop-opacity="0"/></radialGradient></defs>';
+  s+='<rect x="-4000" y="-4000" width="9000" height="9000" fill="#EAEEF6"/><rect x="-4000" y="-4000" width="9000" height="9000" fill="url(#'+u+'dt)"/>';
+  // level panels (arrivals sheet shows two floors unfolded)
+  t.panels.forEach(p=>{
+    s+='<rect x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+p.h+'" rx="22" fill="#E2E8F4" stroke="#C3CDE3" stroke-width="1.2" stroke-dasharray="6 5"/>';
+    s+='<rect x="'+(p.x+12)+'" y="'+(p.y-9)+'" width="30" height="18" rx="9" fill="#001F60"/><text x="'+(p.x+27)+'" y="'+(p.y+4)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="#FFFFFF" font-family="'+FONT+'">'+p.l+'</text>'+
+       '<text x="'+(p.x+50)+'" y="'+(p.y+4)+'" font-size="9.5" font-weight="800" fill="#52649A" font-family="'+FONT+'" letter-spacing=".8"'+halo()+'>'+esc(p.t)+'</text>';});
+  // floor plates
+  let pl='';
   t.shapes.forEach(sh=>{
-    const st='fill="#F8FAFE" stroke="#C4CCDF" stroke-width="1.6"';
-    if(sh.k==='rect')s+='<rect x="'+sh.x+'" y="'+sh.y+'" width="'+sh.w+'" height="'+sh.h+'" rx="'+sh.r+'" '+st+'/>';
-    if(sh.k==='circle')s+='<circle cx="'+sh.cx+'" cy="'+sh.cy+'" r="'+sh.r+'" '+st+'/>';
-    if(sh.k==='poly')s+='<polygon points="'+sh.pts+'" '+st+' stroke-linejoin="round"/>';
+    const st='fill="#FBFCFE" stroke="#AAB6D1" stroke-width="1.5"';
+    if(sh.k==='curb'){s+='<rect x="'+sh.x+'" y="'+sh.y+'" width="'+sh.w+'" height="'+sh.h+'" rx="10" fill="#D3D9E6"/><line x1="'+(sh.x+8)+'" y1="'+(sh.y+sh.h-12)+'" x2="'+(sh.x+sh.w-8)+'" y2="'+(sh.y+sh.h-12)+'" stroke="#FFFFFF" stroke-width="1.4" stroke-dasharray="9 7"/>';return;}
+    if(sh.k==='rect')pl+='<rect x="'+sh.x+'" y="'+sh.y+'" width="'+sh.w+'" height="'+sh.h+'" rx="'+sh.r+'" '+st+'/>';
+    if(sh.k==='circle')pl+='<circle cx="'+sh.cx+'" cy="'+sh.cy+'" r="'+sh.r+'" '+st+'/>';
+    if(sh.k==='poly')pl+='<polygon points="'+sh.pts+'" '+st+' stroke-linejoin="round"/>';
   });
-  // corridors
-  let cor='';t.edges.forEach(([a,b])=>{const A=t.nodes[a],B=t.nodes[b];cor+='M'+A[0]+' '+A[1]+' L'+B[0]+' '+B[1]+' ';});
-  s+='<path d="'+cor+'" stroke="#DCE3F1" stroke-width="40" stroke-linecap="round" fill="none"/><path d="'+cor+'" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" fill="none"/>';
-  t.walkways.forEach(w=>{s+='<line x1="'+w.x1+'" y1="'+w.y1+'" x2="'+w.x2+'" y2="'+w.y2+'" stroke="#8FA3D1" stroke-width="5" stroke-dasharray="10 6" stroke-linecap="round"/>';
-    s+='<text x="'+(w.x1+10)+'" y="'+((w.y1+w.y2)/2)+'" font-size="9.5" font-weight="700" fill="#8FA3D1" font-family="'+FONT+'" transform="rotate(90 '+(w.x1+10)+' '+((w.y1+w.y2)/2)+')" text-anchor="middle" letter-spacing=".5">'+w.label.toUpperCase()+' ↓</text>';});
+  s+='<g filter="url(#'+u+'sh)">'+pl+'</g>';
+  t.rooms.forEach(r=>{s+='<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="6" fill="#EDF1F9" stroke="#C7D0E4" stroke-width="1"/><text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h-5)+'" text-anchor="middle" font-size="7.5" font-weight="700" fill="#98A1BC" font-family="'+FONT+'" letter-spacing=".4">'+esc(r.t.toUpperCase())+'</text>';});
+  // walkable corridors
+  let cor='';t.edges.forEach(([a,b,o])=>{if(o&&o.kind==='esc')return;const A=t.nodes[a],B=t.nodes[b];cor+='M'+A[0]+' '+A[1]+'L'+B[0]+' '+B[1];});
+  s+='<path d="'+cor+'" stroke="#E2E7F2" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="'+cor+'" stroke="#FFFFFF" stroke-width="33" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+  // level connectors
+  t.edges.forEach(([a,b,o])=>{if(!o||o.kind!=='esc')return;const A=t.nodes[a],B=t.nodes[b],mx=(A[0]+B[0])/2,my=(A[1]+B[1])/2;
+    s+='<line x1="'+A[0]+'" y1="'+A[1]+'" x2="'+B[0]+'" y2="'+B[1]+'" stroke="#8FA3D1" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/>';
+    s+='<rect x="'+(mx+8)+'" y="'+(my-11)+'" width="116" height="22" rx="11" fill="#FFFFFF" stroke="#8FA3D1"/><text x="'+(mx+66)+'" y="'+(my+3.5)+'" text-anchor="middle" font-size="9" font-weight="800" fill="#52649A" font-family="'+FONT+'" letter-spacing=".3">ESCALATORS + LIFT ↓ L1</text>';});
+  t.walkways.forEach(w=>{s+='<line x1="'+w.x1+'" y1="'+w.y1+'" x2="'+w.x2+'" y2="'+w.y2+'" stroke="#9FB2DD" stroke-width="5" stroke-dasharray="10 6" stroke-linecap="round"/>';
+    s+='<text x="'+(w.x1+10)+'" y="'+((w.y1+w.y2)/2)+'" font-size="9.5" font-weight="700" fill="#8FA3D1" font-family="'+FONT+'" transform="rotate(90 '+(w.x1+10)+' '+((w.y1+w.y2)/2)+')" text-anchor="middle" letter-spacing=".5">'+w.label.toUpperCase()+' '+(w.arrow||'↓')+'</text>';});
   t.walls.forEach(w=>{s+='<line x1="'+w.x1+'" y1="'+w.y1+'" x2="'+w.x2+'" y2="'+w.y2+'" stroke="#52649A" stroke-width="4"/><line x1="'+w.x1+'" y1="'+w.y1+'" x2="'+w.x2+'" y2="'+w.y2+'" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="3 5"/>';
-    s+='<text x="'+((w.x1+w.x2)/2)+'" y="'+(w.y1-8)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#52649A" font-family="'+FONT+'">'+esc(w.label)+'</text>';});
-  t.labels.forEach(l=>{s+='<text x="'+l.x+'" y="'+l.y+'" text-anchor="middle" font-size="10" font-weight="800" fill="#A3AAC0" font-family="'+FONT+'" letter-spacing="1">'+esc(l.t)+'</text>';});
+    s+='<text x="'+((w.x1+w.x2)/2)+'" y="'+(w.y1-8)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#52649A" font-family="'+FONT+'"'+halo()+'>'+esc(w.label)+'</text>';});
+  t.checks.forEach(c=>{s+='<line x1="'+c.x1+'" y1="'+c.y1+'" x2="'+c.x2+'" y2="'+c.y2+'" stroke="#001F60" stroke-width="2.4" stroke-dasharray="7 5"/>';
+    if(c.booths){const mid=(c.x1+c.x2)/2;for(let x=c.x1+16;x<c.x2-10;x+=24){if(Math.abs(x-mid)<24)continue;s+='<rect x="'+(x-7)+'" y="'+(c.y1-6)+'" width="14" height="12" rx="2.5" fill="#D3DEF3" stroke="#52649A" stroke-width=".8"/>';}}
+    s+='<text x="'+(c.x1+8)+'" y="'+(c.y1-(c.booths?11:6))+'" font-size="9" font-weight="800" fill="#001F60" font-family="'+FONT+'"'+halo()+'>'+esc(c.label)+'</text>';});
+  t.labels.forEach(l=>{s+='<text x="'+l.x+'" y="'+l.y+'" text-anchor="middle" font-size="'+(l.small?8.5:10)+'" font-weight="800" fill="#98A1BC" font-family="'+FONT+'" letter-spacing="1"'+halo()+'>'+esc(l.t)+'</text>';});
+  // baggage carousels
+  t.belts.forEach(([n,x,y])=>{const on=opt.destPoi==='c'+n,w=110,h=24,p=t.POI['c'+n],bx=p&&p.x<x?x+w/2:x-w/2;
+    s+='<rect x="'+(x-w/2)+'" y="'+(y-h/2)+'" width="'+w+'" height="'+h+'" rx="12" fill="'+(on?'#D3DEF3':'#EEF2FA')+'" stroke="'+(on?'#001F60':'#9FB0D6')+'" stroke-width="'+(on?2.4:1.2)+'"/>'+
+       '<rect x="'+(x-w/2+10)+'" y="'+(y-3)+'" width="'+(w-20)+'" height="6" rx="3" fill="'+(on?'#8FA3D1':'#D8DFEE')+'"/>'+
+       '<circle cx="'+bx+'" cy="'+y+'" r="12" fill="'+(on?'#001F60':'#FFFFFF')+'" stroke="'+(on?'#FFFFFF':'#9FB0D6')+'" stroke-width="2"/><text x="'+bx+'" y="'+(y+4)+'" text-anchor="middle" font-size="11.5" font-weight="800" fill="'+(on?'#FFFFFF':'#52649A')+'" font-family="'+FONT+'">'+n+'</text>';});
+  // pick-up bays at the curb
+  if(t.bays){const B=t.bays;for(let n=1;n<=B.n;n++){const x=B.x0+(n-1)*B.dx,kind=B.kinds[n],p=t.pois.find(q=>['pickup','taxi','bus'].includes(q.cat)&&Math.abs(q.x-x)<3),on=!!(p&&opt.destPoi===p.id);
+    s+='<rect x="'+(x-11)+'" y="'+(B.y-9)+'" width="22" height="18" rx="5" fill="'+(on?'#001F60':kind?'#FFFFFF':'#EEF1F7')+'" stroke="'+(on?'#001F60':kind?'#52649A':'#C3CBDD')+'" stroke-width="'+(kind?1.4:1)+'"/><text x="'+x+'" y="'+(B.y+4)+'" text-anchor="middle" font-size="10" font-weight="800" fill="'+(on?'#FFFFFF':kind?'#001F60':'#8A91AB')+'" font-family="'+FONT+'">'+n+'</text>';
+    if(kind)s+='<text x="'+x+'" y="'+(B.y-14)+'" text-anchor="middle" font-size="8.5" font-weight="800" fill="#001F60" font-family="'+FONT+'"'+halo()+'>'+kind.toUpperCase()+'</text>';}}
+  t.doors.forEach(d=>{s+='<rect x="'+(d.x-18)+'" y="'+(d.y-3)+'" width="36" height="6" rx="3" fill="#001F60"/><text x="'+(d.x+24)+'" y="'+(d.y+3)+'" font-size="9" font-weight="800" fill="#001F60" font-family="'+FONT+'"'+halo()+'>'+esc(d.t.toUpperCase())+'</text>';});
   // gates
   const dg=opt.destGate, drawnBus={};
   t.gates.forEach(g=>{
     if(g.group){ if(drawnBus[g.group])return; drawnBus[g.group]=1;
       const on=dg&&t.GATE[dg]&&t.GATE[dg].group===g.group;
-      s+='<rect x="'+(g.x-4)+'" y="'+(g.y-44)+'" width="92" height="30" rx="8" fill="'+(on?'#D3DEF3':'#FFFFFF')+'" stroke="'+(on?'#001F60':'#C9D0E2')+'" stroke-width="'+(on?2:1)+'"/>';
-      s+='<text x="'+(g.x+42)+'" y="'+(g.y-25)+'" text-anchor="middle" font-size="11" font-weight="'+(on?800:700)+'" fill="'+(on?'#001F60':'#5C6480')+'" font-family="'+FONT+'">131–134 ↓G</text>';return;}
+      s+='<rect x="'+(g.x-4)+'" y="'+(g.y-44)+'" width="92" height="28" rx="14" fill="'+(on?'#001F60':'#FFFFFF')+'" stroke="'+(on?'#001F60':'#B4BED6')+'" stroke-width="1.2"/>';
+      s+='<text x="'+(g.x+42)+'" y="'+(g.y-25.5)+'" text-anchor="middle" font-size="11" font-weight="800" fill="'+(on?'#FFFFFF':'#3E4A72')+'" font-family="'+FONT+'">131–134 ↓G</text>';return;}
     const on=g.g===dg, old=g.g===opt.oldGate;
-    const w=g.level?40:46,h=g.level?26:30;
-    s+='<rect x="'+(g.x-w/2)+'" y="'+(g.y-h/2)+'" width="'+w+'" height="'+h+'" rx="8" fill="'+(on?'#D3DEF3':(g.level?'#F2F4F9':'#FFFFFF'))+'" stroke="'+(on?'#001F60':'#C9D0E2')+'" stroke-width="'+(on?2.2:1)+'"'+(g.level&&!on?' stroke-dasharray="3 2"':'')+'/>';
-    s+='<text x="'+g.x+'" y="'+(g.y+4.5)+'" text-anchor="middle" font-size="'+(g.g>99?12:13)+'" font-weight="'+(on?800:600)+'" fill="'+(on?'#001F60':(old?'#B0B6C8':'#5C6480'))+'" font-family="'+FONT+'"'+(old?' text-decoration="line-through"':'')+'>'+g.g+'</text>';
+    const w=g.level?40:46,h=g.level?24:28;
+    s+='<rect x="'+(g.x-w/2)+'" y="'+(g.y-h/2)+'" width="'+w+'" height="'+h+'" rx="'+(h/2)+'" fill="'+(on?'#001F60':(g.level?'#F2F4F9':'#FFFFFF'))+'" stroke="'+(on?'#001F60':(old?'#9AA3BF':'#B4BED6'))+'" stroke-width="'+(on?2:1.1)+'"'+(g.level&&!on?' stroke-dasharray="3 2"':'')+(on?' filter="url(#'+u+'sh)"':'')+'/>';
+    s+='<text x="'+g.x+'" y="'+(g.y+4.5)+'" text-anchor="middle" font-size="'+(g.g>99?12:13)+'" font-weight="'+(on?800:700)+'" fill="'+(on?'#FFFFFF':(old?'#A6ADC2':'#3E4A72'))+'" font-family="'+FONT+'"'+(old?' text-decoration="line-through"':'')+'>'+g.g+'</text>';
   });
-  // level marks
-  t.levelMarks.forEach(m=>{ if(m.t.startsWith('↓ Gates'))return; s+='<text x="'+m.x+'" y="'+(m.y+24)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#8A91AB" font-family="'+FONT+'">'+esc(m.t)+'</text>';});
-  // pois
-  const shopCats=['dining','retail','lounge','dutyfree'];
+  t.levelMarks.forEach(m=>{ if(m.t.startsWith('↓ Gates'))return; s+='<text x="'+m.x+'" y="'+(m.y+24)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#8A91AB" font-family="'+FONT+'"'+halo()+'>'+esc(m.t)+'</text>';});
+  // places as icon badges
+  const shopCats=['dining','retail','lounge','dutyfree'], drawnElse=['carousel','pickup','taxi','bus','exit','place'];
   const seen={};
   t.pois.forEach(p=>{
-    const key=p.x+','+p.y; const hi=opt.destPoi===p.id; if(seen[key]&&!hi)return; seen[key]=1;
-    const shop=shopCats.includes(p.cat);
-    s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(hi?9:5)+'" fill="'+(hi?'#001F60':(shop?'#8FA3D1':'#52649A'))+'" stroke="#fff" stroke-width="2"/>';
-    if(opt.labels!==false&&(hi||shop)&&!p.level)s+='<text x="'+p.x+'" y="'+(p.y-10)+'" text-anchor="middle" font-size="9.5" font-weight="'+(hi?800:600)+'" fill="'+(hi?'#001F60':'#8A91AB')+'" font-family="'+FONT+'">'+esc(p.name.split(/[ ,]/).slice(0,2).join(' '))+'</text>';
+    const hi=opt.destPoi===p.id;
+    if(drawnElse.includes(p.cat)&&!(hi&&(p.cat==='place'||p.cat==='exit')))return;
+    const key=p.x+','+p.y; if(seen[key]&&!hi)return; seen[key]=1;
+    const shop=shopCats.includes(p.cat), r=hi?13:10;
+    s+='<g'+(hi&&opt.drawIn?' class="pop"':'')+'><circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+(hi?'#001F60':(shop?'#E6ECF8':'#FFFFFF'))+'" stroke="'+(hi?'#FFFFFF':(shop?'#8FA3D1':'#AEB9D3'))+'" stroke-width="'+(hi?2.5:1.2)+'"/>'+glyph(catIcon(p.cat),p.x,p.y,hi?15:12,hi?'#FFFFFF':'#001F60')+'</g>';
+    if(opt.labels!==false&&(hi||shop)&&!p.level)s+='<text x="'+p.x+'" y="'+(p.y-r-5)+'" text-anchor="middle" font-size="9.5" font-weight="'+(hi?800:700)+'" fill="'+(hi?'#001F60':'#6A7391')+'" font-family="'+FONT+'"'+halo()+'>'+esc(p.name.split(/[ ,]/).slice(0,2).join(' '))+'</text>';
   });
+  // previous route (after a gate change) fades to a ghost
+  if(opt.ghost&&opt.ghost.length>1)s+='<path class="route-ghost" d="'+pathD(opt.ghost)+'" fill="none" stroke="#9AA3BF" stroke-width="'+(6*k).toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="'+(1*k).toFixed(2)+' '+(10*k).toFixed(2)+'"/>';
   if(opt.route){
-    const d='M'+opt.route.pts.map(p=>p.map(v=>v.toFixed(1)).join(' ')).join(' L ');
-    s+='<path d="'+d+'" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>';
-    s+='<path d="'+d+'" fill="none" stroke="#001F60" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 10"/>';
-    const e=opt.route.pts[opt.route.pts.length-1];
-    s+='<circle cx="'+e[0]+'" cy="'+e[1]+'" r="11" fill="#FFFFFF" stroke="#001F60" stroke-width="3.5"/><circle cx="'+e[0]+'" cy="'+e[1]+'" r="4" fill="#001F60"/>';
+    const pts=opt.route.pts, d=pathD(pts), a=pts[0], b=pts[pts.length-1];
+    s+='<linearGradient id="'+u+'rg" gradientUnits="userSpaceOnUse" x1="'+a[0]+'" y1="'+a[1]+'" x2="'+(b[0]+(a[0]===b[0]&&a[1]===b[1]?1:0))+'" y2="'+b[1]+'"><stop offset="0" stop-color="#5673C6"/><stop offset="1" stop-color="#001F60"/></linearGradient>';
+    s+='<path d="'+d+'" fill="none" stroke="#FFFFFF" stroke-width="'+(14*k).toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round"/>';
+    s+='<path'+(opt.drawIn?' class="route-draw"':'')+' pathLength="1" d="'+d+'" fill="none" stroke="url(#'+u+'rg)" stroke-width="'+(7.5*k).toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round"/>';
+    s+='<path id="'+u+'walked" d="M'+a[0]+' '+a[1]+'" fill="none" stroke="#B3BDD6" stroke-width="'+(7.5*k).toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round"/>';
+    let ch='';const step=46*k;let acc=step*0.7;
+    for(let i=1;i<pts.length;i++){const p0=pts[i-1],p1=pts[i],L=d2(p0,p1);if(!L)continue;const ang=Math.atan2(p1[1]-p0[1],p1[0]-p0[0])*180/Math.PI;
+      while(acc<L-6*k){const f=acc/L;ch+='<path d="M-2.4 -3.1L1.5 0L-2.4 3.1" transform="translate('+(p0[0]+(p1[0]-p0[0])*f).toFixed(1)+' '+(p0[1]+(p1[1]-p0[1])*f).toFixed(1)+') rotate('+ang.toFixed(0)+') scale('+k.toFixed(3)+')"/>';acc+=step;}
+      acc=Math.max(0,acc-L);}
+    s+='<g class="chev'+(opt.drawIn?' fade-late':'')+'" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".9">'+ch+'</g>';
+    s+='<g'+(opt.drawIn?' class="fade-late"':'')+'><path class="route-flow" pathLength="1" d="'+d+'" fill="none" stroke="#DDE6FF" stroke-width="'+(5*k).toFixed(2)+'" stroke-linecap="round" stroke-dasharray=".035 .965"/></g>';
+    s+='<g'+(opt.drawIn?' class="pop"':'')+'><circle cx="'+b[0]+'" cy="'+b[1]+'" r="'+(12*k).toFixed(2)+'" fill="#FFFFFF" stroke="#001F60" stroke-width="'+(4*k).toFixed(2)+'"/><circle cx="'+b[0]+'" cy="'+b[1]+'" r="'+(4.5*k).toFixed(2)+'" fill="#001F60"/></g>';
   }
-  if(opt.you!==false&&state.loc){const L=state.loc;
-    s+='<circle cx="'+L.x+'" cy="'+L.y+'" r="18" fill="#001F60" opacity=".16"/><circle cx="'+L.x+'" cy="'+L.y+'" r="9" fill="#001F60" stroke="#fff" stroke-width="3"/>';
-    s+='<text x="'+L.x+'" y="'+(L.y+30)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#001F60" font-family="'+FONT+'">You</text>';}
+  if(opt.you!==false&&state.loc){const L=state.loc,h=(opt.heading!=null?opt.heading:youHeading(opt.route)).toFixed(0);
+    s+='<g id="'+u+'you" transform="translate('+L.x+' '+L.y+')">'+
+      '<circle class="you-pulse" r="'+(13*k).toFixed(2)+'" fill="#2B55B8" opacity=".45"/>'+
+      '<g class="yrot" transform="rotate('+h+')"><path d="'+conePath(48*k,32)+'" fill="url(#'+u+'cone)"/></g>'+
+      '<circle r="'+(11*k).toFixed(2)+'" fill="#001F60" stroke="#FFFFFF" stroke-width="'+(3.5*k).toFixed(2)+'"/>'+
+      '<g class="yrot" transform="rotate('+h+')"><path d="M0 '+(-5.6*k).toFixed(2)+'L'+(4.2*k).toFixed(2)+' '+(4*k).toFixed(2)+'L0 '+(1.8*k).toFixed(2)+'L'+(-4.2*k).toFixed(2)+' '+(4*k).toFixed(2)+'Z" fill="#FFFFFF"/></g>'+
+      '<text y="'+(27*k).toFixed(2)+'" text-anchor="middle" font-size="'+(11*k).toFixed(2)+'" font-weight="800" fill="#001F60" font-family="'+FONT+'" paint-order="stroke" stroke="#FFFFFF" stroke-width="'+(3*k).toFixed(2)+'" stroke-linejoin="round">You</text></g>';}
   return s+'</svg>';
 }
 function fitVB(pts,topPad,botPad){
@@ -550,33 +817,48 @@ const FEED=[
   {carrierFsCode:'PR',flightNumber:'300',airlineName:'Philippine Airlines',departureAirportFsCode:'MNL',arrivalAirportFsCode:'HKG',departureCity:'Manila',arrivalCity:'Hong Kong',status:'S',
    departureDate:{dateLocal:'2026-09-28T15:10'},arrivalDate:{dateLocal:'2026-09-28T17:25'},boardingLocal:'14:30',airportResources:{departureTerminal:'1',departureGate:'11'}},
   {carrierFsCode:'UO',flightNumber:'553',airlineName:'HK Express',departureAirportFsCode:'MNL',arrivalAirportFsCode:'HKG',departureCity:'Manila',arrivalCity:'Hong Kong',status:'S',
-   departureDate:{dateLocal:'2026-09-28T17:05'},arrivalDate:{dateLocal:'2026-09-28T19:20'},boardingLocal:'16:25',airportResources:{departureTerminal:'1',departureGate:'2'}}
+   departureDate:{dateLocal:'2026-09-28T17:05'},arrivalDate:{dateLocal:'2026-09-28T19:20'},boardingLocal:'16:25',airportResources:{departureTerminal:'1',departureGate:'2'}},
+  /* arrivals: Cirium carries arrivalTerminal/arrivalGate/baggage; bag stage (_bag) is sample data that would come from NAIA's baggage system */
+  {carrierFsCode:'PR',flightNumber:'101',airlineName:'Philippine Airlines',departureAirportFsCode:'SIN',arrivalAirportFsCode:'MNL',departureCity:'Singapore',arrivalCity:'Manila',status:'L',
+   departureDate:{dateLocal:'2026-09-28T09:05'},arrivalDate:{dateLocal:'2026-09-28T12:50'},actualArrivalLocal:'12:44',airportResources:{arrivalTerminal:'3',arrivalGate:'110',baggage:'5'},_bag:2},
+  {carrierFsCode:'UO',flightNumber:'552',airlineName:'HK Express',departureAirportFsCode:'HKG',arrivalAirportFsCode:'MNL',departureCity:'Hong Kong',arrivalCity:'Manila',status:'L',
+   departureDate:{dateLocal:'2026-09-28T11:05'},arrivalDate:{dateLocal:'2026-09-28T13:00'},actualArrivalLocal:'12:56',airportResources:{arrivalTerminal:'1',arrivalGate:'12',baggage:'3'},_bag:1},
+  {carrierFsCode:'Z2',flightNumber:'331',airlineName:'Philippines AirAsia',departureAirportFsCode:'NRT',arrivalAirportFsCode:'MNL',departureCity:'Tokyo Narita',arrivalCity:'Manila',status:'A',
+   departureDate:{dateLocal:'2026-09-28T09:40'},arrivalDate:{dateLocal:'2026-09-28T13:40'},estimatedArrivalLocal:'13:34',airportResources:{arrivalTerminal:'3',arrivalGate:'104',baggage:'7'},_bag:0}
 ];
 const NOW='13:02';
 function hm(s){const [h,m]=s.split(':').map(Number);return h*60+m;}
 function fmt(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
 function dur(m){if(m<=0)return 'no time';const h=Math.floor(m/60),r=m%60;return ((h?h+' h ':'')+(r?r+' min':'')).trim();}
-function adapt(raw){const dep=raw.departureDate.dateLocal.slice(11,16),arr=raw.arrivalDate.dateLocal.slice(11,16),d=raw.delayMinutes||0;
-  return {code:raw.carrierFsCode+' '+raw.flightNumber,key:(raw.carrierFsCode+raw.flightNumber).toUpperCase(),airline:raw.airlineName,from:raw.departureAirportFsCode,to:raw.arrivalAirportFsCode,fromCity:raw.departureCity,toCity:raw.arrivalCity,
-    dep:fmt(hm(dep)+d),arr:fmt(hm(arr)+d),boarding:fmt(hm(raw.boardingLocal)+d),delayed:d>0,delayMin:d,gate:Number(raw.airportResources.departureGate),terminal:raw.airportResources.departureTerminal,updated:raw._updated||NOW,prevGate:raw._prevGate||null};}
-function findFlight(q){const k=q.replace(/\s+/g,'').toUpperCase();const r=state.feed.find(f=>(f.carrierFsCode+f.flightNumber).toUpperCase()===k);return r?adapt(r):null;}
+const BAG=[{t:'Not landed yet',s:'Carousel shown once the flight lands',pill:'tint'},{t:'Waiting for first bags',s:'First bags expected about 13:15',pill:'tint'},{t:'Bags unloading now',s:'Bags on the belt since 13:00',pill:'ok'},{t:'Last bags on the belt',s:'All bags out at 13:24 · unclaimed bags go to Baggage services',pill:'warn'}];
+function adapt(raw){const dep=raw.departureDate.dateLocal.slice(11,16),arr=raw.arrivalDate.dateLocal.slice(11,16),d=raw.delayMinutes||0,ar=raw.airportResources;
+  const base={code:raw.carrierFsCode+' '+raw.flightNumber,key:(raw.carrierFsCode+raw.flightNumber).toUpperCase(),airline:raw.airlineName,from:raw.departureAirportFsCode,to:raw.arrivalAirportFsCode,fromCity:raw.departureCity,toCity:raw.arrivalCity,updated:raw._updated||NOW};
+  if(raw.arrivalAirportFsCode==='MNL'){const bag=raw._bag||0;return Object.assign(base,{dir:'arr',dep,sta:arr,eta:raw.actualArrivalLocal||raw.estimatedArrivalLocal||arr,landed:raw.status==='L'||bag>0,gate:Number(ar.arrivalGate),terminal:ar.arrivalTerminal,carousel:Number(ar.baggage),bag,bagInfo:BAG[bag]});}
+  return Object.assign(base,{dir:'dep',dep:fmt(hm(dep)+d),arr:fmt(hm(arr)+d),boarding:fmt(hm(raw.boardingLocal)+d),delayed:d>0,delayMin:d,gate:Number(ar.departureGate),terminal:ar.departureTerminal,prevGate:raw._prevGate||null});}
+function findFlight(q){const k=q.replace(/\b(arrival|arriving|arrivals|arr|departure|departing|dep)\b/ig,'').replace(/\s+/g,'').toUpperCase();const r=state.feed.find(f=>(f.carrierFsCode+f.flightNumber).toUpperCase()===k);return r?adapt(r):null;}
+function inboundFor(f){const r=state.feed.find(x=>x.arrivalAirportFsCode==='MNL'&&x.departureAirportFsCode===f.to);return r?adapt(r):null;}
 function flightGate(f){return TERMS[f.terminal].GATE[f.gate];}
-function flightHere(f){return f&&f.terminal===state.terminal;}
+function flightHere(f){return !!f&&f.terminal===state.terminal&&state.level===(f.dir==='arr'?'arr':'dep');}
 
 /* ================= state ================= */
-function spotLoc(term,id){const s=TERMS[term].SPOT[id];return {x:s.x,y:s.y,zone:s.zone,at:s.at,spot:s.id,label:s.name};}
-const initial=()=>({stack:['home'],params:{},terminal:'3',loc:spotLoc('3','s_isec'),feed:JSON.parse(JSON.stringify(FEED)),flight:null,flightInput:'',flightErr:'',alertOn:true,
-  nav:null,stepsOpen:true,stepFree:false,sheet:null,q:'',amenCat:'toilets',amenQ:'',shopCat:'all',shopQ:'',svcQ:'',pickTerm:'3',pickKind:'all',pickQ:'',pickSel:'s_isec',
-  chat:[],typing:false,chatIn:'',miniStep:0,miniVeh:'sedan',miniDest:'',toast:null});
+function spotLoc(term,id,level){const s=mk(term,level).SPOT[id];return {x:s.x,y:s.y,zone:s.zone,at:s.at,spot:s.id,label:s.name,level:s.level,face:s.face};}
+function gateLoc(term,g){const t=mk(term,'arr'),sp=t.spots.find(s=>s.id==='s_g'+g);if(sp)return spotLoc(term,sp.id,'arr');const G=t.GATE[g]||t.gates[0];return {x:G.x,y:G.y,zone:'arr',at:G.at,spot:null,label:'Gate '+G.g+' arrival bridge',level:2,face:0};}
+function poiLoc(p){return {x:p.x,y:p.y,zone:p.zone,at:p.at,spot:null,label:p.name,level:p.flr};}
+const initial=()=>({stack:['home'],params:{},terminal:'3',level:'dep',loc:spotLoc('3','s_isec','dep'),heading:270,feed:JSON.parse(JSON.stringify(FEED)),flight:null,flightInput:'',flightErr:'',dir:'dep',alertOn:true,
+  nav:null,stepsOpen:true,stepFree:false,sheet:null,q:'',amenCat:'toilets',amenQ:'',shopCat:'all',shopQ:'',svcQ:'',pickTerm:'3',pickLevel:'dep',pickKind:'all',pickQ:'',pickSel:'s_isec',
+  chat:[],typing:false,chatIn:'',miniStep:0,miniVeh:'sedan',miniDest:'',toast:null,
+  userVB:null,anim:null,swapAnim:false,walking:false,arrivedAt:null,scanHit:null,rideDest:'Makati CBD',rideSel:'grab',rideSort:'price',ride:null,rideBooking:false});
 let state=initial();
 const cur=()=>state.stack[state.stack.length-1];
 function go(scr,params){state.stack.push(scr);state.params=Object.assign({},state.params,params||{});state.sheet=null;render(true);}
 function tab(scr){state.stack=[scr];state.sheet=null;render(true);}
-function back(){if(state.stack.length>1)state.stack.pop();else state.stack=['home'];state.sheet=null;render(true);}
+function back(){stopWalk();if(state.stack.length>1)state.stack.pop();else state.stack=['home'];state.sheet=null;render(true);}
 function toast(t){state.toast=t;render();clearTimeout(toast._t);toast._t=setTimeout(()=>{state.toast=null;render();},2400);}
-function setTerminal(k){if(state.terminal===k)return;state.terminal=k;state.loc=spotLoc(k,TERMS[k].defaultSpot);state.pickSel=TERMS[k].defaultSpot;state.nav=null;}
+function setLoc(term,level,loc){const changed=state.terminal!==term||state.level!==level;state.terminal=term;state.level=level;state.loc=loc;state.heading=loc.face!=null?loc.face:null;state.userVB=null;if(changed)state.nav=null;return changed;}
+function setTerminal(k){if(state.terminal===k&&state.level==='dep')return;const t=mk(k,'dep');setLoc(k,'dep',spotLoc(k,t.defaultSpot,'dep'));state.pickSel=t.defaultSpot;}
 function zoneName(z){return (T().zones||{})[z]||'';}
 function locShort(){return state.loc.label;}
+function levelName(){return state.level==='arr'?'Level '+(state.loc.level||1):'Level 3';}
 
 /* ================= shared chrome ================= */
 function header(title,sub,extra){return '<header class="top"><div class="toprow"><button class="back" type="button" data-act="back" aria-label="Back">'+ic('back',22,'#fff')+'</button><div style="flex:1;min-width:0"><div class="t-title">'+title+'</div>'+(sub?'<div class="t-sub">'+sub+'</div>':'')+'</div></div>'+(extra||'')+'</header>';}
@@ -587,46 +869,58 @@ function searchInput(id,val,ph,onlight){return '<label class="searchbox'+(onligh
 function distCell(o){const w=walkInfo(o);return w?'<div class="dist"><b>'+w.mins+' min</b><span>'+w.m+' m</span></div>':'<div class="dist"><span class="pill tint" style="height:22px;font-size:10px">Other side</span></div>';}
 function kv(k,v,big){return '<div style="display:flex;flex-direction:column;gap:2px"><span class="label" style="font-size:10px">'+k+'</span><span style="font-size:'+(big?22:18)+'px;font-weight:800;color:'+(big?'#001F60':'inherit')+';font-variant-numeric:tabular-nums">'+v+'</span></div>';}
 function statusPill(f){return f.delayed?'<span class="pill warn">Delayed '+f.delayMin+' min</span>':'<span class="pill ok">On time</span>';}
-function catIcon(c){return ({toilets:'wc',charging:'bolt',prayer:'prayer',medical:'plus',atm:'card',water:'water',info:'info',baby:'baby',smoking:'smoke',dining:'cup',retail:'bag',lounge:'sofa',dutyfree:'gift',place:'pin'})[c]||'pin';}
-function nearestOf(cat){return T().pois.filter(p=>p.cat===cat&&p.zone===state.loc.zone).map(p=>[p,walkInfo(p)]).filter(x=>x[1]).sort((a,b)=>a[1].m-b[1].m).map(x=>x[0])[0];}
+function catIcon(c){return ({toilets:'wc',charging:'bolt',prayer:'prayer',medical:'plus',atm:'card',water:'water',info:'info',baby:'baby',smoking:'smoke',dining:'cup',retail:'bag',lounge:'sofa',dutyfree:'gift',place:'user',carousel:'belt',pickup:'car',taxi:'taxi',bus:'bus',exit:'exit'})[c]||'pin';}
+function nearestFrom(A,cat){return T().pois.filter(p=>p.cat===cat).map(p=>[p,walkInfo(p,A)]).filter(x=>x[1]).sort((a,b)=>a[1].m-b[1].m)[0]||null;}
+function nearestOf(cat){const r=nearestFrom(state.loc,cat);return r?r[0]:undefined;}
 
 /* ================= screens ================= */
 const S={};
 S.home=()=>{
-  const f=state.flight;
+  const f=state.flight, arrMode=state.level==='arr';
   let flightBlock;
-  if(f){const here=flightHere(f);const r=here?route({type:'gate',id:f.gate}):null;
+  if(f&&f.dir==='arr'){const t=mk(f.terminal,'arr'),c=t.POI['c'+f.carousel],here=flightHere(f),w=here&&c?walkInfo(c):null;
+    flightBlock='<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div class="label">Your arrival</div><div style="font-size:20px;font-weight:800;margin-top:2px">'+f.code+' <span style="font-size:14px;font-weight:600;color:var(--muted)">from '+f.fromCity+'</span></div></div><span class="pill '+f.bagInfo.pill+'">'+f.bagInfo.t+'</span></div>'+
+      '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">'+kv('Carousel',f.landed?String(f.carousel):f.carousel+'*',true)+kv(f.landed?'Landed':'Lands',f.eta)+kv('Walk',w?w.mins+' min':'—')+'</div>'+
+      '<div style="display:flex;gap:8px"><button type="button" class="btn" style="height:46px;font-size:14.5px" data-act="navCarousel">'+ic('luggage',17,'#fff',2.4)+'Guide me to Carousel '+f.carousel+'</button><button type="button" class="btn line" style="height:46px;width:auto;padding:0 16px;font-size:14px" data-go="arrival">Details</button></div></div>'+
+      '<button type="button" class="btn text" style="height:28px;font-size:12.5px;align-self:flex-start;width:auto;padding:0" data-act="clearFlight">Look up a different flight</button>';
+  } else if(f){const here=flightHere(f);const r=here?route({type:'gate',id:f.gate}):null;
     flightBlock='<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div class="label">Your flight</div><div style="font-size:20px;font-weight:800;margin-top:2px">'+f.code+' <span style="font-size:14px;font-weight:600;color:var(--muted)">to '+f.toCity+'</span></div></div>'+statusPill(f)+'</div>'+
-      '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">'+kv('Gate',(here?'':'T'+f.terminal+' · ')+f.gate,true)+kv('Boarding',f.boarding)+kv('Walk',!here?'Other terminal':(r&&!r.blocked?r.mins+' min':'Other side'))+'</div>'+
-      '<div style="display:flex;gap:8px"><button type="button" class="btn" style="height:46px;font-size:14.5px" data-act="navGate">'+ic('nav',17,'#fff',2.5)+'Take me there</button><button type="button" class="btn line" style="height:46px;width:auto;padding:0 16px;font-size:14px" data-go="flight">Details</button></div></div>'+
+      '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">'+kv('Gate',(here?'':'T'+f.terminal+' · ')+f.gate,true)+kv('Boarding',f.boarding)+kv('Walk',!here?'Other map':(r&&!r.blocked?r.mins+' min':'Other side'))+'</div>'+
+      (here?'':'<div class="notice" style="background:var(--tint);border-color:#C9D6F0;color:var(--navy-ink)">'+ic('warn',14,'#001F60')+'<span>'+f.code+' departs from <b>Terminal '+f.terminal+'</b>. You’re viewing the '+T().name+(state.level==='arr'?' arrivals':'')+' map.</span></div>')+
+      '<div style="display:flex;gap:8px"><button type="button" class="btn" style="height:46px;font-size:14.5px" data-act="'+(here?'navGate':'swapAsk')+'">'+ic('nav',17,'#fff',2.5)+(here?'Take me there':'Switch to T'+f.terminal+' map')+'</button><button type="button" class="btn line" style="height:46px;width:auto;padding:0 16px;font-size:14px" data-go="flight">Details</button></div></div>'+
       '<button type="button" class="btn text" style="height:28px;font-size:12.5px;align-self:flex-start;width:auto;padding:0" data-act="clearFlight">Look up a different flight</button>';
-  } else flightBlock='<form data-form="flight" style="display:flex;flex-direction:column;gap:8px" novalidate>'+
-      '<label for="flightno" style="font-size:15px;font-weight:800">Find my gate</label>'+
-      '<div style="display:flex;gap:8px"><input id="flightno" data-input="flightno" autocomplete="off" autocapitalize="characters" value="'+esc(state.flightInput)+'" placeholder="Flight number, e.g. PR 102" style="flex:1;min-width:0;height:50px;padding:0 14px;font-size:16px;border:1.5px solid '+(state.flightErr?'#B3261E':'#D5DAE8')+';border-radius:12px;background:#fff" aria-describedby="flighterr">'+
+  } else {const arr=state.dir==='arr';
+    flightBlock='<form data-form="flight" style="display:flex;flex-direction:column;gap:8px" novalidate>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><label for="flightno" style="font-size:15px;font-weight:800">'+(arr?'Find my baggage carousel':'Find my gate')+'</label>'+
+      '<div class="seg" role="group" aria-label="Flight direction" style="width:190px">'+[['dep','Departing'],['arr','Arriving']].map(([k,l])=>'<button type="button" data-dir="'+k+'" aria-pressed="'+(state.dir===k)+'" style="height:30px;font-size:12px">'+l+'</button>').join('')+'</div></div>'+
+      '<div style="display:flex;gap:8px"><input id="flightno" data-input="flightno" autocomplete="off" autocapitalize="characters" value="'+esc(state.flightInput)+'" placeholder="Flight number, e.g. '+(arr?'PR 101':'PR 102')+'" style="flex:1;min-width:0;height:50px;padding:0 14px;font-size:16px;border:1.5px solid '+(state.flightErr?'#B3261E':'#D5DAE8')+';border-radius:12px;background:#fff" aria-describedby="flighterr">'+
       '<button type="submit" class="btn" style="width:78px;height:50px">Go</button></div>'+
-      '<div id="flighterr" style="font-size:12px;color:'+(state.flightErr?'#B3261E':'var(--muted)')+'">'+(state.flightErr||'Printed on your boarding pass. Sample data: try PR 102.')+'</div></form>';
+      '<div id="flighterr" style="font-size:12px;line-height:1.45;color:'+(state.flightErr?'#B3261E':'var(--muted)')+'">'+(state.flightErr||(arr?'Shows your carousel and when bags start coming out. Sample data: try PR 101.':'Printed on your boarding pass. Sample data: try PR 102.'))+'</div></form>';}
   return '<div class="screen"><div class="scroll">'+
     '<div style="position:relative;height:250px;background:#0A2E7A;color:#fff;overflow:hidden">'+
-      '<div style="position:absolute;inset:0">'+photo('Photo: '+T().name+' departures hall',250,'plane','dark','hero')+'</div>'+
+      '<div style="position:absolute;inset:0">'+photo('Photo: '+T().name+(arrMode?' arrivals hall':' departures hall'),250,'plane','dark',arrMode?'escalator':'hero')+'</div>'+
       '<div style="position:absolute;left:0;right:0;bottom:0;height:150px;background:linear-gradient(180deg,rgba(0,31,96,0),rgba(0,31,96,.92) 70%)"></div>'+
       '<div style="position:relative;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">'+
         '<div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800"><span style="width:24px;height:24px;border-radius:7px;background:#fff;display:inline-flex;align-items:center;justify-content:center">'+ic('nav',14,'#001F60',2.6)+'</span>Airport Navi</div>'+
         '<button type="button" data-act="lang" style="height:32px;padding:0 12px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:999px;font-size:12px;font-weight:700" aria-label="Language: English">EN</button></div>'+
       '<div style="position:absolute;left:20px;right:20px;bottom:40px;display:flex;flex-direction:column;gap:10px">'+
-        '<button type="button" data-go="location" style="align-self:flex-start;display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:999px;color:#fff;font-size:12px;font-weight:700">NAIA · '+T().name+ic('down',14,'#fff',2.5)+'</button>'+
-        '<div style="font-size:25px;font-weight:800;line-height:1.15;text-wrap:balance">Mabuhay. Where to?</div></div></div>'+
+        '<button type="button" data-go="location" style="align-self:flex-start;display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:999px;color:#fff;font-size:12px;font-weight:700">NAIA · '+T().name+(arrMode?' · Arrivals':'')+ic('down',14,'#fff',2.5)+'</button>'+
+        '<div style="font-size:25px;font-weight:800;line-height:1.15;text-wrap:balance">'+(arrMode?'Welcome to Manila.':'Mabuhay. Where to?')+'</div></div></div>'+
     '<div class="body" style="margin-top:-22px;position:relative;padding-top:0">'+
-      '<button type="button" data-go="location" class="row" style="padding:12px 14px;box-shadow:0 6px 20px rgba(0,31,96,.12);border:0"><span style="width:36px;height:36px;border-radius:999px;background:var(--tint);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('pin',18,'#001F60')+'</span><span class="grow"><span class="label">You are here · '+esc(zoneName(state.loc.zone))+'</span><span class="t">'+esc(locShort())+'</span></span><span style="font-size:12px;font-weight:700;color:var(--navy)">Change</span></button>'+
+      '<div class="row" style="padding:6px 6px 6px 14px;box-shadow:0 6px 20px rgba(0,31,96,.12);border:0;gap:8px"><button type="button" data-go="location" style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;border:0;background:transparent;padding:6px 0;text-align:left;color:inherit"><span style="width:36px;height:36px;border-radius:999px;background:var(--tint);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('pin',18,'#001F60')+'</span><span class="grow"><span class="label">You are here · '+esc(zoneName(state.loc.zone))+' · '+levelName()+'</span><span class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(locShort())+'</span></span></button>'+
+        '<button type="button" data-go="scan" aria-label="Scan a QR code to set your location" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:58px;height:52px;border:0;border-radius:12px;background:var(--navy);color:#fff;font-size:10px;font-weight:800">'+ic('qr',20,'#fff',2.2)+'Scan</button></div>'+
       flightBlock+
-      '<div class="grid2">'+homeTile('amenities','Amenities','Toilets, charging, prayer','Photo: restroom signage','wc','restroom')+homeTile('shops','Shops & lounges','Food, retail, lounges','Photo: café counter','cup','cafe')+homeTile('links','Travel forms','eTravel, customs','Photo: passport and phone','doc','passport')+homeTile('services','Services','Taxi, WiFi, car rental','Photo: taxi bay','taxi','taxi')+'</div>'+
+      (arrMode||(f&&f.dir==='arr')?'<button type="button" data-go="rides" class="row" style="padding:0;overflow:hidden;border:0;background:var(--navy);color:#fff"><span style="width:96px;align-self:stretch;flex-shrink:0">'+photo('',74,'taxi','dark','taxi')+'</span><span class="grow" style="padding:10px 4px"><span class="label" style="color:#C9D3F0;font-size:10px">Ground transport</span><span class="t">Get a ride into the city</span><span class="s" style="color:#C9D3F0">Grab · JoyRide · airport taxi</span></span><span style="padding-right:12px">'+ic('chev',18,'#fff')+'</span></button>':'')+
+      '<div class="grid2">'+homeTile('amenities','Amenities','Toilets, charging, prayer','Photo: restroom signage','wc','restroom')+homeTile('shops','Shops & lounges','Food, retail, lounges','Photo: café counter','cup','cafe')+homeTile('links','Travel forms','eTravel, customs','Photo: passport and phone','doc','passport')+homeTile('services','Services','Rides, WiFi, SIM','Photo: taxi bay','taxi','taxi')+'</div>'+
       '<button type="button" data-tab="chat" class="row" style="background:var(--navy);border-color:var(--navy);color:#fff;padding:12px 14px"><span style="width:38px;height:38px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('chat',18,'#001F60')+'</span><span class="grow"><span class="t">Ask the concierge</span><span class="s" style="color:#C9D3F0">“Is my flight on time?” · “Nearest lounge?”</span></span>'+ic('chev',18,'#fff')+'</button>'+
     '</div></div>'+bar('home')+'</div>';
 };
 function homeTile(g,t,s,cap,icon,img){return '<button type="button" data-go="'+g+'" style="display:flex;flex-direction:column;background:#fff;border:0;border-radius:14px;overflow:hidden;padding:0;text-align:left;box-shadow:0 2px 8px rgba(0,31,96,.06);color:inherit">'+photo(cap,88,icon,'',img)+'<span style="padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:800">'+t+'</span><span style="font-size:11.5px;color:var(--muted)">'+s+'</span></span></button>';}
 
 S.location=()=>{
-  const t=TERMS[state.pickTerm];
+  const t=mk(state.pickTerm,state.pickLevel);
   const kinds=[['all','All'],['gates','Gates'],['shops','Shops'],['counters','Counters'],['signs','Signs']];
   const q=state.pickQ.trim().toLowerCase();
   const list=t.spots.filter(s=>(state.pickKind==='all'||s.kind===state.pickKind)&&(!q||(s.name+' '+s.sub).toLowerCase().includes(q)));
@@ -634,30 +928,45 @@ S.location=()=>{
   const sel=t.SPOT[state.pickSel];
   return '<div class="screen">'+
     '<header class="top"><div class="toprow"><button class="back" type="button" data-act="back" aria-label="Close">'+ic('close',22,'#fff')+'</button><div class="t-title">Where are you?</div></div>'+
-    '<div style="display:flex;flex-direction:column;gap:8px"><div class="label" style="color:#C9D3F0">Terminal</div>'+
-    '<div role="radiogroup" aria-label="Terminal" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:4px;background:rgba(255,255,255,.12);border-radius:12px">'+
-      terms.map(([k,en])=>'<button type="button" role="radio" aria-checked="'+(state.pickTerm===k)+'" '+(en?'data-term="'+k+'"':'disabled')+' style="height:38px;border:0;border-radius:9px;background:'+(state.pickTerm===k?'#fff':'transparent')+';color:'+(state.pickTerm===k?'#001F60':(en?'#C9D3F0':'rgba(201,211,240,.45)'))+';font-size:13px;font-weight:'+(state.pickTerm===k?800:600)+'">T'+k+(en?'':'<span style="display:block;font-size:9px;font-weight:600;margin-top:-2px">soon</span>')+'</button>').join('')+
-    '</div></div></header>'+
-    '<div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:800">What do you see around you?</div>'+searchInput('pickq',state.pickQ,'Gate number, shop, sign, counter',true)+
+    '<button type="button" class="qrhero" data-go="scan" style="background:#fff;color:var(--navy-ink);box-shadow:none"><span style="width:52px;height:52px;border-radius:14px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('qr',28,'#fff',2)+'</span><span style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:16px;font-weight:800">Scan a QR code</span><span style="font-size:12px;color:var(--muted);line-height:1.35">Fastest and exact. Codes are on pillars, gate screens and signs.</span></span>'+ic('chev',20,'#001F60')+'</button>'+
+    '</header>'+
+    '<div style="padding:14px 20px 0;display:flex;flex-direction:column;gap:10px">'+
+      '<div style="display:flex;align-items:center;gap:10px"><span style="flex:1;height:1px;background:var(--line-2)"></span><span class="label">or pick what you see</span><span style="flex:1;height:1px;background:var(--line-2)"></span></div>'+
+      '<div role="radiogroup" aria-label="Terminal" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:4px;background:var(--tint);border-radius:12px">'+
+        terms.map(([k,en])=>'<button type="button" role="radio" aria-checked="'+(state.pickTerm===k)+'" '+(en?'data-term="'+k+'"':'disabled')+' style="height:36px;border:0;border-radius:9px;background:'+(state.pickTerm===k?'#fff':'transparent')+';color:'+(state.pickTerm===k?'#001F60':(en?'#52649A':'rgba(82,100,154,.45)'))+';font-size:13px;font-weight:'+(state.pickTerm===k?800:600)+';'+(state.pickTerm===k?'box-shadow:0 1px 4px rgba(0,31,96,.12)':'')+'">T'+k+(en?'':'<span style="display:block;font-size:9px;font-weight:600;margin-top:-2px">soon</span>')+'</button>').join('')+'</div>'+
+      '<div class="seg" role="group" aria-label="Floor">'+[['dep','Departures · L3'],['arr','Arrivals · L1–L2']].map(([k,l])=>'<button type="button" data-pick-level="'+k+'" aria-pressed="'+(state.pickLevel===k)+'">'+l+'</button>').join('')+'</div>'+
+      searchInput('pickq',state.pickQ,'Gate number, shop, sign, counter',true)+
       '<div class="chips">'+kinds.map(([k,l])=>'<button type="button" class="chip" data-pick-kind="'+k+'" aria-pressed="'+(state.pickKind===k)+'">'+l+'</button>').join('')+'</div></div>'+
     '<div class="scroll" style="padding:12px 20px;display:flex;flex-direction:column;gap:8px">'+
-      (list.length?list.map(s=>'<button type="button" class="row" data-spot="'+s.id+'" aria-pressed="'+(state.pickSel===s.id)+'" style="'+(state.pickSel===s.id?'border:2px solid #001F60;padding:9px':'')+'"><div style="width:60px;height:46px;border-radius:9px;overflow:hidden;flex-shrink:0">'+photo('',46,s.kind==='gates'?'plane':s.kind==='shops'?'bag':s.kind==='counters'?'info':'pin','',s.kind==='gates'?'gate':s.kind==='shops'?'cafe':'escalator')+'</div><span class="grow"><span class="t">'+esc(s.name)+'</span><span class="s">'+esc(s.sub)+(t.zones[s.zone]&&Object.keys(t.zones).length>1?' · '+t.zones[s.zone]:'')+'</span></span>'+(state.pickSel===s.id?ic('check',20,'#001F60',2.6):'')+'</button>').join('')
+      (list.length?list.map(s=>'<button type="button" class="row" data-spot="'+s.id+'" aria-pressed="'+(state.pickSel===s.id)+'" style="'+(state.pickSel===s.id?'border:2px solid #001F60;padding:9px':'')+'"><div style="width:60px;height:46px;border-radius:9px;overflow:hidden;flex-shrink:0">'+photo('',46,s.kind==='gates'?'plane':s.kind==='shops'?'bag':s.kind==='counters'?'info':'pin','',s.kind==='gates'?'gate':s.kind==='shops'?'cafe':'escalator')+'</div><span class="grow"><span class="t">'+esc(s.name)+'</span><span class="s">'+esc(s.sub)+(t.zones[s.zone]&&Object.keys(t.zones).length>1&&!s.sub.includes(t.zones[s.zone])?' · '+t.zones[s.zone]:'')+'</span></span>'+(state.pickSel===s.id?ic('check',20,'#001F60',2.6):'')+'</button>').join('')
         :'<div class="empty">No match for “'+esc(state.pickQ)+'”. Try a gate number or the name on a nearby sign.</div>')+
     '</div>'+
     '<div style="padding:12px 20px 20px;background:#fff;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px">'+
-      '<button type="button" class="btn" data-act="confirmLoc"'+(sel?'':' disabled')+'>'+(sel?'Confirm: I’m at '+esc(sel.name):'Pick a place')+'</button>'+
-      '<button type="button" class="btn text" data-act="scanInfo">'+ic('scan',18,'#001F60')+'Scan a poster instead</button></div></div>';
+      '<button type="button" class="btn" data-act="confirmLoc"'+(sel?'':' disabled')+'>'+(sel?'Confirm: I’m at '+esc(sel.name):'Pick a place')+'</button></div></div>';
 };
 
+S.scan=()=>{
+  const here=mk(state.terminal,state.level), otherT=state.terminal==='3'?'1':'3';
+  const posters=here.spots.filter(s=>s.qr&&s.id!==state.loc.spot).slice(0,4).map(s=>[state.terminal,state.level,s]).concat([[otherT,'dep',mk(otherT,'dep').spots.find(s=>s.qr)]]);
+  const hit=state.scanHit, hs=hit?mk(hit[0],hit[1]).SPOT[hit[2]]:null;
+  return '<div class="screen"><div class="scanview"><div class="cam"></div>'+
+    '<div style="position:relative;display:flex;align-items:center;gap:8px;padding:14px 12px"><button class="back" type="button" data-act="back" aria-label="Close scanner" style="margin-left:0">'+ic('close',22,'#fff')+'</button><div style="flex:1"><div style="font-size:16px;font-weight:800">Scan a QR code</div><div style="font-size:11.5px;color:#C9D3F0">Sets your exact spot and which way you’re facing</div></div></div>'+
+    '<div style="position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px">'+
+      '<div class="finder" aria-hidden="true"><i></i><i></i><i></i><i></i>'+(hs?'<div style="position:absolute;inset:40px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center">'+ic('check',64,'#1B5E20',3)+'</div>':'<div class="scanline"></div>')+'</div>'+
+      '<div role="status" style="text-align:center;font-size:13.5px;line-height:1.45;color:#DCE3F5;padding:0 36px">'+(hs?'Code read':'Point your camera at an Airport Navi code. Look for it on pillars, gate screens and signs.')+'</div></div>'+
+    '<div style="position:relative;padding:0 0 22px;display:flex;flex-direction:column;gap:10px"><div class="label" style="color:#9FB0D6;padding:0 20px">Demo: tap a poster to scan it</div>'+
+      '<div class="chips" style="padding:0 20px;gap:10px">'+posters.filter(x=>x[2]).map(([tm,lv,s])=>'<button type="button" class="poster" data-scan="'+tm+'|'+lv+'|'+s.id+'"><span style="width:34px;height:34px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center">'+ic('qr',22,'#001F60',2)+'</span><span style="font-size:12px;font-weight:800;line-height:1.25">'+esc(s.name)+'</span><span style="font-size:10.5px;color:#C9D3F0">T'+tm+' · '+(lv==='arr'?'Arrivals':'Departures')+' · '+s.qr+'</span></button>').join('')+'</div></div>'+
+    '</div></div>';
+};
 S.flight=()=>{
-  const f=state.flight; if(!f)return S.home();
+  const f=state.flight; if(!f)return S.home(); if(f.dir==='arr')return S.arrival();
   const here=flightHere(f), g=flightGate(f);
   const r=here?route({type:'gate',id:f.gate}):null;
   const until=hm(f.boarding)-hm(NOW);
   const wc=here&&r&&!r.blocked?nearestOf('toilets'):null;
   const food=here?(T().pois.filter(p=>p.cat==='dining'&&p.zone===state.loc.zone)[0]):null;
   let walkCard;
-  if(!here) walkCard='<div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;border-color:#C9D6F0;background:var(--tint)">'+ic('warn',22,'#001F60')+'<div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="font-size:14.5px;font-weight:800">'+f.code+' departs from Terminal '+f.terminal+'</div><div class="muted" style="font-size:12.5px;line-height:1.45">You’re in '+T().name+'. Allow time for the inter-terminal transfer, then scan a poster at Terminal '+f.terminal+'.</div><button type="button" class="btn line" style="height:40px;font-size:13px" data-act="switchToFlightTerm">I’m at Terminal '+f.terminal+' now</button></div></div>';
+  if(!here) walkCard='<div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;border-color:#C9D6F0;background:var(--tint)">'+ic('warn',22,'#001F60')+'<div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="font-size:14.5px;font-weight:800">'+f.code+' departs from Terminal '+f.terminal+'</div><div class="muted" style="font-size:12.5px;line-height:1.45">You’re viewing the '+T().name+(state.level==='arr'?' arrivals':'')+' map. Your flight details stay as they are when you switch.</div><button type="button" class="btn line" style="height:40px;font-size:13px" data-act="acceptSwap">'+ic('nav',16,'#001F60',2.4)+'Switch to the Terminal '+f.terminal+' map</button></div></div>';
   else if(r.blocked) walkCard='<div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;border-color:#C9D6F0;background:var(--tint)">'+ic('wall',22,'#001F60')+'<div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="font-size:14.5px;font-weight:800">Gate '+f.gate+' is on the '+(g.zone==='dom'?'domestic':'international')+' side</div><div class="muted" style="font-size:12.5px;line-height:1.45">You’re on the '+zoneName(state.loc.zone).toLowerCase()+'. A glass partition separates the two, so there’s no walking route from here. Check your boarding pass, or tell us where you are.</div><button type="button" class="btn line" style="height:40px;font-size:13px" data-go="location">Change my location</button></div></div>';
   else walkCard='<div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:12px;background:var(--tint);display:flex;align-items:center;justify-content:center">'+ic('walk',22,'#001F60')+'</span><div style="flex:1"><div style="font-size:15px;font-weight:800">'+r.mins+' min walk to Gate '+f.gate+'</div><div class="muted" style="font-size:12px">'+r.m+' m · '+(g.level?'via '+(g.via==='esc'?'escalators to the ground level':'stairs')+' · ':'Level 3 · ')+(until>0?dur(until)+' until boarding':'Boarding now')+'</div></div></div>';
   return '<div class="screen"><div class="scroll">'+
@@ -679,21 +988,57 @@ S.flight=()=>{
 };
 function miniCard(t,s,kind,id,icon,img){return '<button type="button" data-open-'+kind+'="'+id+'" style="flex:1;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;padding:0;text-align:left;color:inherit">'+photo('',64,icon,'',img)+'<span style="padding:8px 10px;display:flex;flex-direction:column;gap:1px"><span style="font-size:12.5px;font-weight:800">'+esc(t)+'</span><span style="font-size:11px;color:var(--muted)">'+s+'</span></span></button>';}
 
+function promptTile(t,sub,attr,icon,img){return '<button type="button" '+attr+' style="display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;padding:0;text-align:left;color:inherit">'+photo('',64,icon,'',img)+'<span style="padding:8px 10px 10px;display:flex;flex-direction:column;gap:1px"><span style="font-size:12.5px;font-weight:800;line-height:1.25">'+esc(t)+'</span><span style="font-size:11px;color:var(--muted)">'+sub+'</span></span></button>';}
+function arrivalPrompts(f){
+  const t=mk(f.terminal,'arr'),c=t.POI['c'+f.carousel];if(!c)return '';
+  const here=state.level==='arr'&&state.terminal===f.terminal,cl=poiLoc(c),wc=here?nearestFrom(cl,'toilets'):null,fx=here&&t.POI.fx,sim=here&&t.POI.simdesk;
+  return '<div class="grid2">'+
+    (wc?promptTile('Toilets near Carousel '+f.carousel,wc[1].mins+' min from the belt','data-dest="poi:'+wc[0].id+'"','wc','restroom'):'')+
+    promptTile('Exit & ground transport','Grab · JoyRide · taxi queue','data-go="rides"','taxi','taxi')+
+    (fx?promptTile('Money exchange & ATMs','Arrivals hall, after customs','data-dest="poi:fx"','money','passport'):'')+
+    (sim?promptTile('SIM & pocket WiFi','Counters in the arrivals hall','data-open-shop="simdesk"','esim','phone'):'')+'</div>';
+}
+S.arrival=()=>{
+  const f=state.flight; if(!f||f.dir!=='arr')return S.home();
+  const t=mk(f.terminal,'arr'), c=t.POI['c'+f.carousel], here=flightHere(f), w=here&&c?walkInfo(c):null, st=f.bag;
+  const steps=[['Landed',st>=1],['At the gate',st>=1],['Bags unloading',st>=2],['All bags out',st>=3]];
+  const nowIdx=st===0?0:st===1?2:st===2?3:-1;
+  return '<div class="screen"><div class="scroll">'+
+    '<header class="top" style="padding-bottom:70px"><div class="toprow"><button class="back" type="button" data-act="back" aria-label="Back">'+ic('back',22,'#fff')+'</button><div class="t-title">Your arrival</div></div></header>'+
+    '<div class="body" style="margin-top:-54px;position:relative;padding-top:0;gap:14px">'+
+      '<div class="card" style="border:0;box-shadow:0 8px 24px rgba(0,31,96,.14);overflow:hidden">'+
+        '<div style="padding:18px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px dashed var(--line-2)"><div><div style="font-size:28px;font-weight:800;letter-spacing:-.01em">'+f.code+'</div><div class="muted" style="font-size:13px">'+f.airline+' · from '+f.fromCity+'</div></div><span class="pill '+(f.landed?'ok':'tint')+'">'+(f.landed?'Landed '+f.eta:'Lands '+f.eta)+'</span></div>'+
+        '<div style="display:grid;grid-template-columns:1.25fr 1fr 1fr;background:var(--ground)">'+
+          '<div style="padding:12px 18px;background:var(--navy);color:#fff;display:flex;flex-direction:column;gap:2px"><span class="label" style="font-size:10px;color:#C9D3F0">Carousel</span><span style="font-size:34px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">'+f.carousel+'</span><span style="font-size:10.5px;color:#C9D3F0">'+(f.landed?'Baggage claim, L1':'Planned')+'</span></div>'+
+          '<div style="padding:12px;border-left:1px solid var(--line)">'+kv('Gate',f.gate,true)+'</div>'+
+          '<div style="padding:12px;border-left:1px solid var(--line)">'+kv('Terminal',f.terminal,true)+'</div></div></div>'+
+      '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">'+
+        '<div style="display:flex;align-items:flex-start;gap:12px"><span style="width:44px;height:44px;border-radius:12px;background:var(--tint);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('luggage',22,'#001F60')+'</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:15.5px;font-weight:800">'+f.bagInfo.t+'</span>'+(st===2?'<span class="pill ok" style="height:20px;font-size:10px">Live</span>':'')+'</div><div class="muted" style="font-size:12.5px;margin-top:2px">'+f.bagInfo.s+'</div></div></div>'+
+        '<div class="bagsteps" aria-label="Bag progress">'+steps.map(([l,on],i)=>'<div class="'+(on?'on':'')+(i===nowIdx?' now':'')+'"><i></i>'+l+'</div>').join('')+'</div>'+
+        '<div class="small" style="font-size:11px">Updated '+f.updated+' · Carousel from the flight feed (Cirium format); bag status is sample data that NAIA’s baggage system would provide.</div></div>'+
+      (here&&w?'<div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:12px;background:var(--tint);display:flex;align-items:center;justify-content:center">'+ic('walk',22,'#001F60')+'</span><div style="flex:1"><div style="font-size:15px;font-weight:800">About '+w.mins+' min to Carousel '+f.carousel+'</div><div class="muted" style="font-size:12px">'+w.m+' m walk'+(w.extra>=10?' · includes ~10 min at immigration (sample)':'')+' · from '+esc(locShort())+'</div></div></div>'+
+        '<button type="button" class="btn" data-act="navCarousel">'+ic('nav',18,'#fff',2.5)+'Guide me to Carousel '+f.carousel+'</button>'
+       :'<div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;border-color:#C9D6F0;background:var(--tint)">'+ic('warn',22,'#001F60')+'<div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="font-size:14.5px;font-weight:800">Arriving at Terminal '+f.terminal+', Gate '+f.gate+'</div><div class="muted" style="font-size:12.5px;line-height:1.45">We’ll start your route at the arrival bridge. Scan a QR code if you’ve already moved on.</div><button type="button" class="btn line" style="height:40px;font-size:13px" data-act="arrHere">I’m at the Gate '+f.gate+' bridge</button></div></div>')+
+      '<div class="h3" style="margin-top:4px">After you collect your bags</div>'+arrivalPrompts(f)+
+    '</div></div>'+bar(null)+'</div>';
+};
+
 S.search=()=>{
-  const t=T(), q=state.q.trim().toLowerCase(), f=state.flight, mine=f&&flightHere(f)?f.gate:null;
+  const t=T(), q=state.q.trim().toLowerCase(), f=state.flight, mine=f&&f.dir==='dep'&&flightHere(f)?f.gate:null;
   let results=[];
   if(q){
     const digits=q.replace(/\D/g,'');
     t.gates.forEach(g=>{if((digits&&String(g.g).startsWith(digits))||(!digits&&'gate'.startsWith(q.split(' ')[0])&&q.startsWith('gate')))results.push({kind:'gate',id:g.g,o:g,t:'Gate '+g.g+(mine===g.g?' · your flight':''),s:(mine===g.g?f.code+' to '+f.toCity+' · boards '+f.boarding:(t.zones[g.zone]||'')+(g.level?' · '+LVL[g.level]:'')),mine:mine===g.g});});
-    const syn={toilet:'toilets',cr:'toilets',restroom:'toilets',comfort:'toilets',food:'dining',eat:'dining',coffee:'dining',cafe:'dining',café:'dining',charg:'charging',atm:'atm',cash:'atm',money:'atm',lounge:'lounge',pray:'prayer',smok:'smoking',vap:'smoking',info:'info',water:'water',shop:'retail',duty:'dutyfree'};
+    const syn={carousel:'carousel',bag:'carousel',baggage:'carousel',belt:'carousel',pickup:'pickup','pick-up':'pickup',grab:'pickup',ride:'pickup',taxi:'taxi',bus:'bus',exit:'exit',meet:'place',toilet:'toilets',cr:'toilets',restroom:'toilets',comfort:'toilets',food:'dining',eat:'dining',coffee:'dining',cafe:'dining',café:'dining',charg:'charging',atm:'atm',cash:'atm',money:'atm',lounge:'lounge',pray:'prayer',smok:'smoking',vap:'smoking',info:'info',water:'water',shop:'retail',duty:'dutyfree'};
     t.pois.forEach(p=>{const hay=(p.name+' '+p.cat+' '+(p.sub||'')).toLowerCase();if(hay.includes(q)||Object.entries(syn).some(([w,c])=>q.includes(w)&&p.cat===c))results.push({kind:'poi',id:p.id,o:p,t:p.name,s:p.sub||''});});
     results.forEach(r=>r.w=walkInfo(r.o));
     results.sort((a,b)=>(b.mine?1:0)-(a.mine?1:0)||((a.w?a.w.m:1e6)-(b.w?b.w.m:1e6)));
     results=results.slice(0,7);
   }
-  const quick=[mine?['gate',mine,'My gate · '+mine]:null,['q','toilet','Toilets'],['q','food','Food'],['q','lounge','Lounges'],['q','charg','Charging']].filter(Boolean);
-  const nb=t.vb;
-  return '<div class="screen"><div class="mapwrap" style="opacity:.9">'+floorSVG({labels:false,destGate:mine,vb:state.terminal==='3'?'-30 280 460 1000':'-20 120 940 1100'})+'</div>'+
+  const myC=f&&f.dir==='arr'&&flightHere(f)?f.carousel:null;
+  const quick=(state.level==='arr'?[myC?['poi','c'+myC,'My carousel · '+myC]:null,['q','toilet','Toilets'],['q','exit','Exits'],['q','pickup','Ride pick-up'],['q','money','Money']]:[mine?['gate',mine,'My gate · '+mine]:null,['q','toilet','Toilets'],['q','food','Food'],['q','lounge','Lounges'],['q','charg','Charging']]).filter(Boolean);
+  const mkey='search:'+state.terminal+state.level, uvb=state.userVB&&state.userVB.key===mkey?state.userVB.vb:null;
+  return '<div class="screen"><div class="mapwrap pan" data-mapkey="'+mkey+'" style="opacity:.92">'+floorSVG({labels:false,destGate:mine,vb:uvb||t.searchVB})+'</div>'+
     '<div style="position:absolute;left:0;right:0;top:0;background:#fff;border-radius:0 0 22px 22px;box-shadow:0 10px 30px rgba(0,31,96,.18);padding:12px 16px 16px;display:flex;flex-direction:column;gap:12px;max-height:660px;z-index:2">'+
       '<div style="display:flex;align-items:center;gap:6px"><button class="back" type="button" data-act="back" aria-label="Back" style="color:#001F60;margin-left:-8px">'+ic('back',22,'#001F60')+'</button>'+
       '<label class="searchbox" for="navq" style="flex:1;background:var(--ground);border:2px solid #001F60;height:50px">'+ic('search',18,'#001F60',2.4)+'<span class="sr">Search a place</span><input id="navq" type="search" autocomplete="off" data-input="navq" value="'+esc(state.q)+'" placeholder="Search gate, shop, toilet in '+t.short+'" style="font-weight:600;font-size:16px">'+(state.q?'<button type="button" class="x" data-clear="navq" aria-label="Clear search">'+ic('close',16,'#5C6480',2.5)+'</button>':'')+'</label></div>'+
@@ -707,44 +1052,91 @@ S.search=()=>{
     '<button type="button" class="fbtn" data-go="location" style="position:absolute;right:16px;bottom:24px;z-index:2;max-width:330px">'+ic('pin',16,'#001F60')+'<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">From: '+esc(locShort())+'</span></button></div>';
 };
 
+function angDiff(a,b){return ((b-a+540)%360)-180;}
+function faceWord(h){return ['north','north-east','east','south-east','south','south-west','west','north-west'][Math.round(((h%360)+360)%360/45)%8];}
 S.navigate=()=>{
   const d=state.nav; if(!d)return S.search();
   const r=route(d); if(!r)return S.search();
-  const f=state.flight; const isFlight=d.type==='gate'&&f&&flightHere(f)&&f.gate===d.id;
-  const t=T();
+  const f=state.flight, t=T();
+  const isFlight=d.type==='gate'&&f&&f.dir==='dep'&&flightHere(f)&&f.gate===d.id;
+  const isBag=d.type==='poi'&&f&&f.dir==='arr'&&flightHere(f)&&d.id==='c'+f.carousel;
+  const ride=state.ride&&d.type==='poi'&&d.id===state.ride.bay?state.ride:null;
+  const mkey='nav:'+state.terminal+state.level+':'+d.type+d.id, uvb=state.userVB&&state.userVB.key===mkey?state.userVB.vb:null;
+  const cls='screen'+(state.swapAnim?' swap-in':''), badge=state.swapAnim?'<div class="swap-badge">'+ic('check',18,'#fff',2.6)+'Now showing '+t.name+'</div>':'';
+  const zoom='<div class="zoomctl" style="top:186px"><button type="button" data-act="zoomIn" aria-label="Zoom in">'+ic('plus',18,'#001F60',2.6)+'</button><button type="button" data-act="zoomOut" aria-label="Zoom out">'+ic('minus',18,'#001F60',2.6)+'</button><button type="button" data-act="recenter" aria-label="Fit the route">'+ic('target',18,'#001F60',2.2)+'</button></div>';
   if(r.blocked){
-    const o=r.o;
-    return '<div class="screen"><div class="mapwrap">'+floorSVG({destGate:d.type==='gate'?d.id:null,destPoi:d.type==='poi'?d.id:null,vb:fitVB([[state.loc.x,state.loc.y],[o.x,o.y]],150,300)})+'</div>'+
-      '<div class="float-top"><button class="back" type="button" data-act="back" aria-label="Back" style="margin-left:0">'+ic('back',22,'#fff')+'</button><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800">To '+esc(o.name)+'</div><div style="font-size:11px;color:#C9D3F0">No walking route from here</div></div></div>'+
-      '<div class="steps" style="padding:16px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:12px;align-items:flex-start">'+ic('wall',22,'#001F60')+'<div style="flex:1"><div style="font-size:15px;font-weight:800">'+esc(o.name)+' is on the '+(o.zone==='dom'?'domestic':'international')+' side</div><div class="muted" style="font-size:12.5px;line-height:1.45;margin-top:4px">You’re on the '+zoneName(state.loc.zone).toLowerCase()+'. The glass partition in the central hall can’t be crossed after security. If your boarding pass shows this gate, speak to airline staff.</div></div></div>'+
-      '<div style="display:flex;gap:8px"><button type="button" class="btn line" style="height:44px;font-size:13.5px" data-go="location">Change my location</button>'+(nearestOf('info')?'<button type="button" class="btn" style="height:44px;font-size:13.5px" data-dest="poi:'+nearestOf('info').id+'">Information desk</button>':'')+'</div></div></div>';
+    const o=r.o, m=blockedMsg(o);
+    return '<div class="'+cls+'"><div class="mapwrap pan" data-mapkey="'+mkey+'">'+floorSVG({destGate:d.type==='gate'?d.id:null,destPoi:d.type==='poi'?d.id:null,vb:uvb||fitVB([[state.loc.x,state.loc.y],[o.x,o.y]],150,300)})+'</div>'+
+      '<div class="float-top"><button class="back" type="button" data-act="back" aria-label="Back" style="margin-left:0">'+ic('back',22,'#fff')+'</button><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800">To '+esc(o.name)+'</div><div style="font-size:11px;color:#C9D3F0">No walking route from here</div></div></div>'+zoom+
+      '<div class="steps" style="padding:16px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:12px;align-items:flex-start">'+ic('wall',22,'#001F60')+'<div style="flex:1"><div style="font-size:15px;font-weight:800">'+esc(m.h)+'</div><div class="muted" style="font-size:12.5px;line-height:1.45;margin-top:4px">'+esc(m.p)+'</div></div></div>'+
+      '<div style="display:flex;gap:8px"><button type="button" class="btn line" style="height:44px;font-size:13.5px" data-go="location">Change my location</button>'+(nearestOf('info')?'<button type="button" class="btn" style="height:44px;font-size:13.5px" data-dest="poi:'+nearestOf('info').id+'">Information desk</button>':'')+'</div></div>'+badge+'</div>';
   }
-  const cardH=state.stepsOpen?96+54*(r.steps.length-1)+44:78;
-  const vb=fitVB(r.pts,150,cardH+26);
+  const anim=state.anim&&state.anim.type==='reroute'&&isFlight?state.anim:null;
+  const hd=youHeading(r), turn=r.startBearing!=null&&!state.walking&&state.arrivedAt===null?angDiff(hd,r.startBearing):0;
+  const cue=Math.abs(turn)>=135?['Turn around','Your route starts behind you']:Math.abs(turn)>=60?[turn>0?'Turn right to start':'Turn left to start','Then follow the blue line']:null;
+  const eta=anim&&anim.oldMins!=null?'<div class="eta'+(anim.done?'':' flash')+'" role="status">'+ic('clock',18,'#001F60')+'<span style="flex:1">New ETA <b>'+fmt(hm(NOW)+r.mins)+'</b></span><span class="pill '+(r.mins>anim.oldMins?'warn':'ok')+'">'+(r.mins===anim.oldMins?'Same time':(r.mins>anim.oldMins?'+':'−')+Math.abs(r.mins-anim.oldMins)+' min vs Gate '+anim.oldGate)+'</span></div>'
+    :ride?'<div class="eta">'+ic('car',18,'#001F60')+'<span style="flex:1">You reach Bay '+ride.bayN+' ~<b>'+fmt(hm(NOW)+r.mins)+'</b></span><span class="pill '+(r.mins>ride.eta?'warn':'ok')+'">Driver ~'+fmt(hm(NOW)+ride.eta)+'</span></div>':'';
+  const cardH=(state.stepsOpen?96+Math.min(236,58*(r.steps.length-1))+44:78)+(eta?52:0)+(cue?42:0);
+  const vb=uvb||fitVB(r.pts,150,cardH+26);
   const first=r.steps[0],rest=r.steps.slice(1),arrive=fmt(hm(NOW)+r.mins);
-  const lvl=r.o.level&&r.o.level!==3?'L3 → '+(r.o.level==='G'?'G':r.o.level===4?'L4':(r.o.level==='lower'?'↓':'↑')):'L3';
-  return '<div class="screen"><div class="mapwrap">'+floorSVG({route:r,destGate:d.type==='gate'?d.id:null,destPoi:d.type==='poi'?d.id:null,oldGate:isFlight?f.prevGate:null,vb:vb,label:'Route to '+r.name})+'</div>'+
-    '<div class="float-top"><button class="back" type="button" data-act="back" aria-label="Back" style="margin-left:0">'+ic('back',22,'#fff')+'</button><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">To '+esc(r.name)+'</div><div style="font-size:11px;color:#C9D3F0">'+(isFlight?f.code+' · boards '+f.boarding+' · ':'')+r.mins+' min · '+r.m+' m</div></div><span class="pill" style="background:#fff;color:#001F60;height:30px;font-size:12px;font-weight:800">'+t.short+' · '+lvl+'</span></div>'+
+  const lvl=state.level==='arr'?'L'+state.loc.level+(r.o.flr&&r.o.flr!==state.loc.level?' → L'+r.o.flr:''):(r.o.level&&r.o.level!==3?'L3 → '+(r.o.level==='G'?'G':r.o.level===4?'L4':(r.o.level==='lower'?'↓':'↑')):'L3');
+  const sub=isFlight?f.code+' · boards '+f.boarding+' · ':isBag?f.code+' · '+f.bagInfo.t+' · ':ride?ride.partner+' · '+ride.car+' '+ride.plate+' · ':'';
+  const kindPill=s=>s.kind==='imm'?'<span class="pill tint" style="height:20px;font-size:10px">~'+s.m+' min queue</span>':s.kind==='esc'?'<span class="pill tint" style="height:20px;font-size:10px">L2 → L1</span>':'';
+  return '<div class="'+cls+'"><div class="mapwrap pan" data-mapkey="'+mkey+'">'+floorSVG({route:r,destGate:d.type==='gate'?d.id:null,destPoi:d.type==='poi'?d.id:null,oldGate:isFlight?f.prevGate:null,vb:vb,label:'Route to '+r.name,drawIn:!!(anim&&!anim.done),ghost:anim&&!anim.done?anim.oldPts:null,heading:hd})+'</div>'+
+    '<div class="float-top"><button class="back" type="button" data-act="back" aria-label="Back" style="margin-left:0">'+ic('back',22,'#fff')+'</button><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">To '+esc(r.name)+'</div><div style="font-size:11px;color:#C9D3F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(sub)+r.mins+' min · '+r.m+' m</div></div><span class="pill" style="background:#fff;color:#001F60;height:30px;font-size:12px;font-weight:800">'+t.short+' · '+lvl+'</span></div>'+
     '<div style="position:absolute;right:16px;top:84px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;z-index:3">'+
       '<button type="button" class="fbtn" data-go="location">'+ic('pin',16,'#001F60')+'Where am I?</button>'+
-      '<button type="button" class="fbtn" data-act="stepFree" aria-pressed="'+state.stepFree+'">'+ic('access',16,state.stepFree?'#fff':'#001F60')+'Step-free</button></div>'+
-    (isFlight?'<div class="simtag">SIM<button type="button" data-act="simGate">gate change</button><button type="button" data-act="simDelay">delay</button></div>':'')+
+      '<button type="button" class="fbtn" data-act="stepFree" aria-pressed="'+state.stepFree+'">'+ic('access',16,state.stepFree?'#fff':'#001F60')+'Step-free</button></div>'+zoom+
+    '<div class="simtag">SIM<button type="button" data-act="'+(state.walking?'stopWalk':'walk')+'">'+(state.walking?'stop':'walk ▶')+'</button>'+(isFlight?'<button type="button" data-act="simGate">gate change</button><button type="button" data-act="simDelay">delay</button>':'')+'</div>'+
     '<div class="steps">'+
+      (cue?'<div class="cue" role="status">'+ic('reload',18,'#fff',2.4)+'<span>'+cue[0]+'<span style="display:block;font-size:11.5px;font-weight:600;color:#C9D3F0">'+cue[1]+'</span></span><button type="button" data-act="faceRoute">Done</button></div>':'')+
+      (eta?'<div style="padding-top:12px">'+eta+'</div>':'')+
       '<button type="button" class="stephead" data-act="toggleSteps" aria-expanded="'+state.stepsOpen+'"><span class="num on">1</span><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:800">'+esc(first.t)+'</span><span class="muted" style="font-size:12px">'+(first.meters?first.meters+' m · ':'')+first.m+' min'+(rest.length?' · then '+rest.length+' more step'+(rest.length>1?'s':''):'')+'</span></span>'+ic(state.stepsOpen?'down':'up',20,'#5C6480')+'</button>'+
-      (state.stepsOpen?rest.map((s,i)=>'<div class="steprow"><span class="num">'+(i+2)+'</span><span style="flex:1">'+esc(s.t)+'</span><span class="muted" style="font-size:12px;white-space:nowrap">'+s.m+' min</span></div>').join('')+
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px 12px;border-top:1px solid #F0F2F7;font-size:11.5px;color:var(--muted)"><span>Arrive ~'+arrive+(isFlight?' · boarding '+f.boarding:'')+' · schematic map, not to scale</span><button type="button" data-act="endRoute" style="border:0;background:transparent;font-weight:800;color:#001F60;font-size:12.5px;padding:6px 0;white-space:nowrap">End route</button></div>':'')+
-    '</div>'+(state.sheet==='gate'?gateSheet():'')+'</div>';
+      (state.stepsOpen?'<div style="max-height:236px;overflow-y:auto">'+rest.map((s,i)=>'<div class="steprow"><span class="num">'+(i+2)+'</span><span style="flex:1;display:flex;flex-direction:column;gap:4px">'+esc(s.t)+kindPill(s)+'</span><span class="muted" style="font-size:12px;white-space:nowrap">'+s.m+' min</span></div>').join('')+'</div>'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px 12px;border-top:1px solid #F0F2F7;font-size:11.5px;color:var(--muted)"><span>Arrive ~'+arrive+(isFlight?' · boarding '+f.boarding:'')+' · schematic map</span><button type="button" data-act="endRoute" style="border:0;background:transparent;font-weight:800;color:#001F60;font-size:12.5px;padding:6px 0;white-space:nowrap">End route</button></div>':'')+
+    '</div>'+badge+'</div>';
 };
+function sheetWrap(id,inner){return '<div class="sheet-bg" role="dialog" aria-modal="true" aria-labelledby="'+id+'"><div class="sheet"><div class="grab"></div>'+inner+'</div></div>';}
+function sheetHead(id,icon,title,sub,ok){return '<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:12px;background:'+(ok?'var(--ok-bg)':'#001F60')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(icon,22,ok?'#1B5E20':'#fff',2.4)+'</span><div style="min-width:0"><div id="'+id+'" style="font-size:19px;font-weight:800;line-height:1.2">'+title+'</div><div class="muted" style="font-size:12px;margin-top:2px">'+sub+'</div></div></div>';}
 function gateSheet(){
-  const f=state.flight;const r=route({type:'gate',id:f.gate});const until=hm(f.boarding)-hm(NOW)-(r&&!r.blocked?r.mins:0);
-  return '<div class="sheet-bg" role="dialog" aria-modal="true" aria-labelledby="gch"><div class="sheet"><div class="grab"></div>'+
-    '<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:12px;background:#001F60;display:flex;align-items:center;justify-content:center">'+ic('warn',22,'#fff')+'</span><div><div id="gch" style="font-size:20px;font-weight:800">Gate changed</div><div class="muted" style="font-size:12px">'+f.code+' · updated '+f.updated+'</div></div></div>'+
+  const f=state.flight;if(!f)return '';const r=route({type:'gate',id:f.gate}),r0=state.nav?route(state.nav):null;const until=hm(f.boarding)-hm(NOW)-(r&&!r.blocked?r.mins:0);
+  return sheetWrap('gch',sheetHead('gch','warn','Gate changed',f.code+' · updated '+f.updated)+
     '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--ground);border-radius:14px"><div style="flex:1;text-align:center"><div class="label">Was</div><div style="font-size:26px;font-weight:800;color:#8A91AB;text-decoration:line-through">'+f.prevGate+'</div></div>'+ic('chev',22,'#5C6480')+'<div style="flex:1;text-align:center"><div class="label">Now</div><div style="font-size:26px;font-weight:800;color:#001F60">'+f.gate+'</div></div><div style="width:1px;height:40px;background:var(--line-2)"></div><div style="flex:1;text-align:center"><div class="label">Boarding</div><div style="font-size:20px;font-weight:800">'+f.boarding+'</div></div></div>'+
-    '<div style="font-size:14px;line-height:1.45">'+(r&&!r.blocked?'New walking time is <b>about '+r.mins+' min</b> ('+r.m+' m). You still have '+dur(Math.max(0,until))+' before boarding.':'The new gate is on the other side of the partition. Please speak to airline staff.')+'</div>'+
+    '<div style="font-size:14px;line-height:1.5">'+(r&&!r.blocked?'Walk '+(r0&&!r0.blocked?r0.mins+' min → ':'')+'<b>about '+r.mins+' min</b> ('+r.m+' m). New ETA at the gate <b>'+fmt(hm(NOW)+r.mins)+'</b>, leaving '+dur(Math.max(0,until))+' before boarding.':'The new gate is on the other side of the partition. Please speak to airline staff.')+'</div>'+
     '<button type="button" class="btn" data-act="reroute">'+ic('nav',18,'#fff',2.5)+'Re-route to Gate '+f.gate+'</button><button type="button" class="btn text" data-act="gateDetails">View flight details</button>'+
-    '<div class="small" style="text-align:center">Source: simulated flight feed · confirm on the airport displays</div></div></div>';
+    '<div class="small" style="text-align:center">Source: simulated flight feed · confirm on the airport displays</div>');
 }
-
+function swapSheet(){
+  const f=state.flight;if(!f)return '';const tn=TERMS[f.terminal].name;
+  return sheetWrap('swh',sheetHead('swh','plane',f.code+' leaves from '+tn,'Gate '+f.gate+' · boarding '+f.boarding+' · you’re viewing '+T().name+(state.level==='arr'?' arrivals':''))+
+    '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--ground);border-radius:14px"><span class="pill tint" style="height:32px;font-size:13px">'+T().short+(state.level==='arr'?' arrivals':'')+' map</span>'+ic('chev',20,'#5C6480')+'<span class="pill navy" style="height:32px;font-size:13px">'+TERMS[f.terminal].short+' departures map</span><span style="flex:1"></span>'+ic('check',18,'#1B5E20',2.6)+'<span style="font-size:12px;font-weight:700;color:var(--ok)">Flight kept</span></div>'+
+    '<div style="font-size:13.5px;line-height:1.5;color:var(--muted)">Switch now and your flight, gate and alerts stay as they are. The route starts at the '+tn+' security exit; scan a QR code there to fine-tune it. Allow at least 30 minutes to transfer between terminals.</div>'+
+    '<button type="button" class="btn" data-act="acceptSwap">'+ic('nav',18,'#fff',2.5)+'Switch to the '+tn+' map</button><button type="button" class="btn text" data-act="closeSheet">Stay on '+T().name+' for now</button>');
+}
+function scanSheet(){
+  const h=state.scanHit;if(!h)return '';const sp=mk(h[0],h[1]).SPOT[h[2]];if(!sp)return '';const other=h[0]!==state.terminal||h[1]!==state.level;
+  return sheetWrap('sch',sheetHead('sch','check','Found you: '+esc(sp.name),'Terminal '+h[0]+' · '+(h[1]==='arr'?'Arrivals':'Departures')+' · Level '+sp.level+' · code '+sp.qr,true)+
+    '<div class="tagrow"><span class="pill ok">Exact position</span><span class="pill tint">Facing '+faceWord(sp.face||0)+' from the poster</span></div>'+
+    (other?'<div class="notice" style="background:var(--tint);border-color:#C9D6F0;color:var(--navy-ink)">'+ic('info',14,'#001F60')+'<span>This code is in <b>Terminal '+h[0]+(h[1]==='arr'?' arrivals':'')+'</b>. We’ll switch the map'+(state.flight?' and keep '+state.flight.code:'')+'.</span></div>':'')+
+    '<button type="button" class="btn" data-act="scanConfirm">'+ic('pin',18,'#fff',2.4)+'Set as my location</button><button type="button" class="btn text" data-act="scanAgain">Scan a different code</button>');
+}
+function arrivedSheet(){
+  const d=state.arrivedAt, o=d&&destObj(d); if(!o)return '';
+  const f=state.flight, ride=state.ride&&d.type==='poi'&&d.id===state.ride.bay?state.ride:null;
+  if(f&&f.dir==='arr'&&d.type==='poi'&&d.id==='c'+f.carousel)
+    return sheetWrap('arh',sheetHead('arh','luggage','You’re at Carousel '+f.carousel,f.code+' from '+f.fromCity+' · '+f.bagInfo.t,f.bag>=2)+
+      '<div style="font-size:13px;color:var(--muted);line-height:1.45">'+f.bagInfo.s+'. What next?</div>'+arrivalPrompts(f)+'<button type="button" class="btn text" data-act="closeSheet">Done</button>');
+  if(ride)
+    return sheetWrap('arh',sheetHead('arh','car','You’re at Pick-up Bay '+ride.bayN,ride.partner+' · driver arriving ~'+fmt(hm(NOW)+ride.eta),true)+
+      '<div class="card" style="padding:14px;display:flex;align-items:center;gap:12px"><span class="logo" style="background:'+ride.color+'">'+ride.mark+'</span><div style="flex:1"><div style="font-size:15px;font-weight:800">'+ride.car+' · '+ride.carColor+'</div><div class="muted" style="font-size:12.5px">'+ride.driver+' · ★ '+ride.rating+'</div></div><div style="text-align:right"><div class="label" style="font-size:10px">Plate</div><div style="font-size:17px;font-weight:800;letter-spacing:.04em">'+ride.plate+'</div></div></div>'+
+      '<div style="font-size:13px;color:var(--muted);line-height:1.45">Wait at the Bay '+ride.bayN+' sign. Check the plate before you get in.</div><button type="button" class="btn" data-act="closeSheet">OK</button>');
+  if(f&&f.dir==='dep'&&d.type==='gate'&&f.gate===d.id){const left=hm(f.boarding)-hm(NOW);
+    return sheetWrap('arh',sheetHead('arh','plane','You’re at Gate '+f.gate,f.code+' to '+f.toCity+' · boarding '+f.boarding,true)+
+      '<div style="font-size:13.5px;line-height:1.5">'+(left>0?'You have <b>'+dur(left)+'</b> before boarding.':'Boarding has started.')+' We’ll alert you here if the gate or time changes.</div>'+
+      '<div class="grid2">'+(nearestOf('toilets')?promptTile('Nearest toilets',wm(nearestOf('toilets'))+' min','data-dest="poi:'+nearestOf('toilets').id+'"','wc','restroom'):'')+promptTile('Food nearby','Shops & lounges','data-go="shops"','cup','cafe')+'</div><button type="button" class="btn text" data-act="closeSheet">Done</button>');}
+  return sheetWrap('arh',sheetHead('arh','check','You’ve arrived',esc(o.name),true)+'<button type="button" class="btn" data-act="closeSheet">Done</button>');
+}
+const SHEETS={gate:gateSheet,swap:swapSheet,scan:scanSheet,arrived:arrivedSheet};
 const AMEN_CATS=[['toilets','Toilets','wc'],['charging','Charging','bolt'],['prayer','Prayer','prayer'],['atm','Money','card'],['water','Water','water'],['info','Info','info'],['smoking','Smoking','smoke'],['medical','Medical','plus']];
 S.amenities=()=>{
   const t=T(), q=state.amenQ.trim().toLowerCase();
@@ -772,7 +1164,7 @@ S.poi=()=>{
       '<h2 style="margin:0;font-size:22px;font-weight:800;line-height:1.2">'+esc(p.name)+'</h2><div class="muted" style="font-size:13px">'+esc(p.sub||'')+(ok?' · '+r.m+' m from you':'')+'</div></div>'+
       (p.feat?'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">'+p.feat.map(k=>'<div class="card" style="padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px">'+ic(FEAT[k][0],22,'#001F60')+'<span style="font-size:11px;font-weight:600;text-align:center">'+FEAT[k][1]+'</span></div>').join('')+'</div>':'')+
       '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div class="h3">How to get there</div>'+
-        (ok?'<ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);line-height:1.45">'+r.steps.map(s=>'<li>'+esc(s.t)+'</li>').join('')+'</ol><div style="height:130px;border-radius:10px;overflow:hidden;background:#EEF1F8">'+floorSVG({route:r,destPoi:p.id,labels:false,vb:vb})+'</div>'
+        (ok?'<ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);line-height:1.45">'+r.steps.map(s=>'<li>'+esc(s.t)+'</li>').join('')+'</ol><div class="minimap" style="height:130px;border-radius:10px;overflow:hidden;background:#EEF1F8">'+floorSVG({route:r,destPoi:p.id,labels:false,vb:vb,uid:'mini',pw:310,ph:130})+'</div>'
             :'<div class="muted" style="font-size:13px;line-height:1.5">This is on the other side of the glass partition, so there’s no walking route from where you are.</div>')+'</div>'+
       '<button type="button" data-act="report" style="display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:0;font-size:12.5px;font-weight:700;color:#001F60">'+ic('warn',16,'#5C6480')+'Report a problem (closed, wrong location)</button>'+
     '</div></div>'+
@@ -841,9 +1233,12 @@ function answer(qRaw){
     const here=flightHere(f);const r=here?route({type:'gate',id:f.gate}):null;
     return {text:'<b>'+f.code+' to '+f.toCity+' is '+(f.delayed?'delayed by '+f.delayMin+' min':'on time')+'.</b> Boarding '+f.boarding+' at Terminal '+f.terminal+', Gate '+f.gate+'. '+(!here?'You’re in '+t.name+', so allow time to transfer.':(r.blocked?'That gate is on the other side of the partition from you.':'It’s about '+r.mins+' minutes from you.')),cards:here&&!r.blocked?[{kind:'dest',dest:'gate:'+f.gate,t:'Gate '+f.gate,s:t.short+' · '+r.mins+' min walk',icon:'nav',label:'Navigate'}]:[],src:'Flight feed (simulated), as of '+f.updated};
   }
+  if(/bag|luggage|carousel|claim|belt/.test(q)){
+    if(f&&f.dir==='arr')return {text:'<b>'+f.code+' from '+f.fromCity+'</b>: bags on <b>Carousel '+f.carousel+'</b>, Terminal '+f.terminal+'. Status: '+f.bagInfo.t.toLowerCase()+'.',cards:[{kind:'go',go:'arrival',t:'Carousel '+f.carousel,s:f.bagInfo.t,icon:'luggage',label:'Open'}],src:'Flight feed (simulated) · bag status sample'};
+    return {text:'Tell me your arriving flight and I’ll show your carousel and when bags start coming out.',cards:[{kind:'go',go:'home',t:'Find my carousel',s:'Choose “Arriving”, e.g. PR 101',icon:'luggage',label:'Open'}],src:'Flight feed (simulated)'};}
   if(/sim|esim|wifi|internet|data/.test(q)){const ph=t.POI.pharmacy||t.POI.store;return {text:'You can get a local eSIM without leaving the app, or pick up pocket WiFi at the arrivals counters.'+(ph?' The '+ph.name.toLowerCase()+' also sells prepaid SIM cards.':''),cards:[{kind:'svc',svc:'esim',t:'eSIM',s:'Demo partner · activate in minutes',icon:'esim',label:'Open service'}].concat(ph&&walkInfo(ph)?[{kind:'shop',id:ph.id,t:ph.name,s:ph.sub+' · '+wm(ph)+' min',icon:'bag',label:'View'}]:[]),src:t.name+' directory (sample)'};}
   if(/liquid|bottle|carry|cabin/.test(q))return {text:'For international flights, liquids in your cabin bag must be in containers of 100 ml or less, all in one clear, resealable 1-litre bag. Sealed duty-free liquids bought after security are fine. Domestic rules can differ, so check with your airline.',cards:[],src:'MIAA passenger guide (sample)'};
-  if(/taxi|makati|ride|grab|transport|city/.test(q))return {text:'Metered airport taxis and a Grab pickup point are outside the arrivals area on the ground floor. You can also book ahead in Services.',cards:[{kind:'svc',svc:'taxi',t:'Book a taxi',s:'Demo partner · arrivals pickup',icon:'taxi',label:'Open service'}],src:'Public terminal guides'};
+  if(/taxi|makati|ride|grab|joyride|transport|city/.test(q))return {text:'Ride-hail pick-ups and the airport taxi queue are at the arrivals curb on Level 1. Compare Grab, JoyRide and the taxi queue, then I’ll walk you to the right bay.',cards:[{kind:'svc',svc:'taxi',t:'Get a ride',s:'Compare fares and waits · sample',icon:'taxi',label:'Compare'}],src:'Public terminal guides (bays assumed)'};
   if(/lounge/.test(q)){const ls=t.pois.filter(p=>p.cat==='lounge').map(p=>[p,walkInfo(p)]).filter(x=>x[1]).sort((a,b)=>a[1].m-b[1].m).slice(0,2);
     return ls.length?{text:'Nearest lounges to you: '+ls.map(([p,w])=>'<b>'+esc(p.name)+'</b> ('+esc(p.sub||'')+', '+w.mins+' min)').join(' and ')+'.',cards:ls.map(([p,w])=>({kind:'shop',id:p.id,t:p.name,s:(p.sub||'')+' · '+w.mins+' min',icon:'sofa',label:'View'})),src:t.name+' lounge list (public guides)'}:{text:'There are no lounges on your side of the terminal.',cards:[],src:t.name};}
   if(/toilet|restroom|\bcr\b|comfort/.test(q)){const w=nearestOf('toilets');return w?{text:'The nearest toilets are <b>'+esc(w.name.toLowerCase())+'</b>, about '+wm(w)+' min away.',cards:[{kind:'dest',dest:'poi:'+w.id,t:w.name,s:w.sub||'',icon:'nav',label:'Navigate'}],src:t.name+' map'}:{text:'I can’t find toilets on your side yet.',cards:[],src:t.name};}
@@ -890,109 +1285,266 @@ S.mini=()=>{
   return '<div class="screen" style="background:#fff"><header style="padding:10px 12px;background:#001F60;color:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0"><button type="button" class="back" data-act="back" aria-label="Close service" style="margin-left:0">'+ic('close',22,'#fff')+'</button><span style="width:32px;height:32px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center">'+ic(s.icon,18,'#001F60')+'</span><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800">'+s.n+'</div><div style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:#C9D3F0">'+ic('lock',10,'#C9D3F0',2.5)+'by Demo Partner · sandboxed</div></div><button type="button" class="back" data-act="miniReset" aria-label="Reload" style="margin:0;width:40px">'+ic('reload',18,'#fff')+'</button><button type="button" class="back" data-act="miniMore" aria-label="More actions" style="margin:0;width:40px">'+ic('dots',18,'#fff')+'</button></header><div class="scroll" style="border-top:3px solid var(--tint);background:#FAFAFB">'+body+'</div></div>';
 };
 
+/* ---------- ground transport (partner flows run as mini programs; fares and waits are illustrative) ---------- */
+const RIDE_DEST=[['Makati CBD',1],['BGC, Taguig',1.3],['Ortigas Center',1.6],['Pasay · Mall of Asia',0.62],['Quezon City',1.95]];
+const RIDES=[
+  {id:'grab',partner:'Grab',mark:'G',color:'#1A3C85',prod:'GrabCar · 4 seats',fare:450,wait:4,kind:'hail',driver:'Ramon D.',rating:'4.9',car:'Toyota Vios',carColor:'silver',plate:'NDX 4821'},
+  {id:'joy',partner:'JoyRide',mark:'J',color:'#52649A',prod:'JoyRide Car · 4 seats',fare:280,wait:2,kind:'hail',driver:'Liza M.',rating:'4.8',car:'Honda City',carColor:'white',plate:'NCK 7310'},
+  {id:'taxi',partner:'Airport taxi',mark:'T',color:'#001F60',prod:'Metered and coupon taxis',queue:10,kind:'taxi'}];
+function openRides(){if(state.level!=='arr'){setLoc(state.terminal,'arr',spotLoc(state.terminal,'s_hall','arr'));state.pickTerm=state.terminal;state.pickLevel='arr';state.pickSel='s_hall';state.toast='Pick-ups are at the arrivals curb, Level 1';clearTimeout(toast._t);toast._t=setTimeout(()=>{state.toast=null;render();},2600);}go('rides');}
+function rideOptions(){
+  const t=T(),mul=(RIDE_DEST.find(x=>x[0]===state.rideDest)||[0,1])[1];
+  const hb=t.POI[t.rideBay.hail],tb=t.POI[t.rideBay.taxi],wh=walkInfo(hb),wt=walkInfo(tb);
+  const opts=RIDES.map(o=>{const hail=o.kind==='hail',b=hail?hb:tb,w=hail?wh:wt,walk=w?w.mins:null;
+    const price=hail?Math.round(o.fare*mul/10)*10:null, ready=hail?Math.max(o.wait+2,walk||0):(walk||0)+o.queue;
+    return Object.assign({},o,{price,bay:b.id,bayN:Number(b.id.replace('bay','')),walk,ready,eta:hail?o.wait+2:null});});
+  const cheapest=opts.filter(o=>o.price).sort((a,b)=>a.price-b.price)[0],soonest=opts.slice().sort((a,b)=>a.ready-b.ready||(a.eta||99)-(b.eta||99))[0];
+  opts.forEach(o=>{o.cheapest=o===cheapest;o.soonest=o===soonest;});
+  return opts.sort((a,b)=>state.rideSort==='time'?(a.ready-b.ready||(a.eta||99)-(b.eta||99)):((a.price||1e6)-(b.price||1e6)));
+}
+S.rides=()=>{
+  const t=T(), opts=rideOptions(), sel=opts.find(o=>o.id===state.rideSel)||opts[0];
+  return '<div class="screen">'+header('Get a ride','From NAIA '+t.short+' · pick-up at the arrivals curb, Level 1',
+      '<label class="searchbox" for="ridedest">'+ic('pin',18,'#5C6480')+'<span class="sr">Destination</span><input id="ridedest" data-input="ridedest" autocomplete="off" value="'+esc(state.rideDest)+'" placeholder="Where to?"></label>')+
+    '<div class="scroll"><div class="body" style="gap:14px;padding-bottom:180px">'+
+      '<div class="chips">'+RIDE_DEST.map(([n])=>'<button type="button" class="chip" data-ride-dest="'+esc(n)+'" aria-pressed="'+(state.rideDest===n)+'">'+esc(n)+'</button>').join('')+'</div>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div class="h3">Compare rides</div><div class="seg" role="group" aria-label="Sort rides" style="width:190px">'+[['price','Cheapest'],['time','Soonest']].map(([k,l])=>'<button type="button" data-ride-sort="'+k+'" aria-pressed="'+(state.rideSort===k)+'" style="height:30px;font-size:12px">'+l+'</button>').join('')+'</div></div>'+
+      '<div role="radiogroup" aria-label="Ride options" style="display:flex;flex-direction:column;gap:10px">'+opts.map(o=>
+        '<button type="button" class="ride" role="radio" aria-checked="'+(sel.id===o.id)+'" data-ride-sel="'+o.id+'"><span class="rtop"><span class="logo" style="background:'+o.color+'">'+o.mark+'</span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:800">'+o.partner+'</span><span class="muted" style="font-size:12px">'+o.prod+'</span></span>'+
+        '<span style="text-align:right;display:flex;flex-direction:column;gap:2px"><span style="font-size:17px;font-weight:800;font-variant-numeric:tabular-nums">'+(o.price?'Est. ₱'+o.price.toLocaleString('en-PH'):'Metered')+'</span><span class="muted" style="font-size:11.5px">'+(o.kind==='hail'?o.wait+' min wait':'Queue ~'+o.queue+' min')+'</span></span></span>'+
+        '<span class="tagrow"><span class="pill tint">'+ic('pin',12,'#001F60',2.4)+'&nbsp;Bay '+o.bayN+(o.walk?' · '+o.walk+' min walk':'')+'</span>'+(o.cheapest?'<span class="pill ok">Cheapest</span>':'')+(o.soonest?'<span class="pill ok">Soonest pick-up</span>':'')+(o.kind==='taxi'?'<span class="pill tint">Pay the driver</span>':'')+'</span></button>').join('')+'</div>'+
+      '<button type="button" class="row" data-dest="poi:meet"><span style="width:40px;height:40px;border-radius:12px;background:var(--tint);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('user',20,'#001F60')+'</span><span class="grow"><span class="t">Someone picking you up?</span><span class="s">Walk to the meeting area between Exits A and B</span></span>'+distCell(t.POI.meet)+'</button>'+
+      '<div class="notice" style="border-style:dashed">'+ic('info',14,'#5C6480')+'<span>Illustrative fares and waits. No ride-hail agreements are signed yet; bookings would run inside each partner’s mini program, which receives only your terminal, pick-up bay and language.</span></div>'+
+    '</div></div>'+
+    '<div style="position:absolute;left:0;right:0;bottom:92px;padding:12px 20px;background:linear-gradient(180deg,rgba(245,246,250,0),#F5F6FA 28%);z-index:4">'+
+      (sel.kind==='hail'?'<button type="button" class="btn" data-act="bookRide"'+(state.rideDest.trim()?'':' disabled')+'>Book '+sel.partner+' · Est. ₱'+sel.price.toLocaleString('en-PH')+'</button>'
+        :'<button type="button" class="btn" data-dest="poi:'+sel.bay+'">'+ic('nav',18,'#fff',2.5)+'Guide me to the taxi queue · Bay '+sel.bayN+'</button>')+'</div>'+
+    bar('services')+(state.rideBooking?sheetWrap('rbh','<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0 6px;text-align:center"><span class="logo" style="width:56px;height:56px;font-size:20px;background:'+sel.color+'">'+sel.mark+'</span><div id="rbh" style="font-size:17px;font-weight:800">Finding a '+sel.partner+' driver…</div><div class="typing" aria-hidden="true"><i></i><i></i><i></i></div><div class="small">Running in the '+sel.partner+' mini program (sandbox)</div></div>'):'')+'</div>';
+};
+S.ride=()=>{
+  const R=state.ride; if(!R)return S.rides();
+  const t=T(), bay=t.POI[R.bay], w=bay?walkInfo(bay):null, r=bay?route({type:'poi',id:R.bay}):null, ok=r&&!r.blocked;
+  const youAt=w?hm(NOW)+w.mins:null, drv=hm(NOW)+R.eta;
+  const mv=ok?(()=>{const xs=r.pts.map(q=>q[0]),ys=r.pts.map(q=>q[1]);const x0=Math.min(...xs)-40,y0=Math.min(...ys)-40,w2=Math.max(...xs)-x0+40,h2=Math.max(...ys)-y0+40;return x0+' '+y0+' '+w2+' '+h2;})():null;
+  return '<div class="screen"><div class="scroll">'+
+    '<header class="top" style="padding-bottom:70px"><div class="toprow"><button class="back" type="button" data-act="back" aria-label="Back">'+ic('back',22,'#fff')+'</button><div style="flex:1"><div class="t-title">Ride confirmed</div><div class="t-sub">Booked in the '+R.partner+' mini program · sample</div></div></div></header>'+
+    '<div class="body" style="margin-top:-54px;position:relative;padding-top:0;gap:14px;padding-bottom:200px">'+
+      '<div class="card" style="border:0;box-shadow:0 8px 24px rgba(0,31,96,.14);overflow:hidden">'+
+        '<div style="padding:14px 16px;display:flex;align-items:center;gap:10px;background:var(--navy);color:#fff"><span style="flex:1;font-size:14px;font-weight:800">Driver on the way</span><span style="font-size:13px;color:#C9D3F0">arrives ~<b style="color:#fff;font-size:16px">'+fmt(drv)+'</b></span></div>'+
+        '<div style="padding:16px;display:flex;align-items:center;gap:12px"><span class="logo" style="width:52px;height:52px;border-radius:999px;background:var(--tint);color:var(--navy)">'+ic('user',24,'#001F60')+'</span><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800">'+R.driver+'</div><div class="muted" style="font-size:12.5px">★ '+R.rating+' · '+R.partner+'</div></div></div>'+
+        '<div style="display:grid;grid-template-columns:1.4fr 1fr;border-top:1px solid var(--line);background:var(--ground)"><div style="padding:12px 16px">'+kv('Car',R.car+' · '+R.carColor)+'</div><div style="padding:12px 16px;border-left:1px solid var(--line)"><div style="display:flex;flex-direction:column;gap:2px"><span class="label" style="font-size:10px">Plate</span><span style="font-size:19px;font-weight:800;letter-spacing:.05em;font-variant-numeric:tabular-nums">'+R.plate+'</span></div></div></div></div>'+
+      '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="width:40px;height:40px;border-radius:12px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800">'+R.bayN+'</span><div style="flex:1"><div style="font-size:15px;font-weight:800">Pick-up Bay '+R.bayN+'</div><div class="muted" style="font-size:12px">'+esc(bay?bay.sub:'')+' · arrivals curb, Level 1</div></div></div>'+
+        (ok?'<div class="minimap" style="height:150px;border-radius:10px;overflow:hidden;background:#EEF1F8">'+floorSVG({route:r,destPoi:R.bay,labels:false,vb:mv,uid:'mini',pw:320,ph:150})+'</div>':'')+
+        (w?'<div style="display:flex;align-items:center;gap:8px;font-size:13px;line-height:1.45">'+ic('walk',18,'#001F60')+'<span>Your walk: <b>'+w.mins+' min</b> (arrive ~'+fmt(youAt)+'). '+(youAt>drv?'Your driver may get there first and will wait; free waiting time is set by '+R.partner+'.':'You’ll be there before your driver.')+'</span></div>':'')+'</div>'+
+      '<div style="display:flex;gap:8px"><button type="button" class="btn line" style="height:44px;font-size:13.5px" data-act="msgDriver">'+ic('chat',16,'#001F60')+'Message driver</button><button type="button" class="btn line" style="height:44px;font-size:13.5px;'+(state.cancelArm?'background:var(--warn-bg);border-color:var(--warn);color:var(--warn)':'')+'" data-act="cancelRide">'+(state.cancelArm?'Tap again to cancel':'Cancel ride')+'</button></div>'+
+      '<div class="small">Est. fare ₱'+(R.price||0).toLocaleString('en-PH')+' to '+esc(state.rideDest)+', paid in the '+R.partner+' mini program. Driver and vehicle details are sample data.</div>'+
+    '</div></div>'+
+    '<div style="position:absolute;left:0;right:0;bottom:0;padding:12px 20px 22px;background:#fff;border-top:1px solid var(--line)"><button type="button" class="btn" data-act="navRideBay"'+(ok?'':' disabled')+'>'+ic('walk',18,'#fff',2.4)+'Start walking to Pick-up Bay '+R.bayN+'</button></div></div>';
+};
+
 /* ================= render ================= */
-const SCREEN_LIST=[['home','Home'],['location','Where are you?'],['flight','Flight found'],['search','Search & navigate'],['navigate','Guide to gate'],['amenities','Amenities'],['poi','Amenity detail'],['links','Travel forms'],['shops','Shops & lounges'],['shop','Shop profile'],['chat','Concierge'],['services','Services'],['mini','Mini program']];
+const PORTAL_URL='portal.html';
+const SCREEN_LIST=[['home','Home'],['location','Where are you?'],['scan','Scan QR'],['flight','Flight found'],['search','Search & navigate'],['navigate','Guide to gate'],['arrival','Arrival · bags'],['rides','Get a ride'],['ride','Ride confirmed'],['amenities','Amenities'],['poi','Amenity detail'],['links','Travel forms'],['shops','Shops & lounges'],['shop','Shop profile'],['chat','Concierge'],['services','Services'],['mini','Mini program']];
 const phone=document.getElementById('phone');
+let scanTimer=null;
 function render(resetScroll){
   const a=document.activeElement,fid=a&&a.id&&phone.contains(a)?a.id:null,sel=fid&&a.selectionStart!=null?a.selectionStart:null;
   const sc=phone.querySelector('.scroll'),top=sc&&!resetScroll?sc.scrollTop:0;
   const name=cur(),fn=S[name]||S.home;
-  phone.innerHTML=fn()+(state.toast?'<div class="toast" role="status">'+esc(state.toast)+'</div>':'');
+  const sh=state.sheet&&SHEETS[state.sheet]?SHEETS[state.sheet]():'';
+  phone.innerHTML=fn()+sh+(state.toast?'<div class="toast" role="status">'+esc(state.toast)+'</div>':'');
   const sc2=phone.querySelector('.scroll');if(sc2&&name!=='chat')sc2.scrollTop=top;
   if(fid){const el=document.getElementById(fid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel);}catch(e){}}}
   document.getElementById('jump').innerHTML=SCREEN_LIST.map(([k,l])=>'<button type="button" data-jump="'+k+'" aria-current="'+(name===k)+'">'+l+'</button>').join('');
-  document.getElementById('samples').innerHTML=state.feed.map(r=>{const f=adapt(r);return '<div style="display:flex;justify-content:space-between;gap:8px"><button type="button" data-sample="'+f.code+'" style="border:0;background:transparent;padding:0;text-align:left"><code>'+f.code+'</code> <span class="muted">to '+f.toCity+'</span></button><span class="muted" style="white-space:nowrap">T'+f.terminal+' · Gate '+f.gate+(f.delayed?' · delayed':'')+'</span></div>';}).join('');
+  const row=f=>'<div style="display:flex;justify-content:space-between;gap:8px"><button type="button" data-sample="'+f.code+'" style="border:0;background:transparent;padding:0;text-align:left"><code>'+f.code+'</code> <span class="muted">'+(f.dir==='arr'?'from '+f.fromCity:'to '+f.toCity)+'</span></button><span class="muted" style="white-space:nowrap;text-align:right">T'+f.terminal+' · '+(f.dir==='arr'?'Carousel '+f.carousel+(f.bag===2?' · unloading':f.bag===0?' · en route':''):'Gate '+f.gate+(f.delayed?' · delayed':''))+'</span></div>';
+  const all=state.feed.map(adapt);
+  document.getElementById('samples').innerHTML='<div class="label">Departures</div>'+all.filter(f=>f.dir==='dep').map(row).join('')+'<div class="label" style="margin-top:6px">Arrivals</div>'+all.filter(f=>f.dir==='arr').map(row).join('');
+  const hn=document.getElementById('headingNote');if(hn){const h=youHeading(state.nav?route(state.nav):null);hn.textContent='Facing '+faceWord(h)+' ('+Math.round(h)+'°, map up = north). The cone on the blue dot shows it.';}
+  if(name==='scan'&&!state.scanHit&&!state.noAutoScan&&!scanTimer)scanTimer=setTimeout(()=>{scanTimer=null;if(cur()!=='scan'||state.scanHit||state.noAutoScan)return;const b=phone.querySelector('[data-scan]');if(b)b.click();},2600);
 }
 
+/* ================= map pan / zoom ================= */
+const RM=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+function svgEl(){return phone.querySelector('.mapwrap.pan svg');}
+function curVB(svg){return vbArr(svg.getAttribute('viewBox'));}
+function setVB(svg,v){svg.setAttribute('viewBox',v.map(x=>x.toFixed(1)).join(' '));}
+function tweenVB(svg,from,to,ms,done){if(RM||!from){setVB(svg,to);if(done)done();return;}const t0=performance.now();const f=now=>{let q=Math.min(1,(now-t0)/ms);q=1-Math.pow(1-q,3);setVB(svg,from.map((v,i)=>v+(to[i]-v)*q));if(q<1&&svg.isConnected)requestAnimationFrame(f);else if(done)done();};requestAnimationFrame(f);}
+function tweenFrom(from,ms){const svg=svgEl();if(!svg||!from)return;const to=curVB(svg);setVB(svg,from);tweenVB(svg,from,to,ms||600);}
+function commitVB(svg){if(!svg.isConnected)return;const w=svg.closest('.mapwrap');state.userVB={key:w.dataset.mapkey,vb:svg.getAttribute('viewBox')};render();}
+function zoomAround(svg,v,f,cx,cy){const r=svg.getBoundingClientRect(),u=Math.max(v[2]/r.width,v[3]/r.height),ox=r.left+(r.width-v[2]/u)/2,oy=r.top+(r.height-v[3]/u)/2,px=v[0]+(cx-ox)*u,py=v[1]+(cy-oy)*u;
+  const q=Math.min(Math.max(v[2]*f,90),2600)/v[2];return [px-(px-v[0])*q,py-(py-v[1])*q,v[2]*q,v[3]*q];}
+let drag=null,wheelT=null;
+phone.addEventListener('pointerdown',e=>{const w=e.target.closest('.mapwrap.pan');if(!w||(e.pointerType==='mouse'&&e.button!==0))return;const svg=w.querySelector('svg');if(!svg)return;
+  if(!drag)drag={svg,w,pts:new Map(),dist:0,moved:false};drag.pts.set(e.pointerId,[e.clientX,e.clientY]);try{w.setPointerCapture(e.pointerId);}catch(_){}});
+phone.addEventListener('pointermove',e=>{if(!drag||!drag.pts.has(e.pointerId))return;const svg=drag.svg,prev=drag.pts.get(e.pointerId),v=curVB(svg),r=svg.getBoundingClientRect(),u=Math.max(v[2]/r.width,v[3]/r.height);
+  if(drag.pts.size===1){const dx=e.clientX-prev[0],dy=e.clientY-prev[1];drag.dist+=Math.abs(dx)+Math.abs(dy);if(drag.dist>4){drag.moved=true;v[0]-=dx*u;v[1]-=dy*u;setVB(svg,v);drag.w.classList.add('dragging');}else{drag.pts.set(e.pointerId,prev);return;}}
+  else{const o=[...drag.pts.entries()].find(([id])=>id!==e.pointerId)[1],d0=Math.hypot(prev[0]-o[0],prev[1]-o[1]),d1=Math.hypot(e.clientX-o[0],e.clientY-o[1]);if(d0>0&&d1>0){setVB(svg,zoomAround(svg,v,d0/d1,(e.clientX+o[0])/2,(e.clientY+o[1])/2));drag.moved=true;}}
+  drag.pts.set(e.pointerId,[e.clientX,e.clientY]);});
+function endPtr(e){if(!drag||!drag.pts.has(e.pointerId))return;drag.pts.delete(e.pointerId);if(!drag.pts.size){const d=drag;drag=null;d.w.classList.remove('dragging');if(d.moved)commitVB(d.svg);}}
+phone.addEventListener('pointerup',endPtr);phone.addEventListener('pointercancel',endPtr);
+phone.addEventListener('wheel',e=>{const w=e.target.closest('.mapwrap.pan');if(!w)return;const svg=w.querySelector('svg');if(!svg)return;e.preventDefault();setVB(svg,zoomAround(svg,curVB(svg),Math.exp(Math.max(-60,Math.min(60,e.deltaY))*0.004),e.clientX,e.clientY));clearTimeout(wheelT);wheelT=setTimeout(()=>commitVB(svg),260);},{passive:false});
+
+/* ================= simulated walk (moves the You-are-here dot along the route) ================= */
+let walkRAF=null;
+function stopWalk(){if(walkRAF){cancelAnimationFrame(walkRAF);walkRAF=null;}state.walking=false;}
+function startWalk(){
+  const r=state.nav&&route(state.nav);if(!r||r.blocked||r.pts.length<2)return;
+  const pts=r.pts,segs=[];let tot=0;for(let i=1;i<pts.length;i++){const L=d2(pts[i-1],pts[i]);segs.push(L);tot+=L;}
+  const ms=RM?10:Math.min(9000,Math.max(3500,tot*8));state.walking=true;state.sheet=null;render();
+  const t0=performance.now();
+  const step=now=>{if(cur()!=='navigate'||!state.walking){walkRAF=null;return;}
+    const f=Math.min(1,(now-t0)/ms);let dist=f*tot,i=1;const walked=[pts[0]];
+    while(i<pts.length&&dist>segs[i-1]){dist-=segs[i-1];walked.push(pts[i]);i++;}
+    let x,y,h;if(i>=pts.length){[x,y]=pts[pts.length-1];h=bearing(pts[pts.length-2],pts[pts.length-1]);}else{const A=pts[i-1],B=pts[i],q=segs[i-1]?dist/segs[i-1]:1;x=A[0]+(B[0]-A[0])*q;y=A[1]+(B[1]-A[1])*q;h=bearing(A,B);}
+    walked.push([x,y]);
+    const you=document.getElementById('myou');if(you){you.setAttribute('transform','translate('+x.toFixed(1)+' '+y.toFixed(1)+')');you.querySelectorAll('.yrot').forEach(g=>g.setAttribute('transform','rotate('+h.toFixed(0)+')'));}
+    const wk=document.getElementById('mwalked');if(wk)wk.setAttribute('d',pathD(walked));
+    if(f<1)walkRAF=requestAnimationFrame(step);else{walkRAF=null;finishWalk(r,h);}};
+  walkRAF=requestAnimationFrame(step);
+}
+function finishWalk(r,h){const o=r.o;state.walking=false;
+  state.loc={x:o.x,y:o.y,zone:o.zone,at:o.at,spot:null,label:o.type==='gate'?'Gate '+o.g:o.name,level:o.flr||state.loc.level};
+  state.heading=h;state.arrivedAt=state.nav;state.anim=null;state.sheet='arrived';render();}
+
 /* ================= actions ================= */
-function setFlight(f){state.flight=f;state.flightErr='';state.q='Gate '+f.gate;}
+function setFlight(f){state.flight=f;state.flightErr='';state.q=f.dir==='dep'?'Gate '+f.gate:'';}
+function startNav(dest){stopWalk();state.nav=dest;state.stepsOpen=true;state.anim=null;state.userVB=null;state.arrivedAt=null;state.sheet=null;}
+function selectFlight(f){
+  setFlight(f);state.flightInput=f.code;
+  if(f.dir==='arr'){state.dir='arr';const loc=gateLoc(f.terminal,f.gate);setLoc(f.terminal,'arr',loc);state.pickTerm=f.terminal;state.pickLevel='arr';state.pickSel=loc.spot||mk(f.terminal,'arr').defaultSpot;state.stack=['home','arrival'];state.sheet=null;render(true);toast('Map set to '+TERMS[f.terminal].short+' arrivals, starting at your gate');return;}
+  state.dir='dep';state.stack=['home','flight'];state.sheet=flightHere(f)?null:'swap';render(true);
+}
+function acceptSwap(){const f=state.flight;if(!f)return;const k=f.terminal,t=mk(k,'dep');setLoc(k,'dep',spotLoc(k,t.defaultSpot,'dep'));state.pickTerm=k;state.pickLevel='dep';state.pickSel=t.defaultSpot;
+  startNav({type:'gate',id:f.gate});state.stack=['home','navigate'];state.q='Gate '+f.gate;state.swapAnim=true;render(true);clearTimeout(acceptSwap._t);acceptSwap._t=setTimeout(()=>{state.swapAnim=false;},1900);}
 function mutateFeed(fn){if(!state.flight){toast('Enter a flight first, e.g. PR 102');return false;}const raw=state.feed.find(r=>(r.carrierFsCode+r.flightNumber).toUpperCase()===state.flight.key);fn(raw);raw._updated=fmt(hm(NOW)+7);state.flight=adapt(raw);return true;}
 function simGate(){
-  const f0=state.flight; if(!f0){toast('Enter a flight first, e.g. PR 102');return;}
+  const f0=state.flight; if(!f0||f0.dir!=='dep'){toast('Gate changes apply to departures. Try PR 102.');return;}
   const tm=TERMS[f0.terminal], g0=tm.GATE[f0.gate];
   const pool=tm.gates.filter(g=>g.zone===g0.zone&&g.g!==g0.g&&!g.group===!g0.group);
   const ng=pool.sort((a,b)=>Math.abs(b.g-g0.g)-Math.abs(a.g-g0.g))[0]; if(!ng)return;
   mutateFeed(raw=>{raw._prevGate=g0.g;raw.airportResources.departureGate=String(ng.g);});
   state.q='Gate '+state.flight.gate;
-  if(state.alertOn&&flightHere(state.flight)){state.nav={type:'gate',id:state.flight.prevGate};if(cur()!=='navigate')state.stack.push('navigate');state.sheet='gate';render(true);}
+  if(state.alertOn&&flightHere(state.flight)){startNav({type:'gate',id:state.flight.prevGate});if(cur()!=='navigate')state.stack.push('navigate');state.sheet='gate';render(true);}
   else toast('Gate changed to '+state.flight.gate);
 }
-function simDelay(){if(!mutateFeed(raw=>{raw.status='D';raw.delayMinutes=(raw.delayMinutes||0)+35;}))return;toast(state.flight.code+' delayed · boards '+state.flight.boarding);}
+function simDelay(){if(!state.flight||state.flight.dir!=='dep'){toast('Delays apply to departures. Try PR 102.');return;}if(!mutateFeed(raw=>{raw.status='D';raw.delayMinutes=(raw.delayMinutes||0)+35;}))return;toast(state.flight.code+' delayed · boards '+state.flight.boarding);}
+function simBag(){const f=state.flight;if(!f||f.dir!=='arr'){toast('Pick an arriving flight first, e.g. PR 101');return;}mutateFeed(raw=>{raw._bag=((raw._bag||0)+1)%4;if(raw._bag>0)raw.status='L';});toast(state.flight.code+': '+state.flight.bagInfo.t);}
+function turnHeading(dx){const r=state.nav?route(state.nav):null;state.heading=((youHeading(r)+dx)%360+360)%360;render();}
 
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,a,[data-act]');if(!t)return;const d=t.dataset;
-  if(d.tab){if(state.flight&&flightHere(state.flight))state.q='Gate '+state.flight.gate;tab(d.tab);return;}
-  if(d.jump){const k=d.jump;
+  if(d.tab){if(state.flight&&state.flight.dir==='dep'&&flightHere(state.flight))state.q='Gate '+state.flight.gate;stopWalk();tab(d.tab);return;}
+  if(d.jump){const k=d.jump;stopWalk();state.sheet=null;
+    if(k==='arrival'){if(!state.flight||state.flight.dir!=='arr')selectFlight(findFlight('PR101'));else{state.stack=['home','arrival'];render(true);}return;}
     if(['flight','navigate'].includes(k)&&!state.flight)setFlight(findFlight('PR102'));
-    if(k==='navigate'){if(!flightHere(state.flight))setTerminal(state.flight.terminal);state.nav={type:'gate',id:state.flight.gate};state.stepsOpen=true;}
+    if(k==='flight'&&state.flight.dir==='arr'){state.stack=['home','arrival'];render(true);return;}
+    if(k==='navigate'){const f=state.flight;if(f.dir==='arr'){if(!flightHere(f))setLoc(f.terminal,'arr',gateLoc(f.terminal,f.gate));startNav({type:'poi',id:'c'+f.carousel});}else{if(!flightHere(f))setTerminal(f.terminal);startNav({type:'gate',id:f.gate});}}
+    if(k==='rides'||k==='ride'){if(state.level!=='arr')setLoc(state.terminal,'arr',spotLoc(state.terminal,'s_hall','arr'));if(k==='ride'&&!state.ride){const o=rideOptions().find(x=>x.id==='grab');state.ride=o;}}
     if(k==='poi')state.params.poi=(POIX(state.params.poi)?state.params.poi:(nearestOf('toilets')||{}).id);
-    if(k==='shop')state.params.shop=(POIX(state.params.shop)?state.params.shop:(T().pois.find(p=>p.featured)||{}).id);
-    if(k==='mini'){state.params.svc=state.params.svc||'taxi';state.miniStep=0;}
-    if(k==='location'){state.pickSel=state.loc.spot;state.pickTerm=state.terminal;}
-    state.stack=k==='home'?['home']:['home',k];state.sheet=null;render(true);return;}
-  if(d.sample){state.flightInput=d.sample;setFlight(findFlight(d.sample));state.stack=['home','flight'];render(true);return;}
-  if(d.go){if(d.go==='location'){state.pickSel=state.loc.spot;state.pickTerm=state.terminal;state.pickQ='';}go(d.go);return;}
-  if(d.dest){const [k,id]=d.dest.split(':');state.nav={type:k,id:k==='gate'?Number(id):id};state.stepsOpen=true;go('navigate');return;}
+    if(k==='shop')state.params.shop=(POIX(state.params.shop)?state.params.shop:(T().pois.find(p=>p.featured||p.cat==='dining')||{}).id);
+    if(k==='mini'){state.params.svc=state.params.svc||'wifi';state.miniStep=0;}
+    if(k==='location'){state.pickSel=state.loc.spot||mk(state.terminal,state.level).defaultSpot;state.pickTerm=state.terminal;state.pickLevel=state.level;}
+    if(k==='scan'){state.scanHit=null;state.noAutoScan=false;}
+    state.stack=k==='home'?['home']:['home',k];render(true);return;}
+  if(d.sample){const f=findFlight(d.sample);if(f)selectFlight(f);return;}
+  if(d.dir){state.dir=d.dir;state.flightErr='';render();return;}
+  if(d.go){if(d.go==='rides'){openRides();return;}
+    if(d.go==='location'){state.pickSel=state.loc.spot||mk(state.terminal,state.level).defaultSpot;state.pickTerm=state.terminal;state.pickLevel=state.level;state.pickQ='';}
+    if(d.go==='scan'){state.scanHit=null;state.noAutoScan=false;}
+    go(d.go);return;}
+  if(d.dest){const [k,id]=d.dest.split(':');startNav({type:k,id:k==='gate'?Number(id):id});go('navigate');return;}
   if(d.openPoi){go('poi',{poi:d.openPoi});return;}
   if(d.openShop){go('shop',{shop:d.openShop});return;}
-  if(d.openSvc){state.miniStep=0;state.miniDest='';go('mini',{svc:d.openSvc});return;}
+  if(d.openSvc){if(d.openSvc==='taxi'||d.openSvc==='ride'){openRides();return;}state.miniStep=0;state.miniDest='';go('mini',{svc:d.openSvc});return;}
   if(d.ask){ask(d.ask);return;}
-  if(d.quick){const [k,v]=d.quick.split(':');if(k==='gate'){state.nav={type:'gate',id:Number(v)};state.stepsOpen=true;go('navigate');}else{state.q=v;render();}return;}
+  if(d.quick){const [k,v]=d.quick.split(':');if(k==='gate'||k==='poi'){startNav({type:k,id:k==='gate'?Number(v):v});go('navigate');}else{state.q=v;render();}return;}
   if(d.clear){const map={navq:'q',amenq:'amenQ',shopq:'shopQ',svcq:'svcQ',pickq:'pickQ'};state[map[d.clear]]='';render();const el=document.getElementById(d.clear);if(el)el.focus();return;}
   if(d.amenCat){state.amenCat=d.amenCat;state.amenQ='';render();return;}
   if(d.shopCat){state.shopCat=d.shopCat;render();return;}
   if(d.pickKind){state.pickKind=d.pickKind;render();return;}
+  if(d.pickLevel){state.pickLevel=d.pickLevel;const tm=mk(state.pickTerm,state.pickLevel);state.pickSel=tm.SPOT[state.pickSel]?state.pickSel:tm.defaultSpot;render();return;}
   if(d.spot){state.pickSel=d.spot;render();return;}
-  if(d.term){state.pickTerm=d.term;state.pickSel=TERMS[d.term].SPOT[state.pickSel]?state.pickSel:TERMS[d.term].defaultSpot;render();return;}
+  if(d.term){state.pickTerm=d.term;const tm=mk(d.term,state.pickLevel);state.pickSel=tm.SPOT[state.pickSel]?state.pickSel:tm.defaultSpot;render();return;}
+  if(d.scan){state.scanHit=d.scan.split('|');state.sheet='scan';render();return;}
+  if(d.rideDest){state.rideDest=d.rideDest;render();return;}
+  if(d.rideSort){state.rideSort=d.rideSort;render();return;}
+  if(d.rideSel){state.rideSel=d.rideSel;render();return;}
   if(d.linksDir){state.params.linksDir=d.linksDir;render();return;}
-  if(d.linkLocal){toast(d.linkLocal+': opens a guide page in the full app');return;}
+  if(d.linkLocal){if(d.linkLocal==='Getting to the city'){openRides();return;}toast(d.linkLocal+': opens a guide page in the full app');return;}
   if(d.veh){state.miniVeh=d.veh;render();return;}
   switch(d.act){
     case 'panel':setPanel(true);break;
     case 'panelClose':setPanel(false);break;
     case 'back':back();break;
-    case 'fab':state.q=state.flight&&flightHere(state.flight)?'Gate '+state.flight.gate:'';go('search');break;
-    case 'navGate':{const f=state.flight;if(!flightHere(f)){go('flight');break;}state.nav={type:'gate',id:f.gate};state.stepsOpen=true;go('navigate');break;}
-    case 'switchToFlightTerm':setTerminal(state.flight.terminal);state.q='Gate '+state.flight.gate;render();toast('Switched to '+T().name+' map');break;
+    case 'fab':state.q=state.flight&&state.flight.dir==='dep'&&flightHere(state.flight)?'Gate '+state.flight.gate:'';go('search');break;
+    case 'navGate':{const f=state.flight;if(!flightHere(f)){state.sheet='swap';render();break;}startNav({type:'gate',id:f.gate});go('navigate');break;}
+    case 'swapAsk':state.sheet='swap';render();break;
+    case 'acceptSwap':acceptSwap();break;
+    case 'navCarousel':{const f=state.flight;if(!f)break;if(!flightHere(f))setLoc(f.terminal,'arr',gateLoc(f.terminal,f.gate));startNav({type:'poi',id:'c'+f.carousel});go('navigate');break;}
+    case 'arrHere':{const f=state.flight;setLoc(f.terminal,'arr',gateLoc(f.terminal,f.gate));render();toast('Starting at the Gate '+f.gate+' arrival bridge');break;}
+    case 'closeSheet':state.sheet=null;render();break;
     case 'clearFlight':state.flight=null;state.flightInput='';state.q='';render();setTimeout(()=>{const el=document.getElementById('flightno');if(el)el.focus();});break;
     case 'toggleSteps':state.stepsOpen=!state.stepsOpen;render();break;
     case 'stepFree':state.stepFree=!state.stepFree;render();break;
-    case 'endRoute':state.nav=null;tab('home');toast('Route ended');break;
-    case 'simGate':simGate();break;
+    case 'endRoute':stopWalk();state.nav=null;state.anim=null;tab('home');toast('Route ended');break;
+    case 'simGate':stopWalk();simGate();break;
     case 'simDelay':simDelay();break;
-    case 'reroute':state.nav={type:'gate',id:state.flight.gate};state.sheet=null;state.stepsOpen=true;render(true);break;
+    case 'simBag':simBag();break;
+    case 'walk':startWalk();break;
+    case 'stopWalk':stopWalk();render();break;
+    case 'rotL':turnHeading(-45);break;
+    case 'rotR':turnHeading(45);break;
+    case 'faceRoute':{const r=state.nav?route(state.nav):null;if(r&&r.startBearing!=null)state.heading=r.startBearing;else toast('Start a route first');render();break;}
+    case 'zoomIn':case 'zoomOut':{const svg=svgEl();if(!svg)break;const v=curVB(svg),rc=svg.getBoundingClientRect();tweenVB(svg,v,zoomAround(svg,v,d.act==='zoomIn'?0.62:1.6,rc.left+rc.width/2,rc.top+rc.height/2),260,()=>commitVB(svg));break;}
+    case 'recenter':{const svg=svgEl(),from=svg?curVB(svg):null;state.userVB=null;render();tweenFrom(from,520);break;}
+    case 'reroute':{const f=state.flight,old=state.nav?route(state.nav):null,svg=svgEl(),from=svg?curVB(svg):null;
+      state.anim={type:'reroute',oldPts:old&&!old.blocked?old.pts:null,oldMins:old&&!old.blocked?old.mins:null,oldGate:f.prevGate,done:false};
+      stopWalk();state.nav={type:'gate',id:f.gate};state.sheet=null;state.stepsOpen=true;state.userVB=null;state.arrivedAt=null;render(true);tweenFrom(from,950);
+      clearTimeout(simGate._t);simGate._t=setTimeout(()=>{if(state.anim)state.anim.done=true;},2800);break;}
     case 'gateDetails':state.sheet=null;state.stack=['home','flight'];render(true);break;
-    case 'confirmLoc':{const tm=TERMS[state.pickTerm],s=tm.SPOT[state.pickSel];if(!s)break;if(state.terminal!==state.pickTerm){state.terminal=state.pickTerm;state.nav=null;}state.loc={x:s.x,y:s.y,zone:s.zone,at:s.at,spot:s.id,label:s.name};back();toast('Location updated');break;}
-    case 'scanInfo':toast('Opens the camera to scan a poster QR');break;
+    case 'confirmLoc':{const tm=mk(state.pickTerm,state.pickLevel),sp=tm.SPOT[state.pickSel];if(!sp)break;const keep=state.nav;const changed=setLoc(state.pickTerm,state.pickLevel,spotLoc(state.pickTerm,sp.id,state.pickLevel));if(!changed&&keep)startNav(keep);back();toast('Location updated');break;}
+    case 'scanConfirm':{const h=state.scanHit;if(!h)break;const sp=mk(h[0],h[1]).SPOT[h[2]];const keep=state.nav;const swapped=setLoc(h[0],h[1],spotLoc(h[0],h[2],h[1]));state.scanHit=null;state.sheet=null;
+      const f=state.flight;if(!swapped&&keep)startNav(keep);else if(f&&f.dir==='dep'&&flightHere(f))startNav({type:'gate',id:f.gate});else if(f&&f.dir==='arr'&&flightHere(f))startNav({type:'poi',id:'c'+f.carousel});
+      while(state.stack.length>1&&['scan','location'].includes(cur()))state.stack.pop();
+      state.pickSel=sp.id;state.pickTerm=h[0];state.pickLevel=h[1];
+      if(swapped&&cur()==='navigate'){state.swapAnim=true;setTimeout(()=>{state.swapAnim=false;},1900);}
+      render(true);toast('Location set from QR code '+sp.qr);break;}
+    case 'scanAgain':state.scanHit=null;state.sheet=null;state.noAutoScan=true;render();break;
+    case 'bookRide':{if(state.rideBooking)break;state.rideBooking=true;render();setTimeout(()=>{if(cur()!=='rides'){state.rideBooking=false;return;}const o=rideOptions().find(x=>x.id===state.rideSel)||rideOptions()[0];state.rideBooking=false;state.ride=o;state.cancelArm=false;state.stack.push('ride');render(true);},1500);break;}
+    case 'navRideBay':if(state.ride){startNav({type:'poi',id:state.ride.bay});go('navigate');}break;
+    case 'msgDriver':toast('Chat opens inside the '+state.ride.partner+' mini program');break;
+    case 'cancelRide':if(!state.cancelArm){state.cancelArm=true;render();clearTimeout(simBag._t);simBag._t=setTimeout(()=>{if(state.cancelArm){state.cancelArm=false;if(cur()==='ride')render();}},3500);}else{state.ride=null;state.cancelArm=false;state.stack=['home','rides'];render(true);toast('Ride cancelled (demo)');}break;
     case 'lang':toast('Language switch: English only in the pilot');break;
-    case 'report':toast('Thanks. Your report goes to MIAA ops.');break;
+    case 'report':toast('Thanks. Your report goes to the NNIC content team.');break;
     case 'alerts':state.alertOn=t.checked;break;
     case 'miniReset':state.miniStep=0;state.miniDest='';render();break;
     case 'miniMore':toast('Share · Report · About this partner');break;
     case 'miniPick':state.miniStep=1;render(true);break;
-    case 'reset':state=initial();render(true);toast('Prototype reset');break;
+    case 'reset':stopWalk();state=initial();render(true);toast('Prototype reset');break;
   }
 });
 document.addEventListener('input',e=>{
   const k=e.target.dataset&&e.target.dataset.input;if(!k)return;
-  const map={navq:'q',amenq:'amenQ',shopq:'shopQ',svcq:'svcQ',pickq:'pickQ',flightno:'flightInput',chatin:'chatIn',minidest:'miniDest'};
+  const map={navq:'q',amenq:'amenQ',shopq:'shopQ',svcq:'svcQ',pickq:'pickQ',flightno:'flightInput',chatin:'chatIn',minidest:'miniDest',ridedest:'rideDest'};
   state[map[k]]=e.target.value;
-  if(k==='flightno'){if(state.flightErr){state.flightErr='';e.target.style.borderColor='#D5DAE8';const h=document.getElementById('flighterr');if(h){h.style.color='var(--muted)';h.textContent='Printed on your boarding pass. Sample data: try PR 102.';}}return;}
+  if(k==='flightno'){if(state.flightErr){state.flightErr='';e.target.style.borderColor='#D5DAE8';const h=document.getElementById('flighterr');if(h){h.style.color='var(--muted)';h.textContent=state.dir==='arr'?'Shows your carousel and when bags start coming out. Sample data: try PR 101.':'Printed on your boarding pass. Sample data: try PR 102.';}}return;}
   if(k==='chatin')return;
   render();
 });
 document.addEventListener('submit',e=>{
   const f=e.target.dataset.form;if(!f)return;e.preventDefault();
-  if(f==='flight'){const v=state.flightInput.trim();if(!v){state.flightErr='Enter the flight number from your boarding pass, e.g. PR 102.';render();return;}
-    const fl=findFlight(v);if(!fl){state.flightErr='We couldn’t find '+v.toUpperCase()+' departing NAIA today. Check your boarding pass, or try PR 102.';render();return;}
-    setFlight(fl);go('flight');}
+  if(f==='flight'){const v=state.flightInput.trim();if(!v){state.flightErr='Enter the flight number from your boarding pass, e.g. '+(state.dir==='arr'?'PR 101':'PR 102')+'.';render();return;}
+    const fl=findFlight(v);if(!fl){state.flightErr='We couldn’t find '+esc(v.toUpperCase())+' at NAIA today. Check your boarding pass, or try '+(state.dir==='arr'?'PR 101':'PR 102')+'.';render();return;}
+    if(state.dir==='arr'&&fl.dir==='dep'){const ib=inboundFor(fl);state.flightErr=esc(fl.code)+' is the departure to '+esc(fl.toCity)+'.'+(ib?' Arriving from '+esc(ib.fromCity)+'? Your flight is <button type="button" data-sample="'+ib.code+'" style="border:0;background:none;padding:0;font:inherit;font-weight:800;color:#001F60;text-decoration:underline">'+ib.code+'</button>.':'');render();return;}
+    selectFlight(fl);}
   if(f==='chat')ask(state.chatIn);
   if(f==='mini'&&state.miniDest.trim()){state.miniStep=1;render(true);}
 });
 function setPanel(open){const p=document.getElementById('panel'),t=document.getElementById('demoTab'),s=document.getElementById('scrim');p.classList.toggle('open',open);s.classList.toggle('open',open);t.setAttribute('aria-expanded',String(open));try{localStorage.setItem('navi-panel',open?'1':'0');}catch(e){}if(open){setTimeout(()=>{const c=p.querySelector('.panel-close');if(c)c.focus();},50);}else t.focus();}
 try{if(localStorage.getItem('navi-panel')==='1')setPanel(true);}catch(e){}
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(state.sheet){state.sheet=null;render();}else if(document.getElementById('panel').classList.contains('open'))setPanel(false);});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(state.sheet){state.sheet=null;state.scanHit=null;render();}else if(document.getElementById('panel').classList.contains('open'))setPanel(false);});
 document.getElementById('credits').innerHTML='Sample photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>, loaded from their public links: '+Object.values(IMG).map(v=>'<a href="'+v.page+'" target="_blank" rel="noopener">'+esc(v.by)+'</a>').join(', ')+' (Unsplash License).';
+const pl=document.getElementById('portalLink');if(pl){if(PORTAL_URL==='#')pl.parentNode.parentNode.hidden=true;else pl.href=PORTAL_URL;}
 render(true);
 })();
 </script>
