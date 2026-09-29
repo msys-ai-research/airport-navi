@@ -1,0 +1,2239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Airport Navi Business Portal: concept admin and merchant back office for NAIA's operator. Blueprint scanner, tenant CMS, promotions, foot-traffic analytics and integrations. Sample data.">
+<meta name="theme-color" content="#001F60">
+<meta property="og:title" content="Airport Navi Business Portal">
+<meta property="og:description" content="Concept back office for Airport Navi at NAIA: maps, tenants, promotions, analytics, integrations. Sample data.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23001F60'/%3E%3Cpolygon points='14 30 50 13 33 49 29 35' fill='%23fff'/%3E%3C/svg%3E">
+<title>Airport Navi Business Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap">
+<style>
+/* Layout: sticky product header, left section nav (drawer under 960px), one scrolling work area of cards. Single brand hue (PAL blue) + status colours only. */
+:root{
+  --bg:#F5F6FA; --paper:#FFFFFF; --paper-2:#F9FAFC; --sunken:#EEF1F7;
+  --fg:#12183A; --muted:#5C6480; --faint:#6E7690;
+  --line:#E1E4EC; --line-2:#D5DAE8;
+  --brand:#001F60; --brand-fg:#FFFFFF; --brand-hover:#0A2C78;
+  --accent:#001F60; --accent-2:#52649A; --tint:#E6ECF8; --tint-2:#D3DEF3;
+  --nav-active-bg:#E6ECF8; --nav-active-fg:#001F60;
+  --ok-bg:#E3F3E7; --ok:#1B5E20; --warn-bg:#FDEBD0; --warn:#8A4B00; --crit-bg:#FCE4E2; --crit:#9A1B12;
+  --focus:#3A64B8;
+  --shadow-sm:0 1px 2px rgba(18,24,58,.06);
+  --shadow:0 6px 20px rgba(0,31,96,.08);
+  --shadow-lg:0 20px 56px rgba(0,31,96,.20);
+  --scrim:rgba(18,24,58,.38);
+  --mark-bg:#001F60; --mark-fg:#FFFFFF;
+  --map-bg:#F1F3F9; --map-room:#FFFFFF; --map-room-2:#F4F6FB; --map-land:#E9ECF3; --map-wall:#8C96B5;
+  --map-path:#3A64B8; --map-gate:#D3DEF3; --map-gate-fg:#001F60; --map-label:#3D4668; --map-conn:#52649A;
+  --map-partition:#9A1B12; --map-under:#C3CBDD;
+  --chart:#001F60; --chart-area:rgba(0,31,96,.08); --grid:#E8EBF2;
+  --h1:#DCE5F6; --h2:#B4C7EB; --h3:#839FD9; --h4:#5475BE; --h5:#2A4C98; --h6:#0B2A6E;
+  --toast-bg:#12183A; --toast-fg:#FFFFFF;
+  --device:#12183A;
+  /* passenger app preview keeps the app's light look in both themes */
+  --app-bg:#F5F6FA; --app-paper:#FFFFFF; --app-ink:#12183A; --app-navy:#001F60; --app-muted:#5C6480;
+  --app-line:#E1E4EC; --app-tint:#E6ECF8; --app-tint-2:#D3DEF3; --app-on-navy:#FFFFFF; --app-soft:#C9D3F0;
+  --app-ok-bg:#E3F3E7; --app-ok:#1B5E20; --app-crit-bg:#FCE4E2; --app-crit:#9A1B12; --app-warn-bg:#FDEBD0; --app-warn:#8A4B00;
+  --font:'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B1330; --paper:#121B3F; --paper-2:#16204A; --sunken:#0E1738;
+    --fg:#E6EBF8; --muted:#A4AECB; --faint:#8C97B8;
+    --line:#233061; --line-2:#2F3C72;
+    --brand:#8FA8E6; --brand-fg:#0B1330; --brand-hover:#A9BDEE;
+    --accent:#8FA8E6; --accent-2:#AFC0EC; --tint:#1A2758; --tint-2:#25366E;
+    --nav-active-bg:#1D2B5E; --nav-active-fg:#D3DEF8;
+    --ok-bg:#12351F; --ok:#8FD6A0; --warn-bg:#3A2A10; --warn:#F3BE6E; --crit-bg:#3F1A1A; --crit:#F4A097;
+    --focus:#A9BDEE;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3); --shadow:0 6px 20px rgba(0,0,0,.28); --shadow-lg:0 20px 56px rgba(0,0,0,.5);
+    --scrim:rgba(3,6,20,.62);
+    --mark-bg:#2A4AA0; --mark-fg:#FFFFFF;
+    --map-bg:#0E1738; --map-room:#17224E; --map-room-2:#1B285A; --map-land:#121B42; --map-wall:#5C6CA0;
+    --map-path:#8FA8E6; --map-gate:#25366E; --map-gate-fg:#DCE4F8; --map-label:#B9C4E2; --map-conn:#AFC0EC;
+    --map-partition:#F4A097; --map-under:#2A376B;
+    --chart:#8FA8E6; --chart-area:rgba(143,168,230,.14); --grid:#1F2A57;
+    --h1:#1C2A5C; --h2:#27407F; --h3:#3A5DA8; --h4:#5A80CC; --h5:#8BA8E6; --h6:#C8D7F7;
+    --toast-bg:#E6EBF8; --toast-fg:#0B1330;
+    --device:#05091C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B1330; --paper:#121B3F; --paper-2:#16204A; --sunken:#0E1738;
+  --fg:#E6EBF8; --muted:#A4AECB; --faint:#8C97B8;
+  --line:#233061; --line-2:#2F3C72;
+  --brand:#8FA8E6; --brand-fg:#0B1330; --brand-hover:#A9BDEE;
+  --accent:#8FA8E6; --accent-2:#AFC0EC; --tint:#1A2758; --tint-2:#25366E;
+  --nav-active-bg:#1D2B5E; --nav-active-fg:#D3DEF8;
+  --ok-bg:#12351F; --ok:#8FD6A0; --warn-bg:#3A2A10; --warn:#F3BE6E; --crit-bg:#3F1A1A; --crit:#F4A097;
+  --focus:#A9BDEE;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3); --shadow:0 6px 20px rgba(0,0,0,.28); --shadow-lg:0 20px 56px rgba(0,0,0,.5);
+  --scrim:rgba(3,6,20,.62);
+  --mark-bg:#2A4AA0; --mark-fg:#FFFFFF;
+  --map-bg:#0E1738; --map-room:#17224E; --map-room-2:#1B285A; --map-land:#121B42; --map-wall:#5C6CA0;
+  --map-path:#8FA8E6; --map-gate:#25366E; --map-gate-fg:#DCE4F8; --map-label:#B9C4E2; --map-conn:#AFC0EC;
+  --map-partition:#F4A097; --map-under:#2A376B;
+  --chart:#8FA8E6; --chart-area:rgba(143,168,230,.14); --grid:#1F2A57;
+  --h1:#1C2A5C; --h2:#27407F; --h3:#3A5DA8; --h4:#5A80CC; --h5:#8BA8E6; --h6:#C8D7F7;
+  --toast-bg:#E6EBF8; --toast-fg:#0B1330;
+  --device:#05091C;
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed}
+h1,h2,h3,h4{margin:0;text-wrap:balance;line-height:1.2}
+p{margin:0}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.num,.tnum,td,th{font-variant-numeric:tabular-nums}
+svg.ic{width:18px;height:18px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+svg.ic.sm{width:15px;height:15px}
+svg.ic.lg{width:22px;height:22px}
+
+/* ---------- header ---------- */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding-block:10px;padding-inline:20px;background:var(--paper);border-bottom:1px solid var(--line);min-height:60px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:32px;height:32px;border-radius:9px;background:var(--mark-bg);color:var(--mark-fg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mark svg{width:17px;height:17px;fill:currentColor;stroke:none}
+.brand-name{font-weight:800;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+.brand-name span{font-weight:500;color:var(--muted)}
+.hdr-mid{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.hdr-end{margin-left:auto;display:flex;align-items:center;gap:10px}
+.menu-btn{display:none}
+.tenant{position:relative}
+.tenant-btn{display:flex;align-items:center;gap:8px;height:36px;padding-inline:12px;border:1px solid var(--line-2);border-radius:10px;background:var(--paper);font-weight:700;font-size:13px}
+.tenant-btn small{font-weight:500;color:var(--muted);font-size:11.5px}
+.pop{position:absolute;top:calc(100% + 6px);left:0;z-index:40;min-width:260px;background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px}
+.pop button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:8px;background:transparent;font-size:13px}
+.pop button:hover:not(:disabled){background:var(--sunken)}
+.pop button:disabled{color:var(--faint)}
+.pop .hint{padding:6px 10px 4px;font-size:11.5px;color:var(--muted)}
+.seg{display:inline-flex;padding:3px;gap:2px;background:var(--sunken);border:1px solid var(--line);border-radius:10px}
+.seg button{border:0;background:transparent;height:28px;padding-inline:11px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--paper);color:var(--accent);box-shadow:var(--shadow-sm);font-weight:700}
+.seg button:disabled{opacity:.5}
+.mock-badge{display:inline-flex;align-items:center;gap:6px;height:26px;padding-inline:10px;border-radius:999px;border:1px dashed var(--line-2);color:var(--muted);font-size:11.5px;font-weight:600;white-space:nowrap}
+.user{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 4px;border:1px solid var(--line);border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+.avatar{width:28px;height:28px;border-radius:999px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--paper);display:inline-flex;align-items:center;justify-content:center;color:var(--fg);flex-shrink:0}
+.icon-btn:hover{background:var(--sunken)}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:calc(100vh - 61px)}
+.side{position:sticky;top:61px;align-self:start;height:calc(100vh - 61px);overflow-y:auto;border-right:1px solid var(--line);background:var(--paper);padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.side .grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:10px 12px 6px}
+.nav-btn{display:flex;align-items:center;gap:11px;width:100%;height:40px;padding-inline:12px;border:0;border-radius:10px;background:transparent;text-align:left;font-size:13.5px;font-weight:600;color:var(--muted)}
+.nav-btn:hover{background:var(--sunken);color:var(--fg)}
+.nav-btn[aria-current="page"]{background:var(--nav-active-bg);color:var(--nav-active-fg);font-weight:700}
+.nav-btn .cnt{margin-left:auto;min-width:22px;height:20px;padding-inline:6px;border-radius:999px;background:var(--warn-bg);color:var(--warn);font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.nav-btn .cnt:empty{display:none}
+.side-foot{margin-top:auto;padding:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.5}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:34}
+main{min-width:0;padding-block:24px 32px;padding-inline:28px;max-width:1480px;width:100%}
+.view{display:flex;flex-direction:column;gap:20px}
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.view-head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.view-head p{color:var(--muted);margin-top:4px;max-width:70ch}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+footer.about{padding-block:18px 28px;padding-inline:28px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
+
+/* ---------- atoms ---------- */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;min-width:0}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.card-h h2,.card-h h3{font-size:15px;font-weight:700}
+.card-h .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card-b{padding:16px 18px}
+.label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding-inline:14px;border-radius:10px;border:1px solid transparent;font-size:13px;font-weight:700;white-space:nowrap;background:var(--brand);color:var(--brand-fg)}
+.btn:hover:not(:disabled){background:var(--brand-hover)}
+.btn.sec{background:var(--paper);color:var(--accent);border-color:var(--line-2)}
+.btn.sec:hover:not(:disabled){background:var(--sunken)}
+.btn.ghost{background:transparent;color:var(--accent);border-color:transparent}
+.btn.ghost:hover:not(:disabled){background:var(--sunken)}
+.btn.danger{background:var(--paper);color:var(--crit);border-color:var(--line-2)}
+.btn.sm{height:30px;padding-inline:10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.5}
+.pill{display:inline-flex;align-items:center;gap:5px;height:22px;padding-inline:9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;background:var(--tint);color:var(--accent)}
+.pill::before{content:"";width:6px;height:6px;border-radius:999px;background:currentColor;opacity:.85}
+.pill.nodot::before{display:none}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.crit{background:var(--crit-bg);color:var(--crit)}
+.pill.mute{background:var(--sunken);color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding-inline:12px;border-radius:999px;border:1px solid var(--line-2);background:var(--paper);font-size:12.5px;font-weight:600;color:var(--fg);white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-fg)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;height:22px;padding-inline:8px;border-radius:6px;background:var(--sunken);color:var(--muted);font-size:11.5px;font-weight:600;white-space:nowrap}
+.tag.t-adv{background:var(--warn-bg);color:var(--warn)}
+.tag.t-ann{background:var(--tint);color:var(--accent)}
+.tag.t-spo{background:var(--tint-2);color:var(--accent)}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--sunken);color:var(--muted);font-size:12.5px;line-height:1.5}
+.note svg{margin-top:1px;color:var(--accent-2)}
+.note b{color:var(--fg)}
+.note.warn{background:var(--warn-bg);color:var(--warn)}
+.note.warn svg,.note.warn b{color:var(--warn)}
+.empty{padding:32px 16px;text-align:center;color:var(--muted);font-size:13px}
+.empty b{display:block;color:var(--fg);font-size:14px;margin-bottom:4px}
+.link-btn{border:0;background:none;padding:0;color:var(--accent);font-weight:700;font-size:inherit;text-decoration:underline;text-underline-offset:2px}
+
+/* forms */
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.field .lbl{font-size:12px;font-weight:700;color:var(--muted)}
+.inp,select.inp,textarea.inp{height:36px;width:100%;padding-inline:10px;border:1px solid var(--line-2);border-radius:9px;background:var(--paper);color:var(--fg);font-size:13px;min-width:0}
+textarea.inp{height:auto;min-height:72px;padding:8px 10px;resize:vertical;line-height:1.45}
+.inp:focus{outline:2px solid var(--focus);outline-offset:0;border-color:transparent}
+.inp[aria-invalid="true"]{border-color:var(--crit)}
+.err{font-size:11.5px;color:var(--crit);font-weight:600}
+.counter{font-size:11px;color:var(--faint);margin-left:auto;font-variant-numeric:tabular-nums}
+.counter.over{color:var(--crit);font-weight:700}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fgrid .span2{grid-column:1/-1}
+.switch{position:relative;display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;cursor:pointer;user-select:none}
+.switch input{position:absolute;opacity:0;width:36px;height:20px;margin:0;cursor:pointer}
+.switch .trk{width:36px;height:20px;border-radius:999px;background:var(--line-2);position:relative;flex-shrink:0;transition:background .15s}
+.switch .trk::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:999px;background:var(--paper);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.switch input:checked + .trk{background:var(--brand)}
+.switch input:checked + .trk::after{transform:translateX(16px)}
+.switch input:focus-visible + .trk{outline:2px solid var(--focus);outline-offset:2px}
+.switch input:disabled + .trk{opacity:.45}
+.switch input:disabled ~ span{color:var(--faint)}
+.check{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600}
+.check input{accent-color:var(--brand);width:15px;height:15px;margin:0}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;min-width:0;position:relative}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--paper-2)}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .r{text-align:right}
+.tbl tbody tr.click{cursor:pointer}
+.tbl tbody tr.click:hover td{background:var(--paper-2)}
+.tbl .t-main{font-weight:700;color:var(--fg)}
+.tbl .t-sub{font-size:12px;color:var(--muted)}
+.row-btn{border:0;background:none;padding:0;text-align:left;color:inherit;font:inherit}
+.row-btn:hover .t-main{text-decoration:underline;text-underline-offset:2px}
+
+/* ---------- overview ---------- */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.kpi .k-l{font-size:12px;font-weight:600;color:var(--muted);line-height:1.3;min-height:31px}
+.kpi .k-v{font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--fg);line-height:1.1}
+.kpi .k-v small{font-size:14px;font-weight:700;color:var(--muted);margin-left:2px}
+.kpi .k-d{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.up{color:var(--ok);font-weight:700}
+.down{color:var(--crit);font-weight:700}
+.ov-main{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px}
+.chart-box{position:relative}
+.chart-box svg{display:block;width:100%;height:auto}
+.chart-box text{font-family:var(--font)}
+.tip{position:absolute;pointer-events:none;background:var(--paper);border:1px solid var(--line-2);border-radius:8px;padding:6px 9px;font-size:12px;box-shadow:var(--shadow);white-space:nowrap;z-index:5}
+.tip b{display:block;font-size:13px}
+.attn{list-style:none;margin:0;padding:0}
+.attn li{display:flex;gap:12px;align-items:flex-start;padding:12px 18px;border-bottom:1px solid var(--line)}
+.attn li:last-child{border-bottom:0}
+.attn .sev{width:4px;align-self:stretch;border-radius:4px;background:var(--warn);flex-shrink:0}
+.attn .sev.crit{background:var(--crit)}
+.attn .sev.info{background:var(--accent-2)}
+.attn .a-t{font-weight:700;font-size:13.5px}
+.attn .a-s{font-size:12.5px;color:var(--muted);margin-top:2px}
+.attn .grow{flex:1;min-width:0}
+.qlinks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.qlink{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--paper);text-align:left;min-width:0}
+.qlink:hover{border-color:var(--line-2);box-shadow:var(--shadow)}
+.qlink .ql-ic{width:34px;height:34px;border-radius:10px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.qlink b{font-size:13.5px}
+.qlink span{font-size:12px;color:var(--muted)}
+
+/* ---------- maps ---------- */
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;font-weight:700;color:var(--accent-2)}
+.flow .f-step{display:inline-flex;align-items:center;gap:6px;height:30px;padding-inline:12px;border-radius:999px;background:var(--paper);border:1px solid var(--line)}
+.flow .f-step.on{background:var(--tint);color:var(--accent);border-color:var(--tint-2)}
+.flow .f-arr{color:var(--faint)}
+.mp-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);gap:16px}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;border:1.5px dashed var(--line-2);border-radius:12px;background:var(--paper-2);padding:22px 16px;cursor:pointer;min-height:150px}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--tint)}
+.drop .d-ic{width:40px;height:40px;border-radius:12px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.drop b{font-size:13.5px}
+.drop span{font-size:12px;color:var(--muted)}
+.file-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-top:12px}
+.file-row .fi{width:34px;height:40px;border-radius:6px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;font-weight:800;letter-spacing:.04em;flex-direction:column;gap:1px}
+.file-row .grow{flex:1;min-width:0}
+.file-row .fn{font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pipe{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.pipe li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.pipe li:last-child{border-bottom:0}
+.pipe .dot{width:20px;height:20px;border-radius:999px;border:2px solid var(--line-2);display:flex;align-items:center;justify-content:center;color:var(--brand-fg)}
+.pipe li.done .dot{background:var(--brand);border-color:var(--brand)}
+.pipe li.run .dot{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+.pipe .p-t{font-size:13px;font-weight:600}
+.pipe li.wait .p-t{color:var(--faint)}
+.pipe .p-s{font-size:11.5px;color:var(--muted)}
+.conf{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.conf .bar{width:54px;height:6px;border-radius:999px;background:var(--sunken);overflow:hidden}
+.conf .bar i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.conf.mid .bar i{background:var(--warn)}
+.conf.low .bar i{background:var(--crit)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vers{list-style:none;margin:0;padding:0}
+.vers li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.vers li:last-child{border-bottom:0}
+.vers .v-n{font-weight:800;width:30px}
+.vers .grow{flex:1;min-width:0}
+.vers .v-s{font-size:12px;color:var(--muted)}
+.confirm{border:1px solid var(--line-2);background:var(--paper-2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.confirm b{font-size:13.5px}
+.ws{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:0}
+.ws-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.ws-canvas{position:relative;background:var(--map-bg);border-right:1px solid var(--line);min-width:0}
+.ws-canvas .scroller{overflow:auto}
+.ws-canvas svg.plan{display:block;width:100%;min-width:720px;height:auto}
+.plan text{font-family:var(--font)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);background:var(--paper)}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1.5px solid}
+.lg-hi{background:var(--map-gate);border-color:var(--map-wall)!important}
+.lg-mid{background:var(--warn-bg);border-color:var(--warn)!important;border-style:dashed!important}
+.lg-lo{background:var(--crit-bg);border-color:var(--crit)!important;border-style:dashed!important}
+.issues{display:flex;flex-direction:column;min-width:0}
+.issues-h{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.issue{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.issue.sel{background:var(--tint)}
+.issue .i-top{display:flex;gap:10px;align-items:flex-start}
+.issue .i-t{font-weight:700;font-size:13px;line-height:1.35;border:0;background:none;padding:0;text-align:left;color:var(--fg)}
+.issue .i-s{font-size:12px;color:var(--muted);margin-top:2px}
+.issue .i-ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--warn-bg);color:var(--warn)}
+.issue .i-ic.lo{background:var(--crit-bg);color:var(--crit)}
+.issue .i-ic.ok{background:var(--ok-bg);color:var(--ok)}
+.issue.done .i-t{color:var(--muted)}
+.issue .fixbox{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:10px;background:var(--paper);border:1px solid var(--line-2)}
+.georef{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:12px;align-items:end;padding:14px 16px;border-top:1px solid var(--line)}
+.plan .room{stroke:var(--map-wall);stroke-width:1.5}
+.plan .r-land{fill:var(--map-land)}
+.plan .r-dom,.plan .r-intl,.plan .r-pier{fill:var(--map-room)}
+.plan .r-room{fill:var(--map-room-2)}
+.plan .r-arr{fill:var(--map-room-2)}
+.plan .rl{fill:var(--map-label);font-size:11px;font-weight:700;letter-spacing:.02em}
+.plan .rl.big{font-size:12.5px}
+.plan .rl.sm{font-size:9.5px;font-weight:600}
+.plan .gate rect{fill:var(--map-gate);stroke:var(--map-wall);stroke-width:1}
+.plan .gate text{fill:var(--map-gate-fg);font-size:10px;font-weight:800;text-anchor:middle;dominant-baseline:central}
+.plan .c-mid rect,.plan rect.c-mid{fill:var(--warn-bg);stroke:var(--warn);stroke-dasharray:4 3;stroke-width:1.6}
+.plan .c-mid text{fill:var(--warn)}
+.plan .c-lo rect,.plan rect.c-lo{fill:var(--crit-bg);stroke:var(--crit);stroke-dasharray:4 3;stroke-width:1.8}
+.plan .c-lo text{fill:var(--crit)}
+.plan .path{fill:none;stroke:var(--map-path);stroke-width:3;stroke-linecap:round;opacity:.75}
+.plan .path.gap{stroke:var(--crit);stroke-dasharray:3 4;opacity:1}
+.plan .place circle{fill:var(--paper);stroke:var(--accent-2);stroke-width:1.5}
+.plan .place text{fill:var(--map-label);font-size:9.5px;font-weight:600}
+.plan .conn rect{fill:var(--paper);stroke:var(--map-conn);stroke-width:1.5}
+.plan .conn text{fill:var(--map-conn);font-size:9px;font-weight:800;text-anchor:middle;dominant-baseline:central}
+.plan .conn.c-lo rect{fill:var(--crit-bg);stroke:var(--crit)}
+.plan .conn.c-lo text{fill:var(--crit)}
+.plan .partition{stroke:var(--map-partition);stroke-width:2.5;stroke-dasharray:7 5}
+.plan .part-l{fill:var(--map-partition);font-size:9.5px;font-weight:700}
+.plan .under{fill:none;stroke:var(--map-under);stroke-width:1}
+.plan .walkway{fill:var(--tint-2);opacity:.9}
+.plan .pin-issue{cursor:pointer}
+.plan .pin-issue circle.ring{fill:var(--paper);stroke:var(--crit);stroke-width:2}
+.plan .pin-issue.mid circle.ring{stroke:var(--warn)}
+.plan .pin-issue text{fill:var(--crit);font-size:12px;font-weight:800;text-anchor:middle;dominant-baseline:central}
+.plan .pin-issue.mid text{fill:var(--warn)}
+.plan .pin-issue.sel circle.halo{fill:var(--crit);opacity:.18}
+.plan .pin-issue.mid.sel circle.halo{fill:var(--warn)}
+.plan .pin-issue:focus-visible circle.ring{stroke:var(--focus);stroke-width:3}
+.plan .scale line{stroke:var(--fg);stroke-width:2}
+.plan .scale text,.plan .compass text{fill:var(--fg);font-size:10.5px;font-weight:700}
+.plan .compass path{fill:var(--fg)}
+.plan .compass circle{fill:var(--paper);stroke:var(--line-2)}
+.plan .carousel{fill:var(--map-room);stroke:var(--map-wall);stroke-width:1.2}
+.plan .tenant-pin path{fill:var(--brand);stroke:var(--paper);stroke-width:2}
+.plan .tenant-pin circle{fill:var(--brand-fg)}
+.plan .near{stroke:var(--brand);stroke-width:1.5;stroke-dasharray:3 3}
+.plan .heat rect{stroke:var(--map-bg);stroke-width:2}
+.plan .heat rect.sup{fill:none;stroke:var(--map-wall);stroke-width:.8;stroke-dasharray:2 2;opacity:.6}
+.plan .heat rect:hover{stroke:var(--fg)}
+.plan .level-note{fill:var(--muted);font-size:12px;font-weight:600}
+
+/* drawer */
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:50;width:min(1000px,100vw);background:var(--bg);border-left:1px solid var(--line);box-shadow:var(--shadow-lg);display:flex;flex-direction:column}
+.drawer-h{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--paper);border-bottom:1px solid var(--line);padding-top:calc(14px + env(safe-area-inset-top,0px))}
+.drawer-h h2{font-size:17px;font-weight:800}
+.drawer-b{flex:1;overflow-y:auto;padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.drawer-f{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 20px;background:var(--paper);border-top:1px solid var(--line);padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.dsec{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.dsec h3{font-size:13px;font-weight:800}
+.dcol{display:flex;flex-direction:column;gap:14px;min-width:0}
+.hours{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:6px 10px;align-items:center}
+.hours .d{font-size:12.5px;font-weight:700;color:var(--muted)}
+.hours .inp{height:32px}
+.photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.photo{position:relative;aspect-ratio:4/3;max-width:100%;border:1.5px dashed var(--line-2);border-radius:10px;background:var(--paper-2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--muted);font-size:11.5px;font-weight:600;overflow:hidden;cursor:pointer;text-align:center}
+.photo:hover{border-color:var(--accent)}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.photo:focus-within{outline:2px solid var(--focus);outline-offset:2px}
+.picker{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--map-bg);cursor:crosshair}
+.picker svg{display:block;width:100%;height:auto}
+.loc-read{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;font-size:12.5px}
+.loc-read b{display:block;font-size:13px;font-variant-numeric:tabular-nums}
+
+/* phone preview */
+.phone-wrap{position:sticky;top:0;display:flex;flex-direction:column;gap:10px;align-items:center}
+.phone{width:300px;max-width:100%;border-radius:36px;padding:10px;background:var(--device);box-shadow:var(--shadow-lg)}
+.phone .scr{border-radius:28px;overflow:hidden;background:var(--app-bg);color:var(--app-ink);height:560px;display:flex;flex-direction:column;position:relative;font-size:13px}
+.phone .status{height:30px;display:flex;align-items:center;justify-content:space-between;padding-inline:20px;font-size:11px;font-weight:700;color:var(--app-ink);flex-shrink:0}
+.phone .notch{width:84px;height:20px;border-radius:999px;background:var(--device)}
+.ph-cap{font-size:11.5px;color:var(--muted);text-align:center;max-width:300px}
+.app-top{background:var(--app-navy);color:var(--app-on-navy);padding:12px 16px 14px;display:flex;flex-direction:column;gap:3px}
+.app-top b{font-size:15px}
+.app-top span{font-size:11px;color:var(--app-soft)}
+.app-body{flex:1;overflow:hidden;padding:12px;display:flex;flex-direction:column;gap:10px}
+.app-card{background:var(--app-paper);border:1px solid var(--app-line);border-radius:14px;overflow:hidden}
+.app-photo{height:132px;background:var(--app-tint-2);display:flex;align-items:center;justify-content:center;color:var(--app-navy);position:relative;overflow:hidden}
+.app-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.app-photo svg{width:44px;height:44px;opacity:.6}
+.app-pad{padding:12px;display:flex;flex-direction:column;gap:8px}
+.app-name{font-size:16px;font-weight:800;line-height:1.2;color:var(--app-ink)}
+.app-meta{font-size:11.5px;color:var(--app-muted)}
+.app-pill{display:inline-flex;align-items:center;height:22px;padding-inline:9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--app-ok-bg);color:var(--app-ok)}
+.app-pill.closed{background:var(--app-crit-bg);color:var(--app-crit)}
+.app-pill.soon{background:var(--app-warn-bg);color:var(--app-warn)}
+.app-pill.tint{background:var(--app-tint);color:var(--app-navy)}
+.app-btn{height:42px;border-radius:12px;background:var(--app-navy);color:var(--app-on-navy);font-weight:700;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;border:0;width:100%}
+.app-btn svg{stroke:var(--app-on-navy)}
+.app-chips{display:flex;gap:5px;flex-wrap:wrap}
+.app-chip{height:22px;padding-inline:8px;border-radius:999px;border:1px solid var(--app-line);font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;color:var(--app-ink);background:var(--app-paper)}
+.app-row{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--app-muted)}
+.app-row b{color:var(--app-ink)}
+.spons{display:inline-flex;align-items:center;height:18px;padding-inline:6px;border-radius:4px;border:1px solid var(--app-muted);color:var(--app-muted);font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.spons.onnavy{border-color:var(--app-soft);color:var(--app-soft)}
+.ban{border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.ban.hero{background:var(--app-navy);color:var(--app-on-navy)}
+.ban.hero .b-b{color:var(--app-soft)}
+.ban.card{background:var(--app-paper);border:1px solid var(--app-line)}
+.ban.adv{background:var(--app-warn-bg);color:var(--app-warn);border:1px solid var(--app-warn-bg)}
+.ban .b-h{font-size:14.5px;font-weight:800;line-height:1.25}
+.ban .b-b{font-size:11.5px;line-height:1.4;color:var(--app-muted)}
+.ban.adv .b-b{color:var(--app-warn)}
+.ban .b-cta{align-self:flex-start;height:30px;padding-inline:12px;border-radius:999px;border:0;font-size:11.5px;font-weight:700;background:var(--app-paper);color:var(--app-navy)}
+.ban.card .b-cta{background:var(--app-navy);color:var(--app-on-navy)}
+.ban.adv .b-cta{background:var(--app-warn);color:var(--app-paper)}
+.mini-map{flex:1;background:var(--app-tint);position:relative;overflow:hidden}
+.mini-map svg{position:absolute;inset:0;width:100%;height:100%}
+.ghost-line{height:10px;border-radius:6px;background:var(--app-line)}
+.ghost-line.w60{width:60%}
+.ghost-line.w80{width:80%}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--app-paper);border-radius:20px 20px 0 0;padding:10px 14px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 -8px 24px rgba(18,24,58,.18)}
+.sheet .grab{align-self:center;width:36px;height:4px;border-radius:2px;background:var(--app-line)}
+.app-shelf{display:flex;flex-direction:column;gap:8px}
+.app-item{display:flex;gap:10px;align-items:center;background:var(--app-paper);border:1px solid var(--app-line);border-radius:12px;padding:8px}
+.app-item .th{width:44px;height:44px;border-radius:10px;background:var(--app-tint-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--app-navy)}
+.app-item .grow{flex:1;min-width:0}
+.app-item b{font-size:12.5px;display:block;color:var(--app-ink)}
+.app-item span{font-size:11px;color:var(--app-muted)}
+
+/* ---------- tenants ---------- */
+.toolbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)}
+.toolbar .field{min-width:150px}
+.toolbar .search{flex:1;min-width:220px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding-inline:12px}
+.tab{height:44px;padding-inline:12px;border:0;background:none;font-weight:700;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;display:inline-flex;align-items:center;gap:8px}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tab .cnt{min-width:20px;height:20px;padding-inline:6px;border-radius:999px;background:var(--warn-bg);color:var(--warn);font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.appr{display:flex;flex-direction:column;gap:12px;padding:16px 18px}
+.appr-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.appr-h{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.appr-h .grow{flex:1;min-width:0}
+.diff{width:100%;border-collapse:collapse;font-size:12.5px}
+.diff td{padding:8px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.diff tr:last-child td{border-bottom:0}
+.diff .f{font-weight:700;color:var(--muted);width:150px}
+.diff del{color:var(--crit);background:var(--crit-bg);text-decoration:line-through;padding:1px 4px;border-radius:4px}
+.diff ins{color:var(--ok);background:var(--ok-bg);text-decoration:none;padding:1px 4px;border-radius:4px}
+.appr-f{display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:10px 14px;flex-wrap:wrap;border-top:1px solid var(--line)}
+.roles{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+
+/* ---------- promotions ---------- */
+.promo-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.ctr{text-align:right}
+
+/* ---------- analytics ---------- */
+.an-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.an-main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+.heat-tools{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line)}
+.heat-tools input[type=range]{width:240px;max-width:100%;accent-color:var(--brand)}
+.heat-legend{display:flex;align-items:center;gap:8px 2px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);padding:10px 18px;border-top:1px solid var(--line)}
+.heat-legend .sw{display:flex;flex-direction:column;gap:3px;min-width:86px;padding-right:4px}
+.heat-legend .sw i{height:10px;display:block}
+.heat-legend .sw span{font-variant-numeric:tabular-nums}
+.heat-legend .supp{display:flex;align-items:center;gap:6px;margin-left:16px}
+.heat-legend .supp i{width:14px;height:10px;border:1px dashed var(--map-wall);display:inline-block}
+.bar-cell{display:flex;align-items:center;gap:8px;min-width:120px}
+.bar-cell .b{height:8px;border-radius:0 4px 4px 0;background:var(--chart);opacity:.85}
+.bar-cell .bt{flex:1;height:8px}
+.routes{list-style:none;margin:0;padding:0}
+.routes li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 18px;border-bottom:1px solid var(--line)}
+.routes li:last-child{border-bottom:0}
+.routes .rt{font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.routes .rt svg{color:var(--faint)}
+.routes .rv{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.routes .rs{font-size:12px;color:var(--muted)}
+.routes .rbar{grid-column:1/-1;height:6px;border-radius:999px;background:var(--sunken);overflow:hidden}
+.routes .rbar i{display:block;height:100%;background:var(--chart);border-radius:0 4px 4px 0}
+.funnel{display:flex;flex-direction:column;gap:12px;padding:16px 18px}
+.fn-row{display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px;align-items:center}
+.fn-row .fl{font-size:12.5px;font-weight:600}
+.fn-row .fl small{display:block;color:var(--muted);font-weight:500;font-size:11.5px}
+.fn-bar{position:relative;height:28px;border-radius:0 6px 6px 0;background:var(--chart);display:flex;align-items:center;justify-content:flex-end;padding-inline:8px;min-width:2px}
+.fn-val{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fn-track{display:flex;align-items:center;gap:8px}
+.priv{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.priv-i{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;background:var(--sunken);font-size:12.5px;color:var(--muted);line-height:1.45}
+.priv-i b{color:var(--fg);font-size:13px}
+.priv-i svg{color:var(--accent)}
+.tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tier{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.tier ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.tier b{font-size:14px}
+.spark{display:block}
+
+/* ---------- integrations ---------- */
+.int-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.int{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.int-h{display:flex;gap:12px;align-items:flex-start}
+.int-h .ii{width:36px;height:36px;border-radius:10px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.int-h .grow{flex:1;min-width:0}
+.int-h b{font-size:14px;display:block;line-height:1.3}
+.int-h span{font-size:12px;color:var(--muted)}
+.int-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:12px;color:var(--muted)}
+.int-meta b{display:block;color:var(--fg);font-size:13px;font-variant-numeric:tabular-nums}
+.key{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;background:var(--sunken);padding:4px 8px;border-radius:6px;color:var(--fg);white-space:nowrap}
+.int-foot{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+.result{font-size:12px;display:flex;gap:6px;align-items:flex-start;padding:8px 10px;border-radius:8px;background:var(--sunken);color:var(--muted)}
+.result.ok{background:var(--ok-bg);color:var(--ok)}
+.result.warn{background:var(--warn-bg);color:var(--warn)}
+.result.crit{background:var(--crit-bg);color:var(--crit)}
+.perm{display:flex;gap:6px;flex-wrap:wrap}
+.perm label{display:inline-flex;align-items:center;gap:6px;height:28px;padding-inline:10px;border:1px solid var(--line-2);border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.perm label:has(input:checked){background:var(--tint);border-color:var(--tint-2);color:var(--accent)}
+.perm input{accent-color:var(--brand);margin:0}
+.perm .fixed{display:inline-flex;align-items:center;height:28px;padding-inline:10px;border-radius:999px;background:var(--sunken);font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+.spin{width:14px;height:14px;border-radius:999px;border:2px solid currentColor;border-top-color:transparent;animation:spin .8s linear infinite;display:inline-block}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;background:var(--toast-bg);color:var(--toast-fg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:12px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;max-width:calc(100vw - 32px)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1280px){
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mp-top{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mp-top > :last-child{grid-column:1/-1}
+  .ws{grid-template-columns:minmax(0,1fr)}
+  .ws-canvas{border-right:0;border-bottom:1px solid var(--line)}
+  .priv{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .an-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .qlinks{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:1100px){
+  .ov-main,.an-main{grid-template-columns:minmax(0,1fr)}
+  .promo-grid{grid-template-columns:minmax(0,1fr)}
+  .drawer-b{grid-template-columns:minmax(0,1fr)}
+  .phone-wrap{position:static}
+  .georef{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:960px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .menu-btn{display:inline-flex}
+  .side{position:fixed;left:0;top:0;bottom:0;height:auto;width:min(280px,86vw);z-index:36;transform:translateX(-102%);transition:transform .25s ease;box-shadow:var(--shadow-lg);padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  .side.open{transform:none}
+  main{padding-inline:16px;padding-block:18px 28px}
+  footer.about{padding-inline:16px}
+  .hdr{padding-inline:16px;gap:10px}
+  .hdr-mid{order:3;width:100%}
+  .g2,.g3,.tiers{grid-template-columns:minmax(0,1fr)}
+  .mp-top{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:600px){
+  .kpis,.an-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .qlinks{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .priv{grid-template-columns:minmax(0,1fr)}
+  .fgrid{grid-template-columns:minmax(0,1fr)}
+  .georef{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .brand-name span,.user .uname{display:none}
+  .view-head h1{font-size:21px}
+  .fn-row{grid-template-columns:minmax(0,1fr)}
+  .drawer-b{padding:14px 16px}
+  .loc-read{grid-template-columns:minmax(0,1fr)}
+  .toolbar .field{min-width:0;flex:1 1 140px}
+  .toolbar .search{min-width:100%}
+  .ws-canvas svg.plan{min-width:640px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition:none!important}
+}
+</style>
+<style>html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<header class="hdr">
+  <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="side">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 11.2 20.5 3.5 12.8 20.5 11 13z"/></svg></span>
+    <span class="brand-name">Airport Navi <span>· Business Portal</span></span>
+  </div>
+  <div class="hdr-mid">
+    <div class="tenant">
+      <button class="tenant-btn" id="tenantBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="tenantPop">
+        NNIC · NAIA <small>Operator</small>
+        <svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="pop" id="tenantPop" hidden>
+        <div class="hint">Organisation</div>
+        <button type="button" data-act="tenant-pick" aria-current="true"><span class="avatar">NN</span><span><b>NNIC · NAIA</b><br><span class="muted small">New NAIA Infra Corp · operator</span></span></button>
+        <button type="button" disabled><span class="avatar">—</span><span>Other airports<br><span class="small">Not part of the pilot</span></span></button>
+      </div>
+    </div>
+    <div class="seg" role="group" aria-label="Terminal filter" id="termSeg">
+      <button type="button" data-term="All" aria-pressed="true">All terminals</button>
+      <button type="button" data-term="T1" aria-pressed="false">T1</button>
+      <button type="button" data-term="T3" aria-pressed="false">T3</button>
+    </div>
+    <span class="mock-badge"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 7.5v.5"/></svg>Concept mock-up · sample data</span>
+  </div>
+  <div class="hdr-end">
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch theme"></button>
+    <div class="user" title="Signed in as Ops Admin"><span class="avatar">OA</span><span class="uname">Ops Admin</span></div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="side" id="side" aria-label="Sections">
+    <div class="grp">Operate</div>
+    <button class="nav-btn" type="button" data-nav="overview"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"/></svg>Overview</button>
+    <button class="nav-btn" type="button" data-nav="maps"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Maps &amp; Blueprints<span class="cnt" id="cnt-maps"></span></button>
+    <button class="nav-btn" type="button" data-nav="tenants"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM10 20v-5h4v5"/></svg>Tenants &amp; Amenities<span class="cnt" id="cnt-tenants"></span></button>
+    <button class="nav-btn" type="button" data-nav="promos"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l8 4V6l-8 4H4zM18 9.5a3.5 3.5 0 0 1 0 5"/></svg>Promotions &amp; Banners</button>
+    <div class="grp">Understand</div>
+    <button class="nav-btn" type="button" data-nav="analytics"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></svg>Analytics</button>
+    <div class="grp">Connect</div>
+    <button class="nav-btn" type="button" data-nav="ints"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0V8zM12 17v4"/></svg>Integrations<span class="cnt" id="cnt-ints"></span></button>
+    <div class="side-foot">Pilot scope: NAIA Terminal 1 and Terminal 3.<br>Figures are sample data for this concept.</div>
+  </nav>
+  <div class="scrim" id="navScrim" hidden></div>
+
+  <div style="min-width:0;display:flex;flex-direction:column">
+    <main id="main">
+      <section class="view" id="v-overview" aria-labelledby="h-overview"></section>
+      <section class="view" id="v-maps" aria-labelledby="h-maps" hidden></section>
+      <section class="view" id="v-tenants" aria-labelledby="h-tenants" hidden></section>
+      <section class="view" id="v-promos" aria-labelledby="h-promos" hidden></section>
+      <section class="view" id="v-analytics" aria-labelledby="h-analytics" hidden></section>
+      <section class="view" id="v-ints" aria-labelledby="h-ints" hidden></section>
+    </main>
+    <footer class="about">
+      <span>Concept for NNIC · sample data · Airport Navi by Multisys</span>
+      <span>Not connected to live NAIA systems. Figures, partners' statuses and listings are illustrative.</span>
+    </footer>
+  </div>
+</div>
+
+<div class="scrim" id="drawerScrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden></aside>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+(() => {
+'use strict';
+/* ================= helpers ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const compact = n => n >= 1e6 ? (n / 1e6).toFixed(2).replace(/0$/, '') + 'M' : n >= 1e4 ? Math.round(n / 1000) + 'k' : fmt(n);
+const pct = (a, b) => b ? (a / b * 100) : 0;
+const store = {
+  get(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+};
+const reduceMotion = (() => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+
+const IC = {
+  alert: '<path d="M12 3.5 2.5 20h19L12 3.5zM12 10v4.5M12 17.2v.3"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  upload: '<path d="M12 15V4M7 9l5-5 5 5M4 15v5h16v-5"/>',
+  file: '<path d="M6 3h8l4 4v14H6zM14 3v4h4"/>',
+  map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/>',
+  store: '<path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM10 20v-5h4v5"/>',
+  mega: '<path d="M4 10v4h3l8 4V6l-8 4H4zM18 9.5a3.5 3.5 0 0 1 0 5"/>',
+  chart: '<path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/>',
+  plug: '<path d="M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0V8zM12 17v4"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.3"/>',
+  shield: '<path d="M12 3 4.5 6v6c0 4.6 3.2 7.9 7.5 9 4.3-1.1 7.5-4.4 7.5-9V6L12 3z"/><path d="M9 12l2 2 4-4"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  nav: '<path d="M3.5 11.2 20.5 3.5 12.8 20.5 11 13z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  layers: '<path d="M12 3 2 8l10 5 10-5-10-5zM2 13l10 5 10-5M2 17.5l10 5 10-5"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v3h3M4 13a8 8 0 0 0 14.6 4.5M20 20v-3h-3"/>',
+  walk: '<circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2-6-3-3 1.5-4.5L14 9l2 3h3M9 12l-2 3"/>',
+  plane: '<path d="M10.5 13.5 3 11l1.5-1.5 7.5 1 4-4.5c1-1 2.6-1.3 3.2-.7s.3 2.2-.7 3.2L14 12.5l1 7.5-1.5 1.5-2.5-7.5-4 3.5v2.5L5.5 21l-1-3.5L1 16.5 2.5 15H5z"/>',
+  up: '<path d="M7 14l5-5 5 5"/>',
+  down: '<path d="M7 10l5 5 5-5"/>',
+  flat: '<path d="M6 12h12"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  image: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/>',
+  bag: '<path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2"/>',
+  cup: '<path d="M5 8h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8zM16 9.5h1.5a2.5 2.5 0 0 1 0 5H16M8 3v2M11 3v2"/>',
+  car: '<path d="M5 16V11l2-5h10l2 5v5M3 16h18M7 19v-3M17 19v-3"/><circle cx="8" cy="13" r=".8"/><circle cx="16" cy="13" r=".8"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l2 2M15 8l2 2"/>',
+  box: '<path d="M4 8l8-4 8 4v8l-8 4-8-4V8zM4 8l8 4 8-4M12 12v8"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  card: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/>',
+  grid: '<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>',
+  send: '<path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  back: '<path d="M15 6l-6 6 6 6"/>'
+};
+const ic = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n] || ''}</svg>`;
+
+/* toast */
+let toastT = 0;
+function toast(msg, kind) {
+  const t = $('#toast');
+  t.innerHTML = ic(kind === 'warn' ? 'alert' : 'check', 'sm') + '<span>' + esc(msg) + '</span>';
+  t.hidden = false;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { t.hidden = true; }, 2800);
+}
+
+/* ================= global state ================= */
+const NOW = '2026-09-29T13:02';
+const TODAY_IDX = 1; // Tuesday, Mon = 0
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const S = { view: 'overview', term: 'All' };
+
+/* ================= map geometry (schematic, T3 Level 3) =================
+   Drawn with domestic (north) on the left. Plan units: 1 unit ≈ 1.2 m. */
+const UNIT_M = 1.2;
+const T3R = [
+  { id: 'land', z: 'land', x: 200, y: 28, w: 420, h: 62, n: 'Check-in hall (landside)', lx: 410, ly: 50 },
+  { id: 'dsec', z: 'dom', x: 250, y: 90, w: 90, h: 40, n: 'Domestic security', lx: 295, ly: 114, sm: true },
+  { id: 'imm', z: 'intl', x: 450, y: 90, w: 120, h: 40, n: 'Immigration & security', lx: 510, ly: 114, sm: true },
+  { id: 'npier', z: 'dom', x: 40, y: 180, w: 160, h: 90, n: 'North pier', lx: 120, ly: 250 },
+  { id: 'dhall', z: 'dom', x: 200, y: 130, w: 220, h: 190, n: 'Domestic hall', lx: 310, ly: 252 },
+  { id: 'chall', z: 'intl', x: 420, y: 130, w: 180, h: 190, n: 'International central hall', lx: 510, ly: 252 },
+  { id: 'corr', z: 'intl', x: 600, y: 185, w: 260, h: 80, n: 'Corridor south', lx: 800, ly: 212 },
+  { id: 'finger', z: 'intl', x: 860, y: 185, w: 80, h: 315, n: 'South-east finger', lx: 920, ly: 330, rot: true }
+];
+const G3 = [
+  [117, 62, 156], [118, 132, 156], [119, 62, 272], [120, 132, 272],
+  [101, 620, 161], [103, 680, 161], [105, 740, 161], [107, 800, 161],
+  [102, 620, 267], [104, 680, 267], [106, 740, 267], [108, 800, 267],
+  [109, 824, 300], [111, 824, 350], [113, 824, 400], [115, 824, 450],
+  [110, 942, 300], [112, 942, 350], [114, 942, 400], [116, 942, 450]
+];
+const GW = 34, GH = 22;
+function gateSpur(g) {
+  const [n, x, y] = g, cx = x + GW / 2, cy = y + GH / 2;
+  if (n >= 109) return n % 2 ? [x + GW, cy, 900, cy] : [x, cy, 900, cy];
+  return y < 200 ? [cx, y + GH, cx, 225] : [cx, y, cx, 225];
+}
+const PLACES3 = [
+  { n: 'Café & pastry', x: 214, y: 160 }, { n: 'Travel essentials', x: 312, y: 160 },
+  { n: 'PAGSS lounge', x: 214, y: 196 }, { n: 'Food stalls', x: 312, y: 196 },
+  { n: 'Duty free', x: 434, y: 160 }, { n: 'Money exchange', x: 514, y: 160 },
+  { n: 'Pharmacy', x: 434, y: 196 }, { n: 'Prayer room', x: 514, y: 196 },
+  { n: 'Vaping room', x: 612, y: 250 }
+];
+const WALK3 = [
+  { n: 'Check-in hall walkway', a: [215, 70], b: [605, 70] },
+  { n: 'Domestic security exit', a: [295, 70], b: [295, 225] },
+  { n: 'Immigration exit', a: [510, 70], b: [510, 225] },
+  { n: 'North pier walkway', a: [55, 225], b: [200, 225] },
+  { n: 'Domestic hall main walkway', a: [200, 225], b: [414, 225] },
+  { n: 'Central hall main walkway', a: [426, 225], b: [600, 225] },
+  { n: 'Corridor south (moving walkway)', a: [600, 225], b: [900, 225] },
+  { n: 'South-east finger walkway', a: [900, 225], b: [900, 485] }
+];
+const T1R = [
+  { id: 'land', z: 'land', x: 360, y: 28, w: 280, h: 70, n: 'Check-in hall (landside)', lx: 500, ly: 60 },
+  { id: 'imm', z: 'intl', x: 455, y: 98, w: 90, h: 30, n: 'Immigration', lx: 500, ly: 117, sm: true },
+  { id: 'mid', z: 'intl', x: 380, y: 128, w: 240, h: 160, n: 'Mid-section', lx: 500, ly: 262 },
+  { id: 'warm', z: 'intl', x: 180, y: 175, w: 200, h: 60, n: 'West arm', lx: 250, ly: 200 },
+  { id: 'whub', z: 'intl', x: 40, y: 140, w: 140, h: 130, n: 'West hub', lx: 110, ly: 250 },
+  { id: 'earm', z: 'intl', x: 620, y: 175, w: 200, h: 60, n: 'East arm', lx: 750, ly: 200 },
+  { id: 'ehub', z: 'intl', x: 820, y: 140, w: 140, h: 130, n: 'East hub', lx: 890, ly: 250 }
+];
+const G1 = [[10, 52, 116], [11, 112, 116], [12, 4, 165], [13, 4, 215], [14, 60, 272], [17, 120, 272], [9, 220, 151], [15, 300, 237],
+  [2, 660, 151], [7, 740, 237], [3, 832, 116], [4, 896, 116], [5, 962, 165], [6, 962, 215], [1, 420, 290], [16, 546, 290]];
+const WALK1 = [
+  { n: 'Check-in hall walkway', a: [375, 70], b: [625, 70] },
+  { n: 'Immigration exit', a: [500, 70], b: [500, 205] },
+  { n: 'Mid-section walkway', a: [380, 205], b: [620, 205] },
+  { n: 'West arm walkway', a: [110, 205], b: [380, 205] },
+  { n: 'East arm walkway', a: [620, 205], b: [890, 205] }
+];
+function nearestWalk(term, x, y) {
+  const list = term === 'T1' ? WALK1 : WALK3;
+  let best = null;
+  list.forEach(w => {
+    const [ax, ay] = w.a, [bx, by] = w.b, dx = bx - ax, dy = by - ay;
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1)));
+    const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(x - px, y - py);
+    if (!best || d < best.d) best = { n: w.n, d, px, py };
+  });
+  return best;
+}
+/* georeference: plan left = bearing 314.3° (toward domestic / NW), plan up = 44.3° (toward the curb) */
+const geo = { lat: 14.5207, lng: 121.0142, bearing: 314.3, mpp: 0.42, ox: 410, oy: 60 };
+function toLatLng(x, y) {
+  const mx = (x - geo.ox) * UNIT_M, my = (geo.oy - y) * UNIT_M;
+  const bRight = (geo.bearing + 180) * Math.PI / 180, bUp = (geo.bearing + 90) * Math.PI / 180;
+  const east = mx * Math.sin(bRight) + my * Math.sin(bUp);
+  const north = mx * Math.cos(bRight) + my * Math.cos(bUp);
+  const lat = geo.lat + north / 111320;
+  const lng = geo.lng + east / (111320 * Math.cos(geo.lat * Math.PI / 180));
+  return [lat, lng];
+}
+function walkMin(t) {
+  const origin = t.term === 'T1' ? [500, 128] : t.zone === 'dom' ? [295, 130] : t.zone === 'intl' ? [510, 130] : [410, 70];
+  if (!t.pin) return null;
+  const m = (Math.abs(t.pin.x - origin[0]) + Math.abs(t.pin.y - origin[1])) * UNIT_M;
+  return Math.max(1, Math.round(m / 70));
+}
+
+/* ================= tenants ================= */
+const H = (o, c, over) => DAYS.map((d, i) => (over && over[i]) ? { o: over[i][0], c: over[i][1] } : { o, c });
+const TENANTS = [
+  { id: 'cafe3', name: 'Café and pastry shop', cat: 'Dining', term: 'T3', level: 'L3', zone: 'dom', loc: 'Domestic hall, facing the north pier entrance', desc: 'Coffee, ensaymada and pastries baked daily. Grab-and-go sandwiches for early flights.', hours: H('05:00', '22:00'), all24: false, closed: false, closeNote: '', tags: ['Coffee', 'Pastries', 'Breakfast'], pay: ['Cash', 'Visa/Mastercard', 'GCash', 'Maya'], photos: ['sample', null, null], pin: { x: 214, y: 160 }, status: 'Pending approval', owner: 'Merchant', updated: '29 Sep, 10:42' },
+  { id: 'stalls3', name: 'Food stalls', cat: 'Dining', term: 'T3', level: 'L3', zone: 'dom', loc: 'Domestic hall, food court side', desc: 'Filipino rice meals, noodles and snacks from six stalls with shared seating.', hours: H('04:30', '23:00'), all24: false, closed: false, closeNote: '', tags: ['Rice meals', 'Snacks', 'Halal options'], pay: ['Cash', 'GCash', 'Maya'], photos: [null, null, null], pin: { x: 312, y: 196 }, status: 'Open', owner: 'Merchant', updated: '24 Sep, 16:05' },
+  { id: 'gifts3', name: 'Travel essentials & gifts', cat: 'Retail', term: 'T3', level: 'L3', zone: 'dom', loc: 'Domestic hall, next to the café', desc: 'Neck pillows, adapters, snacks and gift boxes for pasalubong.', hours: H('05:00', '22:00'), all24: false, closed: false, closeNote: '', tags: ['Gifts', 'Snacks', 'Travel gear'], pay: ['Cash', 'Visa/Mastercard', 'GCash'], photos: [null, null, null], pin: { x: 312, y: 160 }, status: 'Pending approval', owner: 'Merchant', updated: '29 Sep, 08:17' },
+  { id: 'pagss3', name: 'PAGSS Premium Lounge', cat: 'Lounge', term: 'T3', level: 'L3', zone: 'dom', loc: 'Domestic airside, beside the domestic hall', desc: 'Pay-per-use lounge with buffet, showers and Wi-Fi. Walk-in access subject to capacity.', hours: H('00:00', '23:59'), all24: true, closed: false, closeNote: '', tags: ['Showers', 'Wi-Fi', 'Buffet'], pay: ['Cash', 'Visa/Mastercard'], photos: [null, null, null], pin: { x: 214, y: 196 }, status: 'Open', owner: 'Merchant', updated: '19 Sep, 11:30' },
+  { id: 'duty3', name: 'Duty free', cat: 'Duty free', term: 'T3', level: 'L3', zone: 'intl', loc: 'International central hall', desc: 'Liquor, fragrances, chocolates and local delicacies. Show your boarding pass at checkout.', hours: H('00:00', '23:59'), all24: true, closed: false, closeNote: '', tags: ['Fragrance', 'Liquor', 'Chocolates'], pay: ['Cash', 'Visa/Mastercard', 'Alipay', 'UnionPay'], photos: [null, null, null], pin: { x: 434, y: 160 }, status: 'Open', owner: 'Merchant', updated: '21 Sep, 09:12' },
+  { id: 'pharm3', name: 'Pharmacy', cat: 'Services', term: 'T3', level: 'L3', zone: 'intl', loc: 'Central hall, near the lounge lifts', desc: 'Over-the-counter medicine, motion-sickness tablets and first-aid items.', hours: H('06:00', '22:00'), all24: false, closed: true, closeNote: 'Closed today for stock-take. Reopens 30 Sep, 06:00.', tags: ['Medicine', 'First aid'], pay: ['Cash', 'Visa/Mastercard', 'GCash'], photos: [null, null, null], pin: { x: 434, y: 196 }, status: 'Closed today', owner: 'Merchant', updated: '29 Sep, 06:40' },
+  { id: 'fx3', name: 'Currency exchange', cat: 'Services', term: 'T3', level: 'L3', zone: 'intl', loc: 'Central hall, after immigration', desc: 'Buy and sell USD, JPY, SGD, HKD, KRW and more.', hours: H('00:00', '23:59'), all24: true, closed: false, closeNote: '', tags: ['USD', 'JPY', 'SGD'], pay: ['Cash'], photos: [null, null, null], pin: { x: 514, y: 160 }, status: 'Open', owner: 'Merchant', updated: '15 Sep, 14:22' },
+  { id: 'wc3', name: 'Toilets · central hall', cat: 'Amenity', term: 'T3', level: 'L3', zone: 'intl', loc: 'Central hall, south wall', desc: 'Male, female and accessible toilets with baby-changing room.', hours: H('00:00', '23:59'), all24: true, closed: false, closeNote: '', tags: ['Accessible', 'Baby changing'], pay: [], photos: [null, null, null], pin: { x: 570, y: 298 }, status: 'Open', owner: 'NNIC', updated: '28 Sep, 18:03' },
+  { id: 'pray3', name: 'Prayer room', cat: 'Amenity', term: 'T3', level: 'L3', zone: 'intl', loc: 'Central hall, toward corridor south', desc: 'Multi-faith prayer room with separate ablution area.', hours: H('00:00', '23:59'), all24: true, closed: false, closeNote: '', tags: ['Multi-faith', 'Ablution'], pay: [], photos: [null, null, null], pin: { x: 514, y: 196 }, status: 'Open', owner: 'NNIC', updated: '12 Sep, 10:10' },
+  { id: 'sim3', name: 'SIM & pocket WiFi counter', cat: 'Services', term: 'T3', level: 'L1', zone: 'land', loc: 'Arrivals hall, near exit B', desc: 'Tourist SIMs, eSIM setup help and pocket WiFi rental with return at departures.', hours: H('00:00', '23:59'), all24: true, closed: false, closeNote: '', tags: ['eSIM', 'Pocket WiFi'], pay: ['Cash', 'Visa/Mastercard', 'GCash'], photos: [null, null, null], pin: { x: 540, y: 60 }, status: 'Open', owner: 'Merchant', updated: '26 Sep, 20:41' },
+  { id: 'mab1', name: 'PAL Mabuhay Lounge', cat: 'Lounge', term: 'T1', level: 'L3', zone: 'intl', loc: 'West arm, before the Gates 10–14 hub', desc: 'For eligible Philippine Airlines passengers and Mabuhay Miles members.', hours: H('04:00', '23:30'), all24: false, closed: false, closeNote: '', tags: ['Showers', 'Wi-Fi', 'Buffet'], pay: [], photos: [null, null, null], pin: { x: 200, y: 190 }, status: 'Open', owner: 'Merchant', updated: '20 Sep, 13:15' },
+  { id: 'ofw1', name: 'OFW Lounge', cat: 'Lounge', term: 'T1', level: 'L4', zone: 'intl', loc: 'Mezzanine above the mid-section, stairs and lift', desc: 'Free lounge for Overseas Filipino Workers with a valid OEC or e-receipt.', hours: H('00:00', '23:59'), all24: true, closed: false, closeNote: '', tags: ['Free for OFWs', 'Wi-Fi'], pay: [], photos: [null, null, null], pin: { x: 470, y: 150 }, status: 'Open', owner: 'NNIC', updated: '09 Sep, 09:00' },
+  { id: 'cafe15', name: 'Café near Gate 15', cat: 'Dining', term: 'T1', level: 'L3', zone: 'intl', loc: 'West arm, next to Gate 15', desc: '', hours: H('05:00', '23:00'), all24: false, closed: false, closeNote: '', tags: ['Coffee'], pay: ['Cash'], photos: [null, null, null], pin: { x: 318, y: 222 }, status: 'Pending approval', owner: 'Merchant', updated: '28 Sep, 15:36' },
+  { id: 'conv1', name: 'Convenience store', cat: 'Retail', term: 'T1', level: 'L3', zone: 'intl', loc: 'Mid-section, beside the bureau de change', desc: 'Drinks, snacks, toiletries and phone chargers.', hours: H('00:00', '23:59'), all24: true, closed: false, closeNote: '', tags: ['Snacks', 'Chargers'], pay: ['Cash', 'GCash'], photos: [null, null, null], pin: { x: 560, y: 160 }, status: 'Draft', owner: 'Merchant', updated: '27 Sep, 17:48' }
+];
+const byId = id => TENANTS.find(t => t.id === id);
+const APPROVALS = [
+  { id: 'a1', tid: 'cafe3', by: 'Merchant account · Café and pastry shop', when: '29 Sep, 10:42', prevStatus: 'Open', patch: { hours: H('05:00', '22:00', { 4: ['04:30', '23:00'], 5: ['04:30', '23:00'], 6: ['04:30', '23:00'] }) } },
+  { id: 'a2', tid: 'gifts3', by: 'Merchant account · Travel essentials & gifts', when: '29 Sep, 08:17', prevStatus: 'Open', patch: { tags: ['Gifts', 'Snacks', 'Travel gear', 'Pasalubong'], pay: ['Cash', 'Visa/Mastercard', 'GCash', 'Alipay', 'WeChat Pay'] } },
+  { id: 'a3', tid: 'cafe15', by: 'Merchant account · Café near Gate 15', when: '28 Sep, 15:36', prevStatus: 'Draft', patch: { desc: 'Hot rice bowls, sandwiches and brewed coffee beside the Gate 15 stairs. Open from the first departures.', photos: ['sample', null, null], pay: ['Cash', 'Visa/Mastercard', 'GCash', 'Maya'] } }
+];
+const TAG_OPTS = ['Coffee', 'Pastries', 'Breakfast', 'Rice meals', 'Snacks', 'Halal options', 'Vegetarian options', 'Gifts', 'Pasalubong', 'Travel gear', 'Wi-Fi', 'Showers', 'Buffet', 'Accessible', 'Kids area'];
+const PAY_OPTS = ['Cash', 'Visa/Mastercard', 'GCash', 'Maya', 'Alipay', 'WeChat Pay', 'UnionPay'];
+const ZONES = { dom: 'Airside domestic', intl: 'Airside international', land: 'Landside' };
+const LEVELS = { L1: 'L1 · Arrivals', L2: 'L2 · Arrivals corridor', L3: 'L3 · Departures', L4: 'L4 · Lounges & food court' };
+const CATS = ['Dining', 'Retail', 'Lounge', 'Duty free', 'Services', 'Amenity'];
+const STATUSES = ['Open', 'Closed today', 'Draft', 'Pending approval'];
+
+function hoursSummary(t) {
+  if (t.all24) return 'Open 24 h';
+  const parts = []; let i = 0;
+  while (i < 7) {
+    let j = i;
+    while (j + 1 < 7 && t.hours[j + 1].o === t.hours[i].o && t.hours[j + 1].c === t.hours[i].c) j++;
+    parts.push((i === j ? DAYS[i] : DAYS[i] + '–' + DAYS[j]) + ' ' + t.hours[i].o + '–' + t.hours[i].c);
+    i = j + 1;
+  }
+  return parts.length === 1 ? parts[0].replace('Mon–Sun ', 'Daily ') : parts.join(', ');
+}
+const todayHours = t => t.all24 ? '24 h' : t.hours[TODAY_IDX].o + '–' + t.hours[TODAY_IDX].c;
+const statusPill = s => {
+  const c = s === 'Open' || s === 'Live' || s === 'Connected' || s === 'Approved' ? 'ok'
+    : s === 'Pending approval' || s === 'In review' || s === 'Degraded' || s === 'Scheduled' ? 'warn'
+    : s === 'Closed today' || s === 'Rejected' ? 'crit'
+    : s === 'Sandbox' ? '' : 'mute';
+  return `<span class="pill ${c}">${esc(s)}</span>`;
+};
+
+/* ================= plan drawing ================= */
+const WALKS = {
+  T3: {
+    L1: [{ n: 'Arrivals hall walkway', a: [210, 100], b: [690, 100] }, { n: 'Baggage claim aisle', a: [300, 235], b: [700, 235] }, { n: 'Bus gate lounge walkway', a: [60, 210], b: [200, 210] }],
+    L2: [{ n: 'Arrivals corridor (moving walkway)', a: [300, 220], b: [930, 220] }, { n: 'Arrivals immigration queue', a: [160, 220], b: [300, 220] }],
+    L3: WALK3,
+    L4: [{ n: 'Food court walkway', a: [240, 110], b: [460, 110] }, { n: 'Lounge corridor', a: [460, 210], b: [760, 210] }]
+  },
+  T1: { L3: WALK1, L1: WALK1, L2: WALK1, L4: WALK1 }
+};
+function walksFor(term, level) { return (WALKS[term] && (WALKS[term][level] || WALKS[term].L3)) || WALK3; }
+function nearestWalkL(term, level, x, y) {
+  let best = null;
+  walksFor(term, level).forEach(w => {
+    const [ax, ay] = w.a, [bx, by] = w.b, dx = bx - ax, dy = by - ay;
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1)));
+    const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(x - px, y - py);
+    if (!best || d < best.d) best = { n: w.n, d, px, py };
+  });
+  return best;
+}
+
+const CONN3 = [
+  { id: 'c-bus', k: 'L', x: 238, y: 292, n: 'Lift to L1 bus gates' },
+  { id: 'c-unk', k: '?', x: 392, y: 292, n: 'Stair or escalator? (draft)' },
+  { id: 'c-lift', k: 'L', x: 478, y: 292, n: 'Lifts to L4 airline lounges' },
+  { id: 'c-esc', k: 'E', x: 510, y: 292, n: 'Escalator to L4' },
+  { id: 'c-arr', k: 'E', x: 612, y: 205, n: 'Escalator to L2 arrivals' }
+];
+const ISSUE_DEF = [
+  { id: 'i1', sev: 'lo', t: 'Gate 114 label low confidence (0.62) — confirm', s: 'OCR read “1l4”. Neighbouring gates suggest 114.', x: 959, y: 411, field: 'gate', value: '114', opts: null },
+  { id: 'i2', sev: 'lo', t: 'Stair or escalator? near domestic hall', s: 'Symbol matched both types (0.55 / 0.41). Affects step-free routing.', x: 392, y: 292, field: 'conn', value: 'Escalator', opts: ['Escalator', 'Stairs', 'Lift'] },
+  { id: 'i3', sev: 'mid', t: 'Room without a door: storage 3B', s: 'Enclosed room has no opening on the plan. Mark as staff-only or add a door.', x: 577, y: 296, field: 'room', value: 'Staff only (no public access)', opts: ['Staff only (no public access)', 'Add door on north wall'] },
+  { id: 'i4', sev: 'mid', t: 'Corridor gap near moving walkway', s: 'Walkable path breaks for 48 m between Gates 103 and 105.', x: 720, y: 225, field: 'gap', value: 'Join path along the moving walkway', opts: ['Join path along the moving walkway', 'Leave gap (area closed)'] }
+];
+
+function roomsT3L3(labels, cls) {
+  let s = '';
+  T3R.forEach(r => {
+    const zc = r.z === 'land' ? 'r-land' : r.id === 'npier' ? 'r-pier' : 'r-' + r.z;
+    s += `<rect class="room ${zc}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4"/>`;
+  });
+  // storage 3B (draft room)
+  const st = S.mapIssues && S.mapIssues.i3 && S.mapIssues.i3.state !== 'open';
+  s += `<rect class="room r-room ${st ? '' : 'c-mid'}" x="556" y="274" width="42" height="44" rx="2"/>`;
+  if (labels) {
+    T3R.forEach(r => {
+      const cl = 'rl ' + (r.sm ? 'sm' : '');
+      if (r.rot) s += `<text class="${cl}" x="${r.lx}" y="${r.ly}" transform="rotate(90 ${r.lx} ${r.ly})" text-anchor="middle">${esc(r.n)}</text>`;
+      else s += `<text class="${cl}" x="${r.lx}" y="${r.ly}" text-anchor="middle">${esc(r.n)}</text>`;
+    });
+    s += `<text class="rl sm" x="577" y="300" text-anchor="middle">3B</text>`;
+  }
+  // partition
+  s += `<line class="partition" x1="420" y1="90" x2="420" y2="322"/>`;
+  if (labels) s += `<text class="part-l" x="416" y="336" text-anchor="end">Glass partition · no crossing airside</text>`;
+  return s;
+}
+function gatesT3(opts) {
+  let s = '';
+  G3.forEach(g => {
+    const [n, x, y] = g;
+    let c = '';
+    if (opts && opts.review && n === 114) c = (S.mapIssues.i1.state === 'open') ? 'c-lo' : '';
+    const hl = opts && opts.hlGate === n ? ' style="stroke-width:2.5"' : '';
+    s += `<g class="gate ${c}"><rect x="${x}" y="${y}" width="${GW}" height="${GH}" rx="4"${hl}/><text x="${x + GW / 2}" y="${y + GH / 2}">${n}</text></g>`;
+  });
+  return s;
+}
+function pathsT3(review) {
+  let s = '';
+  const gapOpen = review && S.mapIssues.i4.state === 'open' || (review && S.mapIssues.i4.state === 'done' && S.mapIssues.i4.value.indexOf('Leave') === 0);
+  // moving walkway strips
+  s += `<rect class="walkway" x="640" y="230" width="60" height="7" rx="3"/><rect class="walkway" x="745" y="230" width="95" height="7" rx="3"/>`;
+  WALK3.forEach(w => {
+    if (w.n.indexOf('Corridor south') === 0 && gapOpen) {
+      s += `<line class="path" x1="600" y1="225" x2="696" y2="225"/><line class="path gap" x1="696" y1="225" x2="744" y2="225"/><line class="path" x1="744" y1="225" x2="900" y2="225"/>`;
+    } else s += `<line class="path" x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}"/>`;
+  });
+  G3.forEach(g => { const p = gateSpur(g); s += `<line class="path" style="stroke-width:2" x1="${p[0]}" y1="${p[1]}" x2="${p[2]}" y2="${p[3]}"/>`; });
+  return s;
+}
+function placesT3() {
+  let s = '';
+  PLACES3.concat([{ n: 'Toilets', x: 436, y: 272 }]).forEach(p => {
+    s += `<g class="place"><circle cx="${p.x}" cy="${p.y}" r="5"/><text x="${p.x + 9}" y="${p.y + 3.5}">${esc(p.n)}</text></g>`;
+  });
+  return s;
+}
+function connsT3(review) {
+  let s = '';
+  CONN3.forEach(c => {
+    let k = c.k, cl = '';
+    if (c.id === 'c-unk') {
+      const st = S.mapIssues && S.mapIssues.i2;
+      if (review && st && st.state === 'open') cl = 'c-lo';
+      else k = st ? (st.value[0]) : 'E';
+    }
+    s += `<g class="conn ${cl}"><title>${esc(c.n)}</title><rect x="${c.x - 9}" y="${c.y - 9}" width="18" height="18" rx="4"/><text x="${c.x}" y="${c.y + .5}">${k}</text></g>`;
+  });
+  return s;
+}
+function underlay(src) {
+  let s = '';
+  if (src) return `<image href="${src}" x="0" y="0" width="1000" height="520" preserveAspectRatio="xMidYMid meet" opacity=".4"/>`;
+  for (let x = 20; x < 1000; x += 20) s += `<line class="under" x1="${x}" y1="0" x2="${x}" y2="520" opacity=".5"/>`;
+  for (let y = 20; y < 520; y += 20) s += `<line class="under" x1="0" y1="${y}" x2="1000" y2="${y}" opacity=".5"/>`;
+  // scanned-plan hints: column grid dots along the pier
+  for (let x = 220; x < 940; x += 60) s += `<rect class="under" x="${x - 3}" y="${322}" width="6" height="6" style="fill:var(--map-under)"/>`;
+  return s;
+}
+function scaleCompass() {
+  const len = 50 / UNIT_M; // 50 m
+  const rot = -(geo.bearing + 90 - 360); // plan up = bearing+90
+  const nr = -((geo.bearing + 90) % 360);
+  return `<g class="scale"><line x1="40" y1="490" x2="${(40 + len).toFixed(1)}" y2="490"/><line x1="40" y1="485" x2="40" y2="495"/><line x1="${(40 + len).toFixed(1)}" y1="485" x2="${(40 + len).toFixed(1)}" y2="495"/><text x="40" y="478">50 m</text></g>
+  <g class="compass" transform="translate(150 470)"><circle r="18"/><g transform="rotate(${nr.toFixed(1)})"><path d="M0 -14 L5 3 L0 0 L-5 3 Z"/></g><text x="26" y="4">N</text></g>`;
+}
+function planT3L3(o) {
+  const L = o.layers || { under: false, walls: true, gates: true, places: true, paths: true, conns: true };
+  let s = '';
+  if (L.under) s += underlay(o.underSrc);
+  if (L.walls) s += roomsT3L3(!o.heat, '');
+  else s += `<line class="partition" x1="420" y1="90" x2="420" y2="322"/>`;
+  if (o.heat) s += o.heat;
+  if (L.paths) s += pathsT3(o.review);
+  if (L.gates) s += gatesT3(o);
+  if (L.places && !o.heat) s += placesT3();
+  if (L.conns) s += connsT3(o.review);
+  if (!o.heat && !o.picker) s += scaleCompass();
+  if (o.heat) s += `<text class="rl sm" x="310" y="310" text-anchor="middle">Domestic hall</text><text class="rl sm" x="510" y="310" text-anchor="middle">International central hall</text><text class="rl sm" x="730" y="212" text-anchor="middle">Corridor south</text><text class="rl sm" x="120" y="262" text-anchor="middle">North pier</text>`;
+  return s;
+}
+function planT3Other(level, o) {
+  const L = o.layers || { walls: true, gates: true, places: true, paths: true, conns: true };
+  let s = '';
+  if (L.under) s += underlay(o.underSrc);
+  if (level === 'L1') {
+    if (L.walls) s += `<rect class="room r-land" x="200" y="40" width="500" height="80" rx="4"/><text class="rl" x="450" y="66" text-anchor="middle">Arrivals hall (landside)</text>
+      <rect class="room r-arr" x="250" y="150" width="460" height="170" rx="4"/><text class="rl" x="480" y="306" text-anchor="middle">International baggage claim</text>
+      <rect class="room r-room" x="250" y="120" width="460" height="30" rx="2"/><text class="rl sm" x="480" y="139" text-anchor="middle">Customs (one-way to the hall)</text>
+      <rect class="room r-dom" x="40" y="150" width="160" height="120" rx="4"/><text class="rl" x="120" y="258" text-anchor="middle">Domestic bus gate lounge</text>`;
+    for (let i = 0; i < 8; i++) { const x = 290 + i * 52; s += `<rect class="carousel" x="${x}" y="175" width="30" height="46" rx="15"/><text class="rl sm" x="${x + 15}" y="202" text-anchor="middle">${i + 1}</text>`; }
+    if (L.gates) [131, 132, 133, 134].forEach((n, i) => { const x = 46 + i * 38; s += `<g class="gate"><rect x="${x}" y="272" width="${GW}" height="${GH}" rx="4"/><text x="${x + GW / 2}" y="283">${n}</text></g>`; });
+    if (L.paths) walksFor('T3', 'L1').forEach(w => { s += `<line class="path" x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}"/>`; });
+    if (L.places) [{ n: 'SIM & WiFi', x: 520, y: 84 }, { n: 'Money exchange', x: 600, y: 84 }, { n: 'Taxi', x: 230, y: 84 }, { n: 'Bus & shuttle', x: 300, y: 84 }].forEach(p => { s += `<g class="place"><circle cx="${p.x}" cy="${p.y}" r="5"/><text x="${p.x + 9}" y="${p.y + 3.5}">${p.n}</text></g>`; });
+    if (L.conns) s += `<g class="conn"><rect x="191" y="201" width="18" height="18" rx="4"/><text x="200" y="210.5">L</text></g><g class="conn"><rect x="681" y="241" width="18" height="18" rx="4"/><text x="690" y="250.5">E</text></g>`;
+  } else if (level === 'L2') {
+    if (L.walls) s += `<rect class="room r-arr" x="300" y="195" width="640" height="50" rx="4"/><text class="rl" x="620" y="190" text-anchor="middle">International arrivals corridor</text>
+      <rect class="room r-room" x="160" y="160" width="140" height="120" rx="4"/><text class="rl" x="230" y="296" text-anchor="middle">Arrivals immigration</text>`;
+    if (L.paths) { s += `<rect class="walkway" x="380" y="228" width="200" height="7" rx="3"/><rect class="walkway" x="640" y="228" width="200" height="7" rx="3"/>`; walksFor('T3', 'L2').forEach(w => { s += `<line class="path" x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}"/>`; }); }
+    if (L.gates) [101, 103, 105, 107, 110, 112].forEach((n, i) => { const x = 360 + i * 90; s += `<g class="gate"><rect x="${x}" y="255" width="${GW}" height="${GH}" rx="4"/><text x="${x + GW / 2}" y="266">${n}</text></g>`; });
+    if (L.conns) s += `<g class="conn"><rect x="171" y="291" width="18" height="18" rx="4"/><text x="180" y="300.5">E</text></g><g class="conn"><rect x="211" y="291" width="18" height="18" rx="4"/><text x="220" y="300.5">L</text></g>`;
+  } else {
+    if (L.walls) s += `<rect class="room r-land" x="240" y="50" width="220" height="120" rx="4"/><text class="rl" x="350" y="158" text-anchor="middle">Level 4 food court (landside)</text>
+      <rect class="room r-intl" x="460" y="170" width="300" height="110" rx="4"/><text class="rl" x="610" y="296" text-anchor="middle">Airline lounges (airside international)</text>
+      <line class="partition" x1="460" y1="50" x2="460" y2="290"/>`;
+    if (L.places) [{ n: 'PAGSS', x: 480, y: 190 }, { n: 'Marhaba', x: 560, y: 190 }, { n: '“A” Lounge', x: 650, y: 190 }, { n: 'Cathay Pacific', x: 480, y: 250 }, { n: 'SilverKris', x: 600, y: 250 }, { n: 'Food stalls', x: 260, y: 80 }, { n: 'Seating', x: 360, y: 80 }].forEach(p => { s += `<g class="place"><circle cx="${p.x}" cy="${p.y}" r="5"/><text x="${p.x + 9}" y="${p.y + 3.5}">${p.n}</text></g>`; });
+    if (L.paths) walksFor('T3', 'L4').forEach(w => { s += `<line class="path" x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}"/>`; });
+    if (L.conns) s += `<g class="conn"><rect x="469" y="271" width="18" height="18" rx="4"/><text x="478" y="280.5">L</text></g><g class="conn"><rect x="421" y="131" width="18" height="18" rx="4"/><text x="430" y="140.5">E</text></g>`;
+  }
+  if (!o.picker) s += scaleCompass();
+  return s;
+}
+function planT1(o) {
+  const L = o.layers || { walls: true, gates: true, places: true, paths: true, conns: true };
+  let s = '';
+  if (L.walls) {
+    T1R.forEach(r => { s += `<rect class="room ${r.z === 'land' ? 'r-land' : 'r-intl'}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4"/>`; });
+    T1R.forEach(r => { s += `<text class="rl ${r.sm ? 'sm' : ''}" x="${r.lx}" y="${r.ly}" text-anchor="middle">${esc(r.n)}</text>`; });
+  }
+  if (L.paths) {
+    WALK1.forEach(w => { s += `<line class="path" x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}"/>`; });
+    G1.forEach(([n, x, y]) => {
+      const cx = x + GW / 2, cy = y + GH / 2;
+      if (n === 12 || n === 13) s += `<line class="path" style="stroke-width:2" x1="${x + GW}" y1="${cy}" x2="110" y2="${cy}"/><line class="path" style="stroke-width:2" x1="110" y1="${cy}" x2="110" y2="205"/>`;
+      else if (n === 5 || n === 6) s += `<line class="path" style="stroke-width:2" x1="${x}" y1="${cy}" x2="890" y2="${cy}"/><line class="path" style="stroke-width:2" x1="890" y1="${cy}" x2="890" y2="205"/>`;
+      else s += `<line class="path" style="stroke-width:2" x1="${cx}" y1="${y < 205 ? y + GH : y}" x2="${cx}" y2="205"/>`;
+    });
+  }
+  if (L.gates) G1.forEach(([n, x, y]) => { s += `<g class="gate"><rect x="${x}" y="${y}" width="${GW}" height="${GH}" rx="4"/><text x="${x + GW / 2}" y="${y + GH / 2}">${n}</text></g>`; });
+  if (L.places) [{ n: 'Duty free', x: 396, y: 150 }, { n: 'Bureau de change', x: 470, y: 150 }, { n: 'Cafés', x: 396, y: 178 }, { n: 'Souvenirs', x: 470, y: 178 }].forEach(p => { s += `<g class="place"><circle cx="${p.x}" cy="${p.y}" r="5"/><text x="${p.x + 9}" y="${p.y + 3.5}">${p.n}</text></g>`; });
+  if (L.conns) s += `<g class="conn"><rect x="591" y="137" width="18" height="18" rx="4"/><text x="600" y="146.5">S</text></g><g class="conn"><rect x="428" y="266" width="18" height="18" rx="4"/><text x="437" y="275.5">S</text></g><g class="conn"><rect x="554" y="266" width="18" height="18" rx="4"/><text x="563" y="275.5">S</text></g>`;
+  return s;
+}
+function planSVG(term, level, o) {
+  o = o || {};
+  if (term === 'T1') return planT1(o);
+  if (level === 'L3') return planT3L3(o);
+  return planT3Other(level, o);
+}
+
+/* ================= metrics (single source for tiles + charts) ================= */
+const TF = { All: 1, T3: 0.66, T1: 0.34 };
+const RANGE = {
+  '7d': { days: 7, act: 52300, searches: 294000, routes: 113400, compl: 82, optin: 65, label: 'last 7 days' },
+  '30d': { days: 30, act: 182400, searches: 1260000, routes: 486000, compl: 81, optin: 64, label: 'last 30 days' },
+  '90d': { days: 90, act: 468900, searches: 3410000, routes: 1290000, compl: 79, optin: 62, label: 'last 90 days' }
+};
+const r100 = n => Math.round(n / 100) * 100;
+function metric(range, key) { const v = RANGE[range][key]; return (key === 'compl' || key === 'optin') ? v : (key === 'act' ? r100(v * TF[S.term]) : Math.round(v * TF[S.term] / 1000) * 1000); }
+// daily active users, 30 Aug – 28 Sep 2026 (All terminals)
+const DAU_DATES = []; const DAU = [];
+(function () {
+  const start = new Date(2026, 7, 30);
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(start.getTime() + i * 86400000);
+    DAU_DATES.push(d);
+    const dow = d.getDay();
+    const wk = (dow === 5 || dow === 0) ? 1850 : dow === 6 ? 900 : dow === 2 || dow === 3 ? -600 : 0;
+    const wob = Math.round(Math.sin(i * 1.7) * 420);
+    const dip = (i === 15 || i === 16) ? -2300 : 0; // typhoon signal no. 2 (14–15 Sep)
+    DAU.push(15400 + i * 175 + wk + wob + dip);
+  }
+})();
+const dauT = () => DAU.map(v => Math.round(v * TF[S.term]));
+const dfmt = d => d.getDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()];
+
+/* ================= state for sections ================= */
+S.mapIssues = {};
+function resetIssues() { ISSUE_DEF.forEach(d => { S.mapIssues[d.id] = { state: 'open', value: d.value, fixing: false }; }); }
+resetIssues();
+S.map = {
+  level: 'L3', layers: { under: false, walls: true, gates: true, places: true, paths: true, conns: true },
+  file: { name: 'NAIA-T3-L3-departures-plan.pdf', size: '14.2 MB', kind: 'PDF', pages: 3, src: null, when: '27 Sep 2026, 16:20' },
+  pipe: 6, running: false, sel: null, confirm: false,
+  versions: [{ v: 'v4', st: 'Draft', d: 'Generated 27 Sep 2026 · edited by Ops Admin' }, { v: 'v3', st: 'Live', d: 'Published 28 Sep 2026 · 184 places, 20 gates' }, { v: 'v2', st: 'Archived', d: 'Published 02 Sep 2026' }]
+};
+const PIPE = [
+  { t: 'Reading plan & scale', s: 'Scale bar found · 1:500 · 0.42 m per px', c: 0.97 },
+  { t: 'Detecting walls and rooms', s: '46 rooms · 1 without a door', c: 0.91 },
+  { t: 'Reading gate & room labels (OCR)', s: '20 gates · 1 low-confidence label', c: 0.88 },
+  { t: 'Building walkable corridor graph', s: '212 nodes · 1 gap', c: 0.86 },
+  { t: 'Placing level connectors (escalators/lifts/stairs)', s: '14 connectors · 1 unclassified', c: 0.79 },
+  { t: 'Ready for review', s: '4 items need a person to confirm', c: null }
+];
+const openIssues = () => ISSUE_DEF.filter(d => S.mapIssues[d.id].state === 'open').length;
+
+/* ================= overview ================= */
+function contentTasks() { return openIssues() + APPROVALS.length + PROMOS.filter(p => p.status === 'Pending approval').length; }
+function renderOverview() {
+  const v = $('#v-overview');
+  const act = metric('30d', 'act'), se = metric('30d', 'searches'), ro = metric('30d', 'routes');
+  const termLbl = S.term === 'All' ? 'T1 and T3' : S.term;
+  const tasks = contentTasks();
+  v.innerHTML = `
+  <div class="view-head">
+    <div><div class="eyebrow">NAIA pilot · ${esc(termLbl)}</div><h1 id="h-overview">Overview</h1>
+    <p>Last 30 days, 30 Aug – 28 Sep 2026. Updated today at 13:02.</p></div>
+    <div class="actions"><button class="btn sec" type="button" data-nav="analytics">${ic('chart', 'sm')}Open analytics</button></div>
+  </div>
+  <div class="kpis">
+    ${kpi('Monthly active passengers', fmt(act), '<span class="up">▲ 12.4%</span> vs Aug')}
+    ${kpi('Searches', compact(se), '<span class="up">▲ 9.8%</span> vs Aug')}
+    ${kpi('Routes started', compact(ro), '<span class="up">▲ 14.1%</span> vs Aug')}
+    ${kpi('Route completion', '81<small>%</small>', 'Arrived within 25 m of the destination')}
+    ${kpi('Avg. time-to-gate saved', '4.6<small>min</small>', 'vs Aug baseline survey, n = 1,240')}
+    ${kpi('Open content tasks', String(tasks), `${openIssues()} map · ${APPROVALS.length} listing · ${PROMOS.filter(p => p.status === 'Pending approval').length} campaign`)}
+  </div>
+  <div class="ov-main">
+    <div class="card">
+      <div class="card-h"><div><h2>Daily active passengers</h2><div class="sub" id="dauSub"></div></div><span class="pill nodot mute">${esc(termLbl)}</span></div>
+      <div class="card-b"><div class="chart-box" id="dauBox"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h2>Needs attention</h2><div class="sub">Sorted by urgency</div></div></div>
+      <ul class="attn">${attentionItems()}</ul>
+    </div>
+  </div>
+  <div>
+    <div class="label" style="margin-bottom:10px">Go to</div>
+    <div class="qlinks">
+      ${qlink('maps', 'map', 'Maps & Blueprints', openIssues() ? `v4 draft · ${openIssues()} to review` : 'v4 draft ready to publish')}
+      ${qlink('tenants', 'store', 'Tenants & Amenities', `${TENANTS.length} listings · ${APPROVALS.length} pending`)}
+      ${qlink('promos', 'mega', 'Promotions & Banners', `${PROMOS.filter(p => p.status === 'Live').length} live · ${PROMOS.filter(p => p.status === 'Scheduled').length} scheduled`)}
+      ${qlink('analytics', 'chart', 'Analytics', 'Foot traffic, searches, merchants')}
+      ${qlink('ints', 'plug', 'Integrations', `${INTS.filter(i => i.status === 'Connected').length} connected · ${INTS.filter(i => i.status === 'Degraded').length} degraded`)}
+    </div>
+  </div>`;
+  drawDau();
+}
+function kpi(l, v, d) { return `<div class="kpi"><div class="k-l">${l}</div><div class="k-v num">${v}</div><div class="k-d">${d}</div></div>`; }
+function qlink(nav, i, t, s) { return `<button class="qlink" type="button" data-nav="${nav}"><span class="ql-ic">${ic(i)}</span><b>${esc(t)}</b><span>${esc(s)}</span></button>`; }
+function attentionItems() {
+  const items = [];
+  const oi = openIssues();
+  if (S.map.versions[0].st === 'Draft') items.push({ sev: oi ? 'warn' : 'info', t: oi ? `T3 map v4 draft awaiting review` : 'T3 map v4 ready to publish', s: oi ? `${oi} items flagged by the scanner need a person to confirm.` : 'All flagged items resolved.', nav: 'maps', b: 'Review' });
+  if (APPROVALS.length) items.push({ sev: 'warn', t: `${APPROVALS.length} tenant edit${APPROVALS.length > 1 ? 's' : ''} pending approval`, s: APPROVALS.map(a => byId(a.tid).name).join(' · '), nav: 'tenants', b: 'Approve', act: 'goto-approvals' });
+  const taxi = INTS.find(i => i.id === 'taxi');
+  if (taxi.status === 'Degraded') items.push({ sev: 'crit', t: 'Taxi queue feed delayed 6 min', s: 'Airport taxi queue dispatch · last sync 12:56. Wait times in the app are marked as delayed.', nav: 'ints', b: 'Check' });
+  const rain = PROMOS.find(p => p.id === 'p1');
+  if (rain && rain.status === 'Live') items.push({ sev: 'warn', t: 'Travel advisory expires tonight', s: '“Heavy rain: allow 30 extra minutes…” ends 29 Sep, 23:59. Extend or let it end.', nav: 'promos', b: 'Open', act: 'open-promo', arg: 'p1' });
+  if (!items.length) return `<li><div class="grow empty"><b>All clear</b>Nothing needs attention right now.</div></li>`;
+  return items.map(i => `<li><span class="sev ${i.sev === 'crit' ? 'crit' : i.sev === 'info' ? 'info' : ''}" aria-hidden="true"></span><div class="grow"><div class="a-t">${esc(i.t)}</div><div class="a-s">${esc(i.s)}</div></div><button class="btn sec sm" type="button" ${i.act ? `data-act="${i.act}" data-arg="${i.arg || ''}"` : `data-nav="${i.nav}"`}>${i.b}</button></li>`).join('');
+}
+function drawDau() {
+  const box = $('#dauBox'); if (!box) return;
+  const data = dauT();
+  const W = 720, Hh = 250, L = 52, R = 70, T = 16, B = 30;
+  const max = Math.max.apply(null, data);
+  const step = max > 20000 ? 5000 : max > 10000 ? 2500 : 2000;
+  const top = Math.ceil(max * 1.08 / step) * step;
+  const x = i => L + i * (W - L - R) / (data.length - 1);
+  const y = v => T + (Hh - T - B) * (1 - v / top);
+  let g = '';
+  for (let t = 0; t <= top; t += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="var(--grid)" stroke-width="1"/><text x="${L - 8}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="var(--muted)">${t === 0 ? '0' : (t / 1000) + 'k'}</text>`;
+  [0, 7, 14, 21, 29].forEach(i => { g += `<text x="${x(i).toFixed(1)}" y="${Hh - 8}" text-anchor="middle" font-size="11" fill="var(--muted)">${dfmt(DAU_DATES[i])}</text>`; });
+  const pts = data.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1));
+  const area = `M${x(0).toFixed(1)},${y(0)} L${pts.join(' L')} L${x(data.length - 1).toFixed(1)},${y(0)} Z`;
+  const last = data[data.length - 1], lx = x(data.length - 1), ly = y(last);
+  const avg = Math.round(data.reduce((a, b) => a + b, 0) / data.length);
+  $('#dauSub').textContent = `30-day average ${fmt(avg)} per day · dip on 14–15 Sep during Signal No. 2`;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Daily active passengers, 30 Aug to 28 Sep 2026, ending at ${fmt(last)}">
+    ${g}
+    <path d="${area}" fill="var(--chart-area)"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="var(--chart)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="5" fill="var(--chart)" stroke="var(--paper)" stroke-width="2"/>
+    <text x="${(lx + 10).toFixed(1)}" y="${(ly - 2).toFixed(1)}" font-size="13" font-weight="800" fill="var(--fg)">${fmt(last)}</text>
+    <text x="${(lx + 10).toFixed(1)}" y="${(ly + 13).toFixed(1)}" font-size="11" fill="var(--muted)">28 Sep</text>
+    <line id="dauX" x1="0" x2="0" y1="${T}" y2="${Hh - B}" stroke="var(--line-2)" stroke-width="1" visibility="hidden"/>
+    <circle id="dauDot" r="4.5" fill="var(--chart)" stroke="var(--paper)" stroke-width="2" visibility="hidden"/>
+    <rect x="${L}" y="${T}" width="${W - L - R}" height="${Hh - T - B}" fill="transparent" id="dauHit"/>
+  </svg><div class="tip" id="dauTip" hidden></div>`;
+  const svg = box.querySelector('svg'), hit = $('#dauHit'), tip = $('#dauTip');
+  function move(ev) {
+    const r = svg.getBoundingClientRect();
+    const sx = (ev.clientX - r.left) * W / r.width;
+    const i = Math.max(0, Math.min(data.length - 1, Math.round((sx - L) / ((W - L - R) / (data.length - 1)))));
+    const cx = x(i), cy = y(data[i]);
+    $('#dauX').setAttribute('x1', cx); $('#dauX').setAttribute('x2', cx); $('#dauX').setAttribute('visibility', 'visible');
+    $('#dauDot').setAttribute('cx', cx); $('#dauDot').setAttribute('cy', cy); $('#dauDot').setAttribute('visibility', 'visible');
+    tip.innerHTML = `<b class="num">${fmt(data[i])}</b>${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][DAU_DATES[i].getDay()]} ${dfmt(DAU_DATES[i])}`;
+    tip.hidden = false;
+    const px = cx * r.width / W, py = cy * r.height / Hh;
+    tip.style.left = Math.min(r.width - 120, Math.max(0, px + 10)) + 'px';
+    tip.style.top = Math.max(0, py - 52) + 'px';
+  }
+  hit.addEventListener('pointermove', move);
+  hit.addEventListener('pointerleave', () => { tip.hidden = true; $('#dauX').setAttribute('visibility', 'hidden'); $('#dauDot').setAttribute('visibility', 'hidden'); });
+}
+
+/* ================= maps & blueprints ================= */
+function renderMaps() {
+  const v = $('#v-maps');
+  const m = S.map;
+  v.innerHTML = `
+  <div class="view-head">
+    <div><div class="eyebrow">Blueprint scanner</div><h1 id="h-maps">Maps &amp; Blueprints</h1>
+    <p>Upload a floor plan, let the scanner draft the map, review what it flagged, then publish a new version to the passenger app.</p></div>
+  </div>
+  <div class="flow" aria-label="How a map gets published">
+    <span class="f-step">${ic('upload', 'sm')}Upload plan</span><span class="f-arr">${ic('chev', 'sm')}</span>
+    <span class="f-step">${ic('layers', 'sm')}AI-assisted draft</span><span class="f-arr">${ic('chev', 'sm')}</span>
+    <span class="f-step on">${ic('edit', 'sm')}Admin reviews &amp; corrects</span><span class="f-arr">${ic('chev', 'sm')}</span>
+    <span class="f-step">${ic('send', 'sm')}Publish versioned map</span>
+  </div>
+  ${S.term === 'T1' ? `<div class="note">${ic('info')}<span><b>Terminal 1 map is on v2 Live with no draft in progress.</b> The review below is the Terminal 3 draft. Upload a T1 plan to start a T1 draft.</span></div>` : ''}
+  <div class="mp-top">
+    <div class="card">
+      <div class="card-h"><div><h2>Upload plan</h2><div class="sub">PDF, PNG, JPG or DWG exported to PDF · up to 50 MB</div></div></div>
+      <div class="card-b">
+        <label class="drop" id="drop" for="planFile">
+          <span class="d-ic">${ic('upload')}</span>
+          <b>Drop a floor plan here or choose a file</b>
+          <span>One level per file works best</span>
+          <input type="file" id="planFile" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" class="sr">
+        </label>
+        <div class="file-row">
+          <span class="fi">${m.file.src ? ic('image', 'sm') : ic('file', 'sm')}<span>${esc(m.file.kind)}</span></span>
+          <div class="grow"><div class="fn" title="${esc(m.file.name)}">${esc(m.file.name)}</div><div class="small muted">${esc(m.file.size)}${m.file.pages ? ' · ' + m.file.pages + ' pages' : ''} · ${esc(m.file.when)}</div></div>
+          ${m.running ? '<span class="pill warn">Scanning</span>' : '<span class="pill ok">Scanned</span>'}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h2>Scanner progress</h2><div class="sub">Confidence is the scanner's own estimate per step</div></div></div>
+      <div class="card-b"><ol class="pipe" id="pipe">${pipeItems()}</ol></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h2>Versions · Terminal 3</h2><div class="sub">Terminal 1 map is on v2, live since 02 Sep 2026</div></div></div>
+      <div class="card-b">
+        <ul class="vers">${m.versions.map(x => `<li><span class="v-n">${x.v}</span><div class="grow"><div>${statusPill(x.st === 'Draft' ? 'Draft' : x.st)}</div><div class="v-s">${esc(x.d)}</div></div></li>`).join('')}</ul>
+        ${publishBlock()}
+      </div>
+    </div>
+  </div>
+  <div class="note">${ic('shield')}<span><b>Drafts are always reviewed by a person before publishing.</b> The scanner reads public or scanned plans; official CAD from the operator improves accuracy of walls, scale and gate positions.</span></div>
+  <div class="card" id="ws">
+    <div class="ws-tools">
+      <div class="field" style="min-width:210px"><label for="lvl">Level</label>
+        <select class="inp" id="lvl">${Object.keys(LEVELS).map(k => `<option value="${k}" ${m.level === k ? 'selected' : ''}>${k === 'L1' ? 'L1 · Arrivals' : k === 'L2' ? 'L2 · Arrivals corridor' : k === 'L3' ? 'L3 · Departures' + (openIssues() ? ' · ' + openIssues() + ' to review' : '') : 'L4 · Lounges'}</option>`).join('')}</select></div>
+      <div role="group" aria-label="Layers" class="chips" style="align-self:flex-end">
+        ${[['under', 'Plan underlay'], ['walls', 'Walls & rooms'], ['gates', 'Gates'], ['places', 'Places'], ['paths', 'Walkable paths'], ['conns', 'Connectors']].map(([k, l]) => `<button type="button" class="chip" data-act="layer" data-arg="${k}" aria-pressed="${m.layers[k]}">${esc(l)}</button>`).join('')}
+      </div>
+    </div>
+    <div class="ws">
+      <div class="ws-canvas">
+        <div class="scroller"><svg class="plan" id="planSvg" viewBox="0 0 1000 520" role="img" aria-label="Terminal 3 ${m.level} draft map"></svg></div>
+        <div class="legend">
+          <span><i class="lg-hi"></i>Detected, high confidence</span>
+          <span><i class="lg-mid"></i>Needs a look (0.65–0.80)</span>
+          <span><i class="lg-lo"></i>Low confidence (&lt; 0.65)</span>
+          <span><svg width="22" height="8" aria-hidden="true"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--map-path)" stroke-width="3" stroke-linecap="round"/></svg> Walkable path</span>
+          <span><svg width="22" height="8" aria-hidden="true"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--map-partition)" stroke-width="2.5" stroke-dasharray="5 3"/></svg> Domestic / international partition</span>
+          <span>E escalator · L lift · S stairs</span>
+        </div>
+      </div>
+      <div class="issues" id="issues"></div>
+    </div>
+    <form class="georef" id="geoForm">
+      <div class="field"><label for="g-lat">Origin latitude</label><input class="inp num" id="g-lat" inputmode="decimal" value="${geo.lat}"></div>
+      <div class="field"><label for="g-lng">Origin longitude</label><input class="inp num" id="g-lng" inputmode="decimal" value="${geo.lng}"></div>
+      <div class="field"><label for="g-bear">Bearing of plan “up” (°)</label><input class="inp num" id="g-bear" inputmode="decimal" value="${geo.bearing}"></div>
+      <div class="field"><label for="g-mpp">Metres per pixel</label><input class="inp num" id="g-mpp" inputmode="decimal" value="${geo.mpp}"></div>
+      <div class="field"><span class="lbl">Check</span><span class="small muted" id="geoCheck">Gate 112 → 14.52xx, 121.01xx</span></div>
+      <button class="btn sec" type="submit">Apply scale &amp; position</button>
+    </form>
+  </div>`;
+  drawPlan(); renderIssues(); geoCheck(); wireDrop();
+}
+function pipeItems() {
+  const m = S.map;
+  return PIPE.map((p, i) => {
+    const st = i < m.pipe ? 'done' : (i === m.pipe && m.running) ? 'run' : 'wait';
+    let conf = '';
+    if (p.c != null && st === 'done') { const c = p.c; conf = `<span class="conf ${c < 0.8 ? 'mid' : ''}" title="Scanner confidence">${c.toFixed(2)}<span class="bar"><i style="width:${c * 100}%"></i></span></span>`; }
+    else if (st === 'done') conf = `<span class="pill ${openIssues() ? 'warn' : 'ok'}">${openIssues() ? openIssues() + ' to review' : 'Reviewed'}</span>`;
+    else if (st === 'run') conf = '<span class="small muted">Working…</span>';
+    const sub = (i === 5 && st === 'done') ? (openIssues() ? `${openIssues()} of 4 items still need a person` : 'All flagged items resolved') : p.s;
+    return `<li class="${st}"><span class="dot">${st === 'done' ? ic('check', 'sm') : ''}</span><div><div class="p-t">${esc(p.t)}</div>${st === 'done' ? `<div class="p-s">${esc(sub)}</div>` : ''}</div>${conf}</li>`;
+  }).join('');
+}
+function publishBlock() {
+  const m = S.map, oi = openIssues();
+  if (m.versions[0].st !== 'Draft') return `<div class="note" style="margin-top:12px">${ic('check')}<span><b>v4 is live.</b> Upload a new plan to start the next draft.</span></div>`;
+  if (m.confirm) return `<div class="confirm" role="group" aria-labelledby="pubQ"><b id="pubQ">Publish v4 to the passenger app?</b><span class="small muted">This updates the map for all passengers on the next app refresh. v3 stays available for rollback.</span><div class="row"><button class="btn" type="button" data-act="pub-yes">Publish v4</button><button class="btn ghost" type="button" data-act="pub-no">Cancel</button></div></div>`;
+  return `<div style="margin-top:12px;display:flex;flex-direction:column;gap:6px"><button class="btn" type="button" data-act="pub-ask" ${oi || m.running ? 'disabled' : ''}>${ic('send', 'sm')}Publish v4 to app</button><span class="small muted">${m.running ? 'Wait for the scan to finish.' : oi ? `Resolve ${oi} flagged item${oi > 1 ? 's' : ''} first.` : 'All items reviewed. Ready to publish.'}</span></div>`;
+}
+function drawPlan() {
+  const svg = $('#planSvg'); if (!svg) return;
+  const m = S.map;
+  let s = planSVG('T3', m.level, { layers: m.layers, review: true, underSrc: m.file.src });
+  if (m.level === 'L3') {
+    ISSUE_DEF.forEach((d, i) => {
+      const st = S.mapIssues[d.id];
+      if (st.state !== 'open') return;
+      const sel = m.sel === d.id;
+      s += `<g class="pin-issue ${d.sev === 'mid' ? 'mid' : ''} ${sel ? 'sel' : ''}" data-act="sel-issue" data-arg="${d.id}" tabindex="0" role="button" aria-label="${esc(d.t)}"><circle class="halo" cx="${d.x}" cy="${d.y - 24}" r="17" fill="transparent"/><circle class="ring" cx="${d.x}" cy="${d.y - 24}" r="10"/><text x="${d.x}" y="${d.y - 23.5}">!</text></g>`;
+    });
+  } else {
+    s += `<text class="level-note" x="500" y="400" text-anchor="middle">No flagged items on this level · unchanged from v3</text>`;
+  }
+  svg.innerHTML = s;
+  svg.setAttribute('aria-label', 'Terminal 3 ' + LEVELS[m.level] + ' draft map');
+}
+function renderIssues() {
+  const el = $('#issues'); if (!el) return;
+  const oi = openIssues();
+  const lvlNote = S.map.level !== 'L3' ? `<div class="empty"><b>Nothing to review on ${S.map.level}</b>All four flagged items are on L3 Departures.<br><button class="link-btn" type="button" data-act="lvl" data-arg="L3">Go to L3</button></div>` : '';
+  el.innerHTML = `<div class="issues-h"><div><h3 style="font-size:14px;font-weight:800">Review items</h3><div class="small muted">${oi} open · ${4 - oi} resolved</div></div>${oi ? `<button class="btn sec sm" type="button" data-act="accept-all">Accept all suggestions</button>` : '<span class="pill ok">All reviewed</span>'}</div>
+  ${lvlNote || ISSUE_DEF.map(d => {
+    const st = S.mapIssues[d.id];
+    const done = st.state !== 'open';
+    let body = '';
+    if (done) body = `<div class="row small"><span class="pill ok">${st.state === 'fixed' ? 'Fixed' : 'Accepted'}</span><span class="muted" style="flex:1;min-width:0">${esc(st.value)}</span><button class="link-btn small" type="button" data-act="undo-issue" data-arg="${d.id}">Undo</button></div>`;
+    else if (st.fixing) {
+      const ctrl = d.opts ? `<select class="inp" id="fix-${d.id}">${d.opts.map(o => `<option ${o === st.value ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>` : `<input class="inp" id="fix-${d.id}" value="${esc(st.value)}">`;
+      body = `<div class="fixbox"><div class="field"><label for="fix-${d.id}">${d.field === 'gate' ? 'Gate number' : d.field === 'conn' ? 'Connector type' : d.field === 'room' ? 'Resolution' : 'Path'}</label>${ctrl}</div><div class="row"><button class="btn sm" type="button" data-act="save-fix" data-arg="${d.id}">Save fix</button><button class="btn ghost sm" type="button" data-act="cancel-fix" data-arg="${d.id}">Cancel</button></div></div>`;
+    } else body = `<div class="row"><button class="btn sm" type="button" data-act="accept-issue" data-arg="${d.id}">${ic('check', 'sm')}Accept</button><button class="btn sec sm" type="button" data-act="fix-issue" data-arg="${d.id}">${ic('edit', 'sm')}Fix</button><span class="small muted">Suggested: ${esc(d.value)}</span></div>`;
+    return `<div class="issue ${done ? 'done' : ''} ${S.map.sel === d.id ? 'sel' : ''}"><div class="i-top"><span class="i-ic ${done ? 'ok' : d.sev}">${ic(done ? 'check' : 'alert', 'sm')}</span><div style="min-width:0"><button type="button" class="i-t" data-act="sel-issue" data-arg="${d.id}">${esc(d.t)}</button><div class="i-s">${esc(d.s)}</div></div></div>${body}</div>`;
+  }).join('')}
+  <div style="padding:12px 16px"><div class="note">${ic('info')}<span>Accepted and fixed items become part of v4. Nothing reaches passengers until you publish.</span></div></div>`;
+}
+function geoCheck() {
+  const el = $('#geoCheck'); if (!el) return;
+  const [la, ln] = toLatLng(959, 361);
+  el.innerHTML = `Gate 112 → <span class="num">${la.toFixed(5)}, ${ln.toFixed(5)}</span>`;
+}
+function refreshMapBits() {
+  drawPlan(); renderIssues();
+  const p = $('#pipe'); if (p) p.innerHTML = pipeItems();
+  const pb = $('#v-maps .vers'); if (pb) { pb.nextElementSibling && pb.nextElementSibling.remove(); pb.insertAdjacentHTML('afterend', publishBlock()); }
+  const lv = $('#lvl'); if (lv) { const o = lv.querySelector('option[value="L3"]'); if (o) o.textContent = 'L3 · Departures' + (openIssues() ? ' · ' + openIssues() + ' to review' : ''); }
+  updateCounts();
+}
+function wireDrop() {
+  const d = $('#drop'), f = $('#planFile');
+  if (!d) return;
+  ['dragenter', 'dragover'].forEach(e => d.addEventListener(e, ev => { ev.preventDefault(); d.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(e => d.addEventListener(e, ev => { ev.preventDefault(); d.classList.remove('over'); }));
+  d.addEventListener('drop', ev => { const file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]; if (file) takePlan(file); });
+  f.addEventListener('change', () => { if (f.files && f.files[0]) takePlan(f.files[0]); });
+}
+function takePlan(file) {
+  const ok = /\.(pdf|png|jpe?g)$/i.test(file.name) || /^(image\/(png|jpeg)|application\/pdf)$/.test(file.type);
+  if (!ok) { toast('Use a PDF, PNG or JPG. Export DWG files to PDF first.', 'warn'); return; }
+  const kind = /pdf/i.test(file.type) || /\.pdf$/i.test(file.name) ? 'PDF' : (/png/i.test(file.type) ? 'PNG' : 'JPG');
+  const size = file.size > 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+  S.map.file = { name: file.name, size, kind, pages: null, src: null, when: 'Just now' };
+  const start = () => {
+    resetIssues(); S.map.sel = null; S.map.confirm = false; S.map.pipe = 0; S.map.running = true;
+    S.map.versions[0] = { v: 'v4', st: 'Draft', d: 'Regenerated just now from ' + file.name };
+    if (S.map.versions[1].st !== 'Live') { /* v4 had been published: new draft becomes v5 */ }
+    renderMaps(); runPipe();
+  };
+  if (kind !== 'PDF') {
+    const rd = new FileReader();
+    rd.onload = () => { S.map.file.src = rd.result; S.map.layers.under = true; start(); };
+    rd.onerror = () => start();
+    rd.readAsDataURL(file);
+  } else start();
+}
+function runPipe() {
+  const tick = () => {
+    if (S.map.pipe >= PIPE.length) return;
+    S.map.pipe++;
+    if (S.map.pipe >= PIPE.length) { S.map.running = false; renderMaps(); updateCounts(); toast('Draft ready for review'); return; }
+    const p = $('#pipe'); if (p) p.innerHTML = pipeItems();
+    setTimeout(tick, reduceMotion ? 150 : 850);
+  };
+  setTimeout(tick, reduceMotion ? 150 : 850);
+}
+
+/* ================= tenants ================= */
+S.ten = { q: '', term: 'All', cat: 'All', status: 'All', tab: 'list' };
+function tenTermFilter() { return S.term !== 'All' ? S.term : S.ten.term; }
+function renderTenants() {
+  const v = $('#v-tenants');
+  v.innerHTML = `
+  <div class="view-head">
+    <div><div class="eyebrow">Content · CMS</div><h1 id="h-tenants">Tenants &amp; Amenities</h1>
+    <p>Shops, lounges, services and amenities as passengers see them in Explore and on the map.</p></div>
+    <div class="actions"><button class="btn" type="button" data-act="new-tenant">${ic('plus', 'sm')}Add listing</button></div>
+  </div>
+  <div class="roles">${ic('users', 'sm')}<span><b style="color:var(--fg)">Roles:</b> merchants edit their own listing · the NNIC content team approves changes before they go live · amenities are managed by NNIC.</span></div>
+  <div class="card">
+    <div class="tabs" role="tablist" aria-label="Listings view">
+      <button class="tab" role="tab" type="button" id="tab-list" aria-selected="${S.ten.tab === 'list'}" aria-controls="tenPanel" data-act="ten-tab" data-arg="list">All listings</button>
+      <button class="tab" role="tab" type="button" id="tab-appr" aria-selected="${S.ten.tab === 'appr'}" aria-controls="tenPanel" data-act="ten-tab" data-arg="appr">Approvals <span class="cnt">${APPROVALS.length || ''}</span></button>
+    </div>
+    <div id="tenPanel" role="tabpanel" aria-labelledby="${S.ten.tab === 'list' ? 'tab-list' : 'tab-appr'}"></div>
+  </div>`;
+  renderTenPanel();
+}
+function renderTenPanel() {
+  const p = $('#tenPanel'); if (!p) return;
+  if (S.ten.tab === 'appr') { p.innerHTML = approvalsHTML(); return; }
+  const lock = S.term !== 'All';
+  p.innerHTML = `
+    <form class="toolbar" id="tenFilters" role="search">
+      <div class="field search"><label for="ten-q">Search</label><input class="inp" id="ten-q" type="search" placeholder="Name, location or tag" value="${esc(S.ten.q)}"></div>
+      <div class="field"><label for="ten-term">Terminal</label><select class="inp" id="ten-term" ${lock ? 'disabled' : ''}>${['All', 'T1', 'T3'].map(o => `<option ${tenTermFilter() === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div>
+      <div class="field"><label for="ten-cat">Category</label><select class="inp" id="ten-cat">${['All'].concat(CATS).map(o => `<option ${S.ten.cat === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div>
+      <div class="field"><label for="ten-st">Status</label><select class="inp" id="ten-st">${['All'].concat(STATUSES).map(o => `<option ${S.ten.status === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div>
+    </form>
+    <div id="tenTable"></div>`;
+  renderTenTable();
+}
+function tenFiltered() {
+  const q = S.ten.q.trim().toLowerCase(), tf = tenTermFilter();
+  return TENANTS.filter(t => (tf === 'All' || t.term === tf) && (S.ten.cat === 'All' || t.cat === S.ten.cat) && (S.ten.status === 'All' || t.status === S.ten.status) &&
+    (!q || [t.name, t.loc, t.cat, t.tags.join(' ')].join(' ').toLowerCase().indexOf(q) >= 0));
+}
+function renderTenTable() {
+  const el = $('#tenTable'); if (!el) return;
+  const rows = tenFiltered();
+  if (!rows.length) { el.innerHTML = `<div class="empty"><b>No listings match these filters</b>Try another category or clear the search.<br><button class="link-btn" type="button" data-act="ten-clear">Clear filters</button></div>`; return; }
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Listing</th><th>Category</th><th>Terminal · level</th><th>Zone</th><th>Today</th><th>Status</th><th>Updated</th><th><span class="sr">Actions</span></th></tr></thead><tbody>
+  ${rows.map(t => `<tr class="click" data-act="open-tenant" data-arg="${t.id}"><td><button class="row-btn" type="button" data-act="open-tenant" data-arg="${t.id}"><div class="t-main">${esc(t.name)}</div><div class="t-sub">${esc(t.loc)}</div></button></td>
+    <td>${esc(t.cat)}</td><td class="tnum">${t.term} · ${t.level}</td><td>${esc(ZONES[t.zone])}</td><td class="tnum">${t.closed ? '<span class="muted">Closed</span>' : todayHours(t)}</td><td>${statusPill(t.status)}</td><td class="t-sub tnum">${esc(t.updated)} · ${t.owner}</td><td class="r">${ic('chev', 'sm')}</td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="small muted" style="padding:10px 18px;border-top:1px solid var(--line)">${rows.length} of ${TENANTS.length} listings</div>`;
+}
+function diffRows(t, patch) {
+  const rows = [];
+  if (patch.hours) {
+    DAYS.forEach((d, i) => { const a = t.hours[i], b = patch.hours[i]; if (a.o !== b.o || a.c !== b.c) rows.push([`Hours · ${d}`, `${a.o}–${a.c}`, `${b.o}–${b.c}`]); });
+  }
+  if (patch.desc != null) rows.push(['Description', t.desc || '(empty)', patch.desc]);
+  if (patch.tags) rows.push(['Tags', t.tags.join(', '), patch.tags.join(', ')]);
+  if (patch.pay) rows.push(['Payment', t.pay.join(', ') || '(none)', patch.pay.join(', ')]);
+  if (patch.photos) rows.push(['Photos', t.photos.filter(Boolean).length + ' photo(s)', patch.photos.filter(Boolean).length + ' photo(s)']);
+  if (patch.closed != null && patch.closed !== t.closed) rows.push(['Temporary closure', t.closed ? 'On' : 'Off', patch.closed ? 'On · ' + (patch.closeNote || '') : 'Off']);
+  if (patch.name && patch.name !== t.name) rows.push(['Name', t.name, patch.name]);
+  if (patch.pin && t.pin && (patch.pin.x !== t.pin.x || patch.pin.y !== t.pin.y)) rows.push(['Location tag', 'Previous pin', 'Moved pin']);
+  if (patch.all24 != null && patch.all24 !== t.all24) rows.push(['Open 24 h', t.all24 ? 'On' : 'Off', patch.all24 ? 'On' : 'Off']);
+  return rows;
+}
+function approvalsHTML() {
+  if (!APPROVALS.length) return `<div class="empty"><b>No edits waiting</b>Merchant changes appear here for approval before passengers see them.</div>`;
+  return `<div class="appr">${APPROVALS.map(a => {
+    const t = byId(a.tid), rows = diffRows(t, a.patch);
+    return `<div class="appr-card"><div class="appr-h"><div class="grow"><div class="t-main" style="font-weight:800">${esc(t.name)}</div><div class="small muted">${esc(a.by)} · submitted ${esc(a.when)} · ${t.term} ${esc(ZONES[t.zone])}</div></div>${statusPill('Pending approval')}</div>
+    <div class="tbl-wrap"><table class="diff"><tbody>${rows.map(r => `<tr><td class="f">${esc(r[0])}</td><td><del>${esc(r[1])}</del> <span class="muted">→</span> <ins>${esc(r[2])}</ins></td></tr>`).join('') || '<tr><td class="f">Changes</td><td class="muted">No field changes</td></tr>'}</tbody></table></div>
+    <div class="appr-f"><button class="btn ghost sm" type="button" data-act="open-tenant" data-arg="${t.id}">View listing</button><button class="btn danger sm" type="button" data-act="reject" data-arg="${a.id}">${ic('x', 'sm')}Reject</button><button class="btn sm" type="button" data-act="approve" data-arg="${a.id}">${ic('check', 'sm')}Approve</button></div></div>`;
+  }).join('')}</div>`;
+}
+
+/* ---------- editor drawer ---------- */
+let ED = null; // working copy
+function openTenant(id) {
+  const src = id ? byId(id) : { id: 'new' + Date.now(), name: '', cat: 'Dining', term: S.term === 'T1' ? 'T1' : 'T3', level: 'L3', zone: 'dom', loc: '', desc: '', hours: H('06:00', '22:00'), all24: false, closed: false, closeNote: '', tags: [], pay: ['Cash'], photos: [null, null, null], pin: null, status: 'Draft', owner: 'Merchant', updated: 'Just now', isNew: true };
+  // show the pending version if there is one
+  const pend = APPROVALS.find(a => a.tid === src.id);
+  ED = JSON.parse(JSON.stringify(src));
+  if (pend) Object.assign(ED, JSON.parse(JSON.stringify(pend.patch)));
+  ED._pending = !!pend;
+  const d = $('#drawer');
+  d.innerHTML = `
+  <div class="drawer-h"><button class="icon-btn" type="button" data-act="close-drawer" aria-label="Close editor">${ic('x')}</button>
+    <div style="flex:1;min-width:0"><h2 id="drawerTitle">${src.isNew ? 'New listing' : 'Edit listing'}</h2><div class="small muted">${src.isNew ? 'Saved as a draft until you submit' : esc(src.name) + ' · ' + src.term + ' · last updated ' + esc(src.updated)}</div></div>
+    <span id="edStatus">${statusPill(src.status)}</span></div>
+  <form class="drawer-b" id="edForm" novalidate>
+    <div class="dcol">
+      ${ED._pending ? `<div class="note warn">${ic('clock')}<span><b>Showing the edit pending approval.</b> Passengers still see the approved version until NNIC approves.</span></div>` : ''}
+      <div class="dsec"><h3>Basics</h3>
+        <div class="fgrid">
+          <div class="field span2"><label for="ed-name">Name</label><input class="inp" id="ed-name" value="${esc(ED.name)}" maxlength="48" required placeholder="As shown on the shopfront"></div>
+          <div class="field"><label for="ed-cat">Category</label><select class="inp" id="ed-cat">${CATS.map(c => `<option ${ED.cat === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+          <div class="field"><label for="ed-term">Terminal</label><select class="inp" id="ed-term">${['T1', 'T3'].map(c => `<option ${ED.term === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+          <div class="field"><label for="ed-level">Level</label><select class="inp" id="ed-level">${Object.keys(LEVELS).map(k => `<option value="${k}" ${ED.level === k ? 'selected' : ''}>${LEVELS[k]}</option>`).join('')}</select></div>
+          <div class="field"><label for="ed-zone">Zone</label><select class="inp" id="ed-zone">${Object.keys(ZONES).map(k => `<option value="${k}" ${ED.zone === k ? 'selected' : ''}>${ZONES[k]}</option>`).join('')}</select></div>
+          <div class="field span2"><label for="ed-loc">Location description</label><input class="inp" id="ed-loc" value="${esc(ED.loc)}" placeholder="e.g. Domestic hall, next to the café"></div>
+          <div class="field span2"><div class="row" style="gap:6px"><label for="ed-desc">Description</label><span class="counter" id="ed-desc-c"></span></div><textarea class="inp" id="ed-desc" maxlength="220" placeholder="What passengers can get here, in one or two sentences">${esc(ED.desc)}</textarea></div>
+        </div>
+      </div>
+      <div class="dsec"><h3>Opening hours</h3>
+        <div class="row"><label class="switch"><input type="checkbox" id="ed-24" ${ED.all24 ? 'checked' : ''}><span class="trk"></span><span>Open 24 h</span></label>
+        <label class="switch"><input type="checkbox" id="ed-closed" ${ED.closed ? 'checked' : ''}><span class="trk"></span><span>Temporarily closed</span></label></div>
+        <div class="field" id="ed-cn-wrap" ${ED.closed ? '' : 'hidden'}><label for="ed-cn">Closure note shown to passengers</label><input class="inp" id="ed-cn" value="${esc(ED.closeNote)}" placeholder="e.g. Closed for renovation until 5 Oct"></div>
+        <div class="hours" id="ed-hours" ${ED.all24 ? 'hidden' : ''}>
+          <span></span><span class="label">Opens</span><span class="label">Closes</span>
+          ${DAYS.map((d, i) => `<span class="d">${d}</span><input class="inp tnum" type="time" id="ed-o${i}" aria-label="${d} opens" value="${ED.hours[i].o}"><input class="inp tnum" type="time" id="ed-c${i}" aria-label="${d} closes" value="${ED.hours[i].c}">`).join('')}
+        </div>
+      </div>
+      <div class="dsec"><h3>Photos</h3>
+        <div class="photos">${[0, 1, 2].map(i => `<label class="photo" for="ed-ph${i}" id="ed-phl${i}">${photoInner(ED.photos[i], i)}<input type="file" accept="image/*" id="ed-ph${i}" aria-label="Photo ${i + 1}"></label>`).join('')}</div>
+        <div class="small muted">First photo is the cover. Landscape, at least 1200 px wide. Photos are reviewed with the listing.</div>
+      </div>
+      <div class="dsec"><h3>Tags &amp; payment</h3>
+        <div class="field"><span class="lbl" id="lb-tags">Tags</span><div class="chips" role="group" aria-labelledby="lb-tags">${TAG_OPTS.map(o => `<button type="button" class="chip" data-act="ed-tag" data-arg="${esc(o)}" aria-pressed="${ED.tags.indexOf(o) >= 0}">${esc(o)}</button>`).join('')}</div></div>
+        <div class="field"><span class="lbl" id="lb-pay">Payment accepted</span><div class="chips" role="group" aria-labelledby="lb-pay">${PAY_OPTS.map(o => `<button type="button" class="chip" data-act="ed-pay" data-arg="${esc(o)}" aria-pressed="${ED.pay.indexOf(o) >= 0}">${esc(o)}</button>`).join('')}</div></div>
+      </div>
+      <div class="dsec"><h3>Location tag</h3>
+        <div class="small muted">Click the map to drop the pin where the shop entrance is. The app routes passengers to the nearest walkway point.</div>
+        <div class="picker" id="picker"><svg viewBox="0 0 1000 520" id="pickSvg" role="img" aria-label="Pick the location on the terminal map"></svg></div>
+        <div class="loc-read" id="locRead"></div>
+      </div>
+    </div>
+    <div class="phone-wrap">
+      <div class="label">Passenger preview</div>
+      <div class="phone"><div class="scr" id="edPhone"></div></div>
+      <div class="ph-cap">Shop profile as it appears in the Airport Navi app (Explore › Shops &amp; lounges).</div>
+    </div>
+  </form>
+  <div class="drawer-f"><span class="small muted" style="margin-right:auto;align-self:center" id="edHint">Changes are reviewed by the NNIC content team.</span>
+    <button class="btn ghost" type="button" data-act="close-drawer">Cancel</button>
+    <button class="btn sec" type="button" data-act="ed-draft">Save draft</button>
+    <button class="btn" type="button" data-act="ed-submit">${ic('send', 'sm')}Save &amp; submit for approval</button></div>`;
+  d.hidden = false; $('#drawerScrim').hidden = false;
+  document.body.style.overflow = 'hidden';
+  wireEditor(); drawPicker(); updatePhone(); descCount();
+  setTimeout(() => { const n = $('#ed-name'); if (n) n.focus(); }, 30);
+}
+function photoInner(p, i) {
+  if (p && p !== 'sample') return `<img src="${p}" alt="Uploaded photo ${i + 1}">`;
+  if (p === 'sample') return `<svg width="100%" height="100%" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0" aria-hidden="true"><rect width="120" height="90" fill="var(--tint-2)"/><rect x="0" y="58" width="120" height="32" fill="var(--tint)"/><rect x="18" y="30" width="36" height="28" rx="3" fill="var(--paper)"/><circle cx="84" cy="44" r="12" fill="var(--paper)"/><rect x="70" y="56" width="28" height="4" fill="var(--accent-2)"/></svg><span style="position:absolute;left:6px;bottom:4px;font-size:10px;color:var(--accent)">Cover · sample</span>`;
+  return `${ic('image')}<span>${i === 0 ? 'Cover photo' : 'Add photo'}</span>`;
+}
+function wireEditor() {
+  const f = $('#edForm');
+  f.addEventListener('submit', e => e.preventDefault());
+  f.addEventListener('input', e => {
+    const id = e.target.id;
+    if (id === 'ed-name') ED.name = e.target.value;
+    else if (id === 'ed-desc') { ED.desc = e.target.value; descCount(); }
+    else if (id === 'ed-loc') ED.loc = e.target.value;
+    else if (id === 'ed-cn') ED.closeNote = e.target.value;
+    else if (/^ed-[oc]\d$/.test(id)) { const i = +id.slice(4); ED.hours[i][id[3]] = e.target.value; }
+    updatePhone();
+  });
+  f.addEventListener('change', e => {
+    const id = e.target.id;
+    if (id === 'ed-cat') ED.cat = e.target.value;
+    else if (id === 'ed-term') { ED.term = e.target.value; ED.pin = null; drawPicker(); }
+    else if (id === 'ed-level') { ED.level = e.target.value; drawPicker(); }
+    else if (id === 'ed-zone') ED.zone = e.target.value;
+    else if (id === 'ed-24') { ED.all24 = e.target.checked; $('#ed-hours').hidden = ED.all24; }
+    else if (id === 'ed-closed') { ED.closed = e.target.checked; $('#ed-cn-wrap').hidden = !ED.closed; }
+    else if (/^ed-ph\d$/.test(id)) {
+      const i = +id.slice(5), file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!/^image\//.test(file.type)) { toast('Choose an image file (JPG or PNG).', 'warn'); return; }
+      const rd = new FileReader();
+      rd.onload = () => { ED.photos[i] = rd.result; const l = $('#ed-phl' + i); const inp = l.querySelector('input'); l.innerHTML = photoInner(rd.result, i); l.appendChild(inp); updatePhone(); };
+      rd.readAsDataURL(file);
+    }
+    updatePhone();
+  });
+  $('#picker').addEventListener('click', e => {
+    const svg = $('#pickSvg'), r = svg.getBoundingClientRect();
+    const x = (e.clientX - r.left) * 1000 / r.width, y = (e.clientY - r.top) * 520 / r.height;
+    ED.pin = { x: Math.round(x), y: Math.round(y) };
+    drawPicker(); updatePhone();
+  });
+}
+function descCount() { const c = $('#ed-desc-c'); if (c) { c.textContent = (ED.desc || '').length + ' / 220'; } }
+function drawPicker() {
+  const svg = $('#pickSvg'); if (!svg) return;
+  let s = planSVG(ED.term, ED.term === 'T3' ? ED.level : 'L3', { picker: true, layers: { walls: true, gates: true, places: false, paths: true, conns: true }, hlGate: null });
+  const rd = $('#locRead');
+  if (ED.pin) {
+    const nw = nearestWalkL(ED.term, ED.level, ED.pin.x, ED.pin.y);
+    s += `<line class="near" x1="${ED.pin.x}" y1="${ED.pin.y}" x2="${nw.px.toFixed(1)}" y2="${nw.py.toFixed(1)}"/><g class="tenant-pin" transform="translate(${ED.pin.x} ${ED.pin.y})"><path d="M0 0 C-4 -8 -12 -14 -12 -22 A12 12 0 0 1 12 -22 C12 -14 4 -8 0 0Z"/><circle cx="0" cy="-22" r="4.5"/></g>`;
+    const [la, ln] = toLatLng(ED.pin.x, ED.pin.y);
+    rd.innerHTML = `<div><span class="label">Coordinates</span><b>${la.toFixed(5)}, ${ln.toFixed(5)}</b></div><div><span class="label">Nearest walkway</span><b>${esc(nw.n)}</b></div><div><span class="label">Distance to walkway</span><b>${Math.round(nw.d * UNIT_M)} m · ${ED.term} ${ED.level}</b></div>`;
+  } else rd.innerHTML = `<div class="small muted" style="grid-column:1/-1">No pin yet. Passengers can't navigate to this listing until it has a location.</div>`;
+  svg.innerHTML = s;
+}
+function isOpenNow(t) {
+  if (t.closed) return false;
+  if (t.all24) return true;
+  const h = t.hours[TODAY_IDX], now = '13:02';
+  return h.o <= now && now < h.c;
+}
+function updatePhone() {
+  const el = $('#edPhone'); if (!el) return;
+  const t = ED, wm = walkMin(t);
+  const cover = t.photos.find(Boolean);
+  const open = isOpenNow(t);
+  const pill = t.closed ? `<span class="app-pill closed">Closed today</span>` : open ? `<span class="app-pill">Open now</span>` : `<span class="app-pill soon">Closed now</span>`;
+  el.innerHTML = `<div class="status"><span>13:02</span><span class="notch"></span><span>5G</span></div>
+    <div class="app-top"><b>${ic('back', 'sm')} Shops &amp; lounges</b><span>NAIA ${t.term} · ${esc(ZONES[t.zone])}</span></div>
+    <div class="app-body">
+      <div class="app-card">
+        <div class="app-photo">${cover && cover !== 'sample' ? `<img src="${cover}" alt="">` : cover === 'sample' ? `<svg viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;opacity:1" aria-hidden="true"><rect width="120" height="90" fill="var(--app-tint-2)"/><rect x="0" y="58" width="120" height="32" fill="var(--app-tint)"/><rect x="18" y="30" width="36" height="28" rx="3" fill="var(--app-paper)"/><circle cx="84" cy="44" r="12" fill="var(--app-paper)"/></svg>` : `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IC[t.cat === 'Dining' ? 'cup' : t.cat === 'Lounge' ? 'grid' : 'bag']}</svg>`}</div>
+        <div class="app-pad">
+          <div class="app-name">${esc(t.name || 'Listing name')}</div>
+          <div class="app-meta">${esc(t.cat)} · ${esc(t.loc || 'Location description')}</div>
+          <div class="row" style="gap:6px">${pill}${wm ? `<span class="app-pill tint">${wm} min walk</span>` : ''}</div>
+          ${t.closed && t.closeNote ? `<div class="app-meta" style="color:var(--app-crit)">${esc(t.closeNote)}</div>` : ''}
+          <div class="app-meta">${esc(t.desc || 'Add a short description so passengers know what they can get here.')}</div>
+          <div class="app-row"><span>Today</span><b>${t.closed ? 'Closed' : todayHours(t)}</b></div>
+          ${t.pay.length ? `<div class="app-chips">${t.pay.slice(0, 4).map(p => `<span class="app-chip">${esc(p)}</span>`).join('')}${t.pay.length > 4 ? `<span class="app-chip">+${t.pay.length - 4}</span>` : ''}</div>` : ''}
+          <button class="app-btn" type="button" tabindex="-1" aria-hidden="true">${ic('nav', 'sm')}Navigate</button>
+        </div>
+      </div>
+    </div>`;
+}
+function closeDrawer() {
+  $('#drawer').hidden = true; $('#drawerScrim').hidden = true; document.body.style.overflow = ''; ED = null;
+}
+function saveTenant(submit) {
+  const n = $('#ed-name');
+  if (!ED.name.trim()) { n.setAttribute('aria-invalid', 'true'); n.focus(); toast('Add a name before saving.', 'warn'); return; }
+  n.removeAttribute('aria-invalid');
+  let t = byId(ED.id);
+  const fields = ['name', 'cat', 'term', 'level', 'zone', 'loc', 'desc', 'hours', 'all24', 'closed', 'closeNote', 'tags', 'pay', 'photos', 'pin'];
+  const patch = {}; fields.forEach(k => { patch[k] = JSON.parse(JSON.stringify(ED[k])); });
+  if (!t) {
+    t = Object.assign({ id: ED.id, status: 'Draft', owner: 'Merchant', updated: '29 Sep, 13:02' }, patch);
+    TENANTS.unshift(t);
+    if (submit) { t.status = 'Pending approval'; APPROVALS.unshift({ id: 'a' + Date.now(), tid: t.id, by: 'Ops Admin · new listing', when: '29 Sep, 13:02', prevStatus: 'Draft', patch: {} }); }
+  } else if (submit) {
+    const ex = APPROVALS.find(a => a.tid === t.id);
+    if (ex) { ex.patch = patch; ex.when = '29 Sep, 13:02'; }
+    else APPROVALS.unshift({ id: 'a' + Date.now(), tid: t.id, by: 'Ops Admin on behalf of merchant', when: '29 Sep, 13:02', prevStatus: t.status, patch });
+    t.status = 'Pending approval'; t.updated = '29 Sep, 13:02';
+  } else {
+    if (t.status === 'Draft') Object.assign(t, patch);
+    t.updated = '29 Sep, 13:02';
+  }
+  closeDrawer(); renderTenants(); updateCounts();
+  toast(submit ? 'Submitted for approval' : 'Draft saved');
+}
+function decide(aid, ok) {
+  const i = APPROVALS.findIndex(a => a.id === aid); if (i < 0) return;
+  const a = APPROVALS[i], t = byId(a.tid);
+  if (ok) { Object.assign(t, JSON.parse(JSON.stringify(a.patch))); t.status = t.closed ? 'Closed today' : 'Open'; t.updated = '29 Sep, 13:02'; }
+  else t.status = a.prevStatus;
+  APPROVALS.splice(i, 1);
+  renderTenPanel(); const c = $('#tab-appr .cnt'); if (c) c.textContent = APPROVALS.length || '';
+  updateCounts();
+  toast(ok ? `Approved · ${t.name} is live in the app` : `Rejected · ${t.name} was sent back to the merchant`);
+}
+
+/* ================= promotions ================= */
+const PTYPES = ['Announcement', 'Travel advisory', 'Sponsored promo'];
+const PLACES_P = ['Home hero banner', 'Home card', 'Map banner', 'Shops “Sponsored” slot', 'Arrivals prompt'];
+const CTAS = ['Navigate to place', 'Open service', 'Open link', 'No button'];
+const SERVICES = ['Airport taxi queue', 'SIM & pocket WiFi rental', 'eTravel (deep link)', 'Flight status'];
+const PROMOS = [
+  { id: 'p1', type: 'Travel advisory', head: 'Heavy rain: allow 30 extra minutes to reach NAIA', body: 'PAGASA rainfall warning over Metro Manila. Expect slow traffic on NAIA Road and the Skyway ramps.', cta: 'Open link', ctaLabel: 'Traffic updates', tenant: '', service: '', link: 'https://www.pagasa.dost.gov.ph', place: 'Home hero banner', aTerm: 'All', aDir: 'Departing', aType: 'All', start: '2026-09-28T06:00', end: '2026-09-29T23:59', prio: 'High', status: 'Live', imp: 96400, clk: 3120 },
+  { id: 'p2', type: 'Announcement', head: 'T3 Level 4 food court now open', body: 'More seating and 12 food stalls before security. Take the escalator or lift from the check-in hall.', cta: 'Navigate to place', ctaLabel: 'Take me there', tenant: '', service: '', link: '', place: 'Home card', aTerm: 'T3', aDir: 'Departing', aType: 'All', start: '2026-09-15T08:00', end: '2026-10-15T23:59', prio: 'Normal', status: 'Live', imp: 41800, clk: 2960 },
+  { id: 'p3', type: 'Sponsored promo', head: '10% off gift boxes before you fly', body: 'Pasalubong gift boxes at Travel essentials & gifts, domestic hall. Show this banner at the counter.', cta: 'Navigate to place', ctaLabel: 'Navigate', tenant: 'gifts3', service: '', link: '', place: 'Shops “Sponsored” slot', aTerm: 'T3', aDir: 'Departing', aType: 'Domestic', start: '2026-09-20T00:00', end: '2026-10-20T23:59', prio: 'Normal', status: 'Live', imp: 18200, clk: 1090 },
+  { id: 'p4', type: 'Travel advisory', head: 'eTravel QR required for all arrivals', body: 'Register on eTravel within 72 hours before arrival and keep the QR code ready at immigration.', cta: 'Open service', ctaLabel: 'Open eTravel', tenant: '', service: 'eTravel (deep link)', link: '', place: 'Arrivals prompt', aTerm: 'All', aDir: 'Arriving', aType: 'International', start: '2026-09-01T00:00', end: '2026-12-31T23:59', prio: 'High', status: 'Live', imp: 22600, clk: 7480 },
+  { id: 'p5', type: 'Sponsored promo', head: 'Duty free: ₱500 off above ₱5,000', body: 'One voucher per boarding pass. Valid at Duty free, T3 international central hall.', cta: 'Navigate to place', ctaLabel: 'Navigate', tenant: 'duty3', service: '', link: '', place: 'Map banner', aTerm: 'T3', aDir: 'Departing', aType: 'International', start: '2026-10-01T00:00', end: '2026-10-31T23:59', prio: 'Normal', status: 'Scheduled', imp: 0, clk: 0 },
+  { id: 'p6', type: 'Announcement', head: 'Ride-hail pickup moved to Bay 4 during works', body: 'Arrivals curb works at T3 Bays 1–3. Follow signs to Bay 4 for app-booked rides.', cta: 'No button', ctaLabel: '', tenant: '', service: '', link: '', place: 'Arrivals prompt', aTerm: 'T3', aDir: 'Arriving', aType: 'All', start: '2026-08-18T00:00', end: '2026-09-12T23:59', prio: 'Normal', status: 'Ended', imp: 31500, clk: 940 }
+];
+S.promo = { filter: 'All', edit: null };
+function blankPromo() { return { id: '', type: 'Announcement', head: '', body: '', cta: 'Navigate to place', ctaLabel: 'Navigate', tenant: '', service: SERVICES[0], link: '', place: 'Home card', aTerm: S.term, aDir: 'All', aType: 'All', start: '2026-09-30T06:00', end: '2026-10-14T23:59', prio: 'Normal', status: 'Draft', imp: 0, clk: 0 }; }
+const dshort = s => { if (!s) return '—'; const d = new Date(s); return d.getDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()] + ', ' + s.slice(11, 16); };
+const typeTag = t => `<span class="tag ${t === 'Travel advisory' ? 't-adv' : t === 'Sponsored promo' ? 't-spo' : 't-ann'}">${esc(t)}</span>`;
+function renderPromos() {
+  const v = $('#v-promos');
+  if (!S.promo.edit) S.promo.edit = JSON.parse(JSON.stringify(PROMOS[2]));
+  v.innerHTML = `
+  <div class="view-head">
+    <div><div class="eyebrow">Content · campaigns</div><h1 id="h-promos">Promotions &amp; Banners</h1>
+    <p>Announcements, travel advisories and sponsored promos in the passenger app. Sponsored items always carry a visible “Sponsored” label.</p></div>
+    <div class="actions"><button class="btn" type="button" data-act="new-promo">${ic('plus', 'sm')}New campaign</button></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div><h2>Campaigns</h2><div class="sub">Impressions and clicks since start · ${S.term === 'All' ? 'all terminals' : 'showing campaigns that reach ' + S.term}</div></div>
+      <div class="chips" role="group" aria-label="Filter by status">${['All', 'Live', 'Scheduled', 'Pending approval', 'Draft', 'Ended'].map(f => `<button type="button" class="chip" data-act="promo-filter" data-arg="${f}" aria-pressed="${S.promo.filter === f}">${f}</button>`).join('')}</div></div>
+    <div id="promoTable"></div>
+  </div>
+  <div class="promo-grid">
+    <form class="card" id="promoForm" novalidate></form>
+    <div class="phone-wrap"><div class="label">Live preview</div><div class="phone"><div class="scr" id="promoPhone"></div></div><div class="ph-cap" id="promoCap"></div></div>
+  </div>`;
+  renderPromoTable(); renderPromoForm();
+}
+function renderPromoTable() {
+  const el = $('#promoTable'); if (!el) return;
+  const rows = PROMOS.filter(p => (S.promo.filter === 'All' || p.status === S.promo.filter) && (S.term === 'All' || p.aTerm === 'All' || p.aTerm === S.term));
+  if (!rows.length) { el.innerHTML = `<div class="empty"><b>No ${S.promo.filter === 'All' ? '' : S.promo.filter.toLowerCase() + ' '}campaigns</b>${S.promo.filter === 'Pending approval' ? 'Submitted campaigns wait here for the NNIC content team.' : 'Change the filter or create a new campaign.'}<br><button class="link-btn" type="button" data-act="promo-filter" data-arg="All">Show all campaigns</button></div>`; return; }
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Type</th><th>Placement</th><th>Audience</th><th>Schedule</th><th>Status</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">CTR</th></tr></thead><tbody>
+  ${rows.map(p => `<tr class="click" data-act="edit-promo" data-arg="${p.id}"><td style="min-width:240px"><button class="row-btn" type="button" data-act="edit-promo" data-arg="${p.id}"><div class="t-main">${esc(p.head)}</div>${p.tenant ? `<div class="t-sub">${esc(byId(p.tenant).name)}</div>` : ''}</button></td>
+  <td>${typeTag(p.type)}</td><td>${esc(p.place)}</td><td class="t-sub">${p.aTerm === 'All' ? 'All terminals' : p.aTerm} · ${p.aDir === 'All' ? 'departing & arriving' : p.aDir.toLowerCase()}${p.aType !== 'All' ? ' · ' + p.aType.toLowerCase() : ''}</td>
+  <td class="t-sub tnum" style="white-space:nowrap">${dshort(p.start)} →<br>${dshort(p.end)}</td><td>${statusPill(p.status)}</td>
+  <td class="r tnum">${p.imp ? fmt(p.imp) : '—'}</td><td class="r tnum">${p.clk ? fmt(p.clk) : '—'}</td><td class="r tnum">${p.imp ? (p.clk / p.imp * 100).toFixed(1) + '%' : '—'}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+function renderPromoForm() {
+  const f = $('#promoForm'); if (!f) return;
+  const p = S.promo.edit;
+  const isNew = !p.id;
+  const tOpts = TENANTS.filter(t => p.aTerm === 'All' || t.term === p.aTerm);
+  f.innerHTML = `
+  <div class="card-h"><div><h2>${isNew ? 'New campaign' : 'Edit campaign'}</h2><div class="sub">${isNew ? 'Starts as a draft' : esc(p.status) + (p.imp ? ' · ' + fmt(p.imp) + ' impressions so far' : '')}</div></div>${isNew ? '' : statusPill(p.status)}</div>
+  <div class="card-b" style="display:flex;flex-direction:column;gap:14px">
+    <div class="field"><span class="lbl" id="lb-ptype">Type</span><div class="seg" role="group" aria-labelledby="lb-ptype" style="align-self:flex-start;flex-wrap:wrap">${PTYPES.map(t => `<button type="button" data-act="p-type" data-arg="${t}" aria-pressed="${p.type === t}">${t}</button>`).join('')}</div></div>
+    ${p.type === 'Sponsored promo' ? `<div class="note">${ic('info')}<span><b>Disclosure is mandatory.</b> Sponsored items show a “Sponsored” label wherever they appear. It cannot be turned off.</span></div>` : ''}
+    <div class="fgrid">
+      <div class="field span2"><div class="row" style="gap:6px"><label for="p-head">Headline</label><span class="counter" id="p-head-c"></span></div><input class="inp" id="p-head" value="${esc(p.head)}" placeholder="Short and specific, e.g. “Gate 112 boarding moved to 14:10”"><span class="err" id="p-head-e" hidden></span></div>
+      <div class="field span2"><div class="row" style="gap:6px"><label for="p-body">Body</label><span class="counter" id="p-body-c"></span></div><textarea class="inp" id="p-body" rows="2">${esc(p.body)}</textarea></div>
+      <div class="field"><label for="p-cta">Button action</label><select class="inp" id="p-cta">${CTAS.map(c => `<option ${p.cta === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label for="p-ctal">Button label</label><input class="inp" id="p-ctal" value="${esc(p.ctaLabel)}" maxlength="20" ${p.cta === 'No button' ? 'disabled' : ''}></div>
+      ${p.cta === 'Navigate to place' || p.type === 'Sponsored promo' ? `<div class="field span2"><label for="p-ten">Linked tenant${p.type === 'Sponsored promo' ? ' (sponsor)' : ''}</label><select class="inp" id="p-ten"><option value="">${p.type === 'Sponsored promo' ? 'Choose the sponsoring tenant' : 'None · pick a place on the map later'}</option>${tOpts.map(t => `<option value="${t.id}" ${p.tenant === t.id ? 'selected' : ''}>${esc(t.name)} · ${t.term}</option>`).join('')}</select></div>` : ''}
+      ${p.cta === 'Open service' ? `<div class="field span2"><label for="p-svc">Service</label><select class="inp" id="p-svc">${SERVICES.map(s => `<option ${p.service === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>` : ''}
+      ${p.cta === 'Open link' ? `<div class="field span2"><label for="p-link">Link (opens outside the app)</label><input class="inp" id="p-link" type="url" value="${esc(p.link)}" placeholder="https://"></div>` : ''}
+      <div class="field"><label for="p-place">Placement</label><select class="inp" id="p-place">${PLACES_P.map(c => `<option ${p.place === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label for="p-prio">Priority${p.type === 'Travel advisory' ? '' : ' (advisories only)'}</label><select class="inp" id="p-prio" ${p.type === 'Travel advisory' ? '' : 'disabled'}>${['Normal', 'High', 'Critical'].map(c => `<option ${p.prio === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label for="p-aterm">Audience · terminal</label><select class="inp" id="p-aterm">${['All', 'T1', 'T3'].map(c => `<option value="${c}" ${p.aTerm === c ? 'selected' : ''}>${c === 'All' ? 'All terminals' : c}</option>`).join('')}</select></div>
+      <div class="field"><label for="p-adir">Audience · journey</label><select class="inp" id="p-adir">${['All', 'Departing', 'Arriving'].map(c => `<option value="${c}" ${p.aDir === c ? 'selected' : ''}>${c === 'All' ? 'Departing & arriving' : c}</option>`).join('')}</select></div>
+      <div class="field"><label for="p-atype">Audience · flight type</label><select class="inp" id="p-atype">${['All', 'Domestic', 'International'].map(c => `<option value="${c}" ${p.aType === c ? 'selected' : ''}>${c === 'All' ? 'Domestic & international' : c}</option>`).join('')}</select></div>
+      <div class="field"><span class="lbl">Estimated reach</span><span class="num" style="font-weight:800;padding-top:8px" id="p-reach"></span></div>
+      <div class="field"><label for="p-start">Starts</label><input class="inp tnum" type="datetime-local" id="p-start" value="${p.start}"></div>
+      <div class="field"><label for="p-end">Ends</label><input class="inp tnum" type="datetime-local" id="p-end" value="${p.end}"><span class="err" id="p-end-e" hidden></span></div>
+    </div>
+  </div>
+  <div class="drawer-f" style="border-radius:0 0 14px 14px">
+    <span class="small muted" style="margin-right:auto;align-self:center">${p.type === 'Sponsored promo' ? 'Sponsored promos need NNIC approval before they run.' : 'Advisories and announcements can be scheduled by Ops Admin.'}</span>
+    <button class="btn sec" type="button" data-act="p-save" data-arg="Draft">Save draft</button>
+    <button class="btn sec" type="button" data-act="p-save" data-arg="Pending approval">Submit for approval</button>
+    <button class="btn" type="button" data-act="p-save" data-arg="Scheduled" ${p.type === 'Sponsored promo' ? 'disabled title="Sponsored promos are scheduled after approval"' : ''}>${ic('clock', 'sm')}Schedule</button>
+  </div>`;
+  promoCounters(); promoPreview();
+}
+function promoCounters() {
+  const p = S.promo.edit;
+  const hc = $('#p-head-c'), bc = $('#p-body-c');
+  if (hc) { hc.textContent = p.head.length + ' / 60'; hc.classList.toggle('over', p.head.length > 60); }
+  if (bc) { bc.textContent = p.body.length + ' / 140'; bc.classList.toggle('over', p.body.length > 140); }
+  const reach = $('#p-reach');
+  if (reach) {
+    let base = 182400 * (p.aTerm === 'All' ? 1 : TF[p.aTerm]);
+    base *= p.aDir === 'All' ? 1 : p.aDir === 'Departing' ? 0.58 : 0.42;
+    base *= p.aType === 'All' ? 1 : p.aType === 'Domestic' ? 0.55 : 0.45;
+    reach.textContent = '≈ ' + fmt(r100(base)) + ' passengers / 30 days';
+  }
+}
+function promoPreview() {
+  const el = $('#promoPhone'); if (!el) return;
+  const p = S.promo.edit;
+  const sp = p.type === 'Sponsored promo';
+  const adv = p.type === 'Travel advisory';
+  const head = esc(p.head || 'Your headline appears here');
+  const body = esc(p.body || 'Body text for the banner.');
+  const ten = p.tenant ? byId(p.tenant) : null;
+  const cta = p.cta === 'No button' ? '' : `<button class="b-cta" type="button" tabindex="-1" aria-hidden="true">${esc(p.ctaLabel || 'Open')}</button>`;
+  const label = (onNavy) => sp ? `<span class="spons ${onNavy ? 'onnavy' : ''}">Sponsored</span>` : adv ? `<span class="spons ${onNavy ? 'onnavy' : ''}">Travel advisory${p.prio !== 'Normal' ? ' · ' + p.prio : ''}</span>` : '';
+  const status = `<div class="status"><span>13:02</span><span class="notch"></span><span>5G</span></div>`;
+  let scr = '';
+  if (p.place === 'Home hero banner' || p.place === 'Home card') {
+    const ban = p.place === 'Home hero banner'
+      ? `<div class="ban hero">${label(true)}<div class="b-h">${head}</div><div class="b-b">${body}</div>${cta}</div>`
+      : `<div class="ban card ${adv ? 'adv' : ''}">${label(false)}<div class="b-h">${head}</div><div class="b-b">${body}</div>${cta}</div>`;
+    scr = `${status}<div class="app-top"><span>Magandang hapon</span><b>NAIA Terminal ${p.aTerm === 'T1' ? '1' : '3'}</b></div><div class="app-body">
+      ${p.place === 'Home hero banner' ? ban : ''}
+      <div class="app-card" style="padding:12px;display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b style="font-size:13px">PR 102 · Singapore</b><span class="app-pill">On time</span></div><div class="app-row"><span>Gate</span><b>112 · boards 13:40</b></div></div>
+      ${p.place === 'Home card' ? ban : ''}
+      <div class="ghost-line w80"></div><div class="ghost-line w60"></div></div>`;
+  } else if (p.place === 'Map banner') {
+    scr = `${status}<div class="mini-map"><svg viewBox="0 0 280 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect x="20" y="120" width="240" height="90" rx="6" fill="var(--app-paper)" stroke="var(--app-line)"/><rect x="110" y="210" width="60" height="240" rx="6" fill="var(--app-paper)" stroke="var(--app-line)"/><line x1="40" y1="165" x2="240" y2="165" stroke="var(--app-navy)" stroke-width="3" opacity=".5"/><line x1="140" y1="165" x2="140" y2="430" stroke="var(--app-navy)" stroke-width="3" opacity=".5"/><circle cx="140" cy="330" r="7" fill="var(--app-navy)" stroke="var(--app-paper)" stroke-width="3"/></svg>
+      <div style="position:absolute;left:10px;right:10px;top:10px"><div class="ban card ${adv ? 'adv' : ''}" style="box-shadow:0 8px 20px rgba(18,24,58,.16)">${label(false)}<div class="b-h">${head}</div><div class="b-b">${body}</div>${cta}</div></div></div>`;
+  } else if (p.place === 'Shops “Sponsored” slot') {
+    const it = (n, s) => `<div class="app-item"><span class="th">${ic('bag', 'sm')}</span><div class="grow"><b>${n}</b><span>${s}</span></div></div>`;
+    scr = `${status}<div class="app-top"><b>Shops &amp; lounges</b><span>NAIA ${p.aTerm === 'T1' ? 'T1' : 'T3'} · sorted by distance</span></div><div class="app-body">
+      <div class="app-item" style="align-items:flex-start;flex-direction:column;gap:6px">${label(false)}<b style="font-size:13.5px">${head}</b><span>${ten ? esc(ten.name) + ' · ' : ''}${body}</span>${cta ? `<button class="app-btn" type="button" tabindex="-1" aria-hidden="true" style="height:34px;font-size:12px">${esc(p.ctaLabel || 'Open')}</button>` : ''}</div>
+      ${it('Café and pastry shop', 'Domestic hall · 2 min')}${it('Food stalls', 'Domestic hall · 3 min')}${it('PAGSS Premium Lounge', 'Domestic airside · 3 min')}</div>`;
+  } else {
+    scr = `${status}<div class="app-top"><b>Welcome to Manila</b><span>PR 101 from Singapore · Carousel 5</span></div><div class="app-body"><div class="ghost-line w80"></div><div class="ghost-line w60"></div><div class="ghost-line w80"></div></div>
+      <div class="sheet"><span class="grab"></span>${label(false)}<div class="b-h" style="font-size:15px;font-weight:800">${head}</div><div class="app-meta">${body}</div>${cta ? `<button class="app-btn" type="button" tabindex="-1" aria-hidden="true">${esc(p.ctaLabel || 'Open')}</button>` : ''}<div class="app-meta" style="text-align:center">Not now</div></div>`;
+  }
+  el.innerHTML = scr;
+  const cap = $('#promoCap');
+  if (cap) cap.textContent = `${p.place} · ${p.aTerm === 'All' ? 'all terminals' : p.aTerm} · ${p.aDir === 'All' ? 'departing & arriving' : p.aDir.toLowerCase()}${sp ? ' · “Sponsored” label is always shown' : ''}`;
+}
+function wirePromoForm() {
+  const f = $('#v-promos');
+  f.addEventListener('submit', e => e.preventDefault());
+  f.addEventListener('input', e => {
+    if (!S.promo.edit) return;
+    const p = S.promo.edit, id = e.target.id;
+    const map = { 'p-head': 'head', 'p-body': 'body', 'p-ctal': 'ctaLabel', 'p-link': 'link', 'p-start': 'start', 'p-end': 'end' };
+    if (map[id]) { p[map[id]] = e.target.value; promoCounters(); promoPreview(); }
+  });
+  f.addEventListener('change', e => {
+    if (!S.promo.edit) return;
+    const p = S.promo.edit, id = e.target.id;
+    const map = { 'p-cta': 'cta', 'p-ten': 'tenant', 'p-svc': 'service', 'p-place': 'place', 'p-prio': 'prio', 'p-aterm': 'aTerm', 'p-adir': 'aDir', 'p-atype': 'aType' };
+    if (!map[id]) return;
+    p[map[id]] = e.target.value;
+    if (id === 'p-cta') { p.ctaLabel = { 'Navigate to place': 'Navigate', 'Open service': 'Open', 'Open link': 'Learn more', 'No button': '' }[p.cta]; }
+    if (id === 'p-cta' || id === 'p-aterm') renderPromoForm(); else { promoCounters(); promoPreview(); }
+  });
+}
+function savePromo(status) {
+  const p = S.promo.edit;
+  const he = $('#p-head-e'), ee = $('#p-end-e');
+  he.hidden = true; ee.hidden = true; $('#p-head').removeAttribute('aria-invalid');
+  if (!p.head.trim() || p.head.length > 60) { he.textContent = !p.head.trim() ? 'Add a headline.' : 'Shorten the headline to 60 characters or fewer.'; he.hidden = false; $('#p-head').setAttribute('aria-invalid', 'true'); $('#p-head').focus(); return; }
+  if (p.end && p.start && p.end <= p.start) { ee.textContent = 'End must be after the start.'; ee.hidden = false; $('#p-end').focus(); return; }
+  if (p.type === 'Sponsored promo' && !p.tenant && status !== 'Draft') { toast('Choose the sponsoring tenant before submitting.', 'warn'); const t = $('#p-ten'); if (t) t.focus(); return; }
+  if (!p.id) { p.id = 'p' + Date.now(); PROMOS.unshift(p); }
+  const target = PROMOS.find(x => x.id === p.id);
+  if (status === 'Draft' && (target.status === 'Live' || target.status === 'Scheduled')) { /* saving edits to a running campaign keeps it running */ }
+  else target.status = status;
+  Object.assign(target, JSON.parse(JSON.stringify(p)), { status: target.status });
+  S.promo.edit = JSON.parse(JSON.stringify(target));
+  renderPromoTable(); renderPromoForm(); updateCounts();
+  toast(status === 'Draft' ? 'Draft saved' : status === 'Scheduled' ? `Scheduled · starts ${dshort(p.start)}` : 'Submitted for approval');
+}
+
+/* ================= analytics ================= */
+S.an = { range: '30d', hour: 17, heatTerm: 'T3' };
+const HOUR_PROFILE = [0.22, 0.12, 0.08, 0.14, 0.62, 0.95, 1.0, 0.86, 0.7, 0.62, 0.66, 0.72, 0.78, 0.74, 0.7, 0.8, 0.92, 1.0, 0.96, 0.84, 0.7, 0.58, 0.46, 0.34];
+const HOT = {
+  T3: [{ x: 310, y: 210, w: 1.0, r: 60 }, { x: 510, y: 205, w: 0.95, r: 55 }, { x: 510, y: 110, w: 0.8, r: 45 }, { x: 295, y: 110, w: 0.75, r: 45 }, { x: 960, y: 360, w: 0.55, r: 60 }, { x: 700, y: 225, w: 0.45, r: 70 }, { x: 110, y: 225, w: 0.45, r: 70 }, { x: 900, y: 460, w: 0.3, r: 60 }],
+  T1: [{ x: 500, y: 200, w: 1.0, r: 65 }, { x: 500, y: 113, w: 0.85, r: 40 }, { x: 110, y: 205, w: 0.6, r: 70 }, { x: 890, y: 205, w: 0.55, r: 70 }, { x: 280, y: 205, w: 0.35, r: 80 }, { x: 720, y: 205, w: 0.35, r: 80 }]
+};
+const HEAT_BINS = [20, 100, 250, 500, 1000, 2000];
+function heatCells(term, hour, range) {
+  const rooms = (term === 'T1' ? T1R : T3R).filter(r => r.z !== 'land');
+  const cells = [], CS = 20;
+  const days = RANGE[range].days;
+  const tf = term === 'T3' ? 1 : 0.52;
+  rooms.forEach(r => {
+    for (let x = r.x; x + CS <= r.x + r.w + 0.1; x += CS) for (let y = r.y; y + CS <= r.y + r.h + 0.1; y += CS) {
+      const cx = x + CS / 2, cy = y + CS / 2;
+      let w = 0;
+      HOT[term].forEach(h => { const d = Math.hypot(cx - h.x, cy - h.y); w += h.w * Math.exp(-(d * d) / (2 * h.r * h.r)); });
+      const jitter = 0.85 + 0.3 * Math.abs(Math.sin(cx * 12.9898 + cy * 78.233));
+      const c = Math.round(w * jitter * HOUR_PROFILE[hour] * days * 20 * tf);
+      if (cells.some(k => k.x === x && k.y === y)) continue;
+      cells.push({ x, y, c });
+    }
+  });
+  return cells;
+}
+function binOf(c) { let b = -1; HEAT_BINS.forEach((t, i) => { if (c >= t) b = i; }); return b; }
+const HEAT_FILL = ['var(--h1)', 'var(--h2)', 'var(--h3)', 'var(--h4)', 'var(--h5)', 'var(--h6)'];
+const SEARCHES = [
+  { q: 'Gate 112', t: 'T3', n: 48200, d: 6 }, { q: 'toilets', t: 'Both', n: 41900, d: 2 }, { q: 'coffee', t: 'Both', n: 33600, d: 11 },
+  { q: 'taxi', t: 'Both', n: 26100, d: -4 }, { q: 'SIM card', t: 'Both', n: 21400, d: 18 }, { q: 'money exchange', t: 'Both', n: 19800, d: 0 },
+  { q: 'PAGSS lounge', t: 'Both', n: 14300, d: 7 }, { q: 'Gate 11', t: 'T1', n: 12700, d: -2 }, { q: 'prayer room', t: 'Both', n: 6900, d: 3 }, { q: 'pharmacy', t: 'Both', n: 5200, d: -9 }
+];
+const ROUTES = [
+  { a: 'Immigration exit', b: 'Gate 112', t: 'T3', n: 4120, m: 9 }, { a: 'Domestic security exit', b: 'Gate 118', t: 'T3', n: 3560, m: 5 },
+  { a: 'Immigration exit', b: 'Gate 104', t: 'T3', n: 2980, m: 6 }, { a: 'Gate 110 bridge', b: 'Carousel 5', t: 'T3', n: 2640, m: 11 },
+  { a: 'Immigration exit', b: 'Gate 11', t: 'T1', n: 2310, m: 8 }, { a: 'Domestic hall', b: 'Bus Gate 132 (L1)', t: 'T3', n: 1870, m: 7 }
+];
+const MERCH = [
+  { id: 'cafe3', views: 18600, nav: 6240, arr: 4480, seed: 1 }, { id: 'stalls3', views: 15900, nav: 5710, arr: 4020, seed: 2 },
+  { id: 'duty3', views: 14200, nav: 3980, arr: 3150, seed: 3 }, { id: 'gifts3', views: 9800, nav: 2870, arr: 1940, seed: 4 },
+  { id: 'pagss3', views: 8700, nav: 3310, arr: 2260, seed: 5 }, { id: 'fx3', views: 7400, nav: 3050, arr: 2530, seed: 6 },
+  { id: 'mab1', views: 6100, nav: 2140, arr: 1610, seed: 7 }, { id: 'cafe15', views: 3900, nav: 1260, arr: 880, seed: 8 }
+];
+S.share = { cafe3: true, stalls3: true, duty3: true, gifts3: false, pagss3: true, fx3: false, mab1: true, cafe15: false };
+const rf = () => RANGE[S.an.range].days / 30 * (S.an.range === '90d' ? 0.95 : S.an.range === '7d' ? 1.04 : 1);
+function renderAnalytics() {
+  const v = $('#v-analytics');
+  const rg = S.an.range, R = RANGE[rg];
+  if (S.term !== 'All') S.an.heatTerm = S.term;
+  v.innerHTML = `
+  <div class="view-head">
+    <div><div class="eyebrow">Foot traffic &amp; merchant insights</div><h1 id="h-analytics">Analytics</h1>
+    <p>Aggregated, anonymised passenger activity from the Airport Navi app · ${esc(R.label)} to 28 Sep 2026 · ${S.term === 'All' ? 'T1 and T3' : S.term}.</p></div>
+    <div class="seg" role="group" aria-label="Date range">${['7d', '30d', '90d'].map(r => `<button type="button" data-act="range" data-arg="${r}" aria-pressed="${rg === r}">${r === '7d' ? '7 days' : r === '30d' ? '30 days' : '90 days'}</button>`).join('')}</div>
+  </div>
+  <div class="an-kpis">
+    ${kpi('Active passengers', fmt(metric(rg, 'act')), R.label)}
+    ${kpi('Searches', compact(metric(rg, 'searches')), fmt(Math.round(metric(rg, 'searches') / metric(rg, 'act') * 10) / 10) + ' per passenger')}
+    ${kpi('Routes started', compact(metric(rg, 'routes')), Math.round(metric(rg, 'routes') / metric(rg, 'searches') * 100) + '% of searches')}
+    ${kpi('Route completion', R.compl + '<small>%</small>', 'Arrived within 25 m')}
+    ${kpi('Location opt-in', R.optin + '<small>%</small>', 'Only opted-in sessions count toward foot traffic')}
+  </div>
+  <div class="card">
+    <div class="card-h"><div><h2>Foot traffic heatmap · ${S.an.heatTerm} Level 3 departures</h2><div class="sub">Passengers per 24 m × 24 m cell during the selected hour, summed over ${esc(R.label)}</div></div>
+      ${S.term === 'All' ? `<div class="seg" role="group" aria-label="Heatmap terminal">${['T3', 'T1'].map(t => `<button type="button" data-act="heat-term" data-arg="${t}" aria-pressed="${S.an.heatTerm === t}">${t}</button>`).join('')}</div>` : ''}</div>
+    <div class="heat-tools"><label for="hour" class="label" style="margin:0">Hour of day</label><input type="range" id="hour" min="0" max="23" step="1" value="${S.an.hour}" aria-valuetext="${String(S.an.hour).padStart(2, '0')}:00 to ${String(S.an.hour).padStart(2, '0')}:59"><b class="num" id="hourLbl" style="font-size:15px"></b><span class="small muted" id="hourSum"></span></div>
+    <div class="ws-canvas" style="border:0"><div class="scroller"><svg class="plan" id="heatSvg" viewBox="0 0 1000 520" role="img" aria-label="Foot traffic heatmap"></svg></div></div>
+    <div class="heat-legend" id="heatLegend"></div>
+  </div>
+  <div class="an-main">
+    <div class="card"><div class="card-h"><div><h2>Top searches</h2><div class="sub">Change vs the previous ${R.days} days</div></div></div><div id="searchTbl"></div></div>
+    <div class="card"><div class="card-h"><div><h2>Popular routes</h2><div class="sub">Routes started · median walk time</div></div></div><ul class="routes" id="routeList"></ul></div>
+  </div>
+  <div class="card"><div class="card-h"><div><h2>Merchant performance</h2><div class="sub">Profile views → “Navigate” taps → arrivals at the store (geofence, opted-in passengers only)</div></div></div><div id="merchTbl"></div></div>
+  <div class="an-main">
+    <div class="card"><div class="card-h"><div><h2>Arrivals funnel</h2><div class="sub">International and domestic arrivals · ${esc(R.label)}</div></div></div><div class="funnel" id="funnel"></div></div>
+    <div class="card"><div class="card-h"><div><h2>Tenant insights</h2><div class="sub">Monthly aggregated report per commercial tenant</div></div></div><div id="shareList"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div><h2>Privacy &amp; data</h2><div class="sub">How these numbers are produced</div></div><span class="pill ok">RA 10173 aligned</span></div>
+    <div class="card-b"><div class="priv">
+      <div class="priv-i">${ic('users')}<b>Aggregated and anonymised</b>Counts only. No names, phone numbers or device IDs appear in any report.</div>
+      <div class="priv-i">${ic('grid')}<b>Small cells suppressed</b>Any cell, route or store count below 20 passengers is hidden and shown as a dashed outline.</div>
+      <div class="priv-i">${ic('eye')}<b>No individual paths</b>Walking paths are reduced to cell counts on the phone side. Individual paths are not stored or shared.</div>
+      <div class="priv-i">${ic('pin')}<b>Opt-in location</b>Location use is opt-in in the app and can be turned off at any time in Settings.</div>
+      <div class="priv-i">${ic('shield')}<b>Data Privacy Act</b>Processing follows the Philippine Data Privacy Act of 2012 (RA 10173). Retention: 13 months, then deleted.</div>
+    </div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div><h2>Report packages for tenants</h2><div class="sub">How NNIC could package aggregated insights for commercial tenants</div></div><span class="pill mute nodot">Illustrative · to be agreed with NNIC commercial</span></div>
+    <div class="card-b"><div class="tiers">
+      <div class="tier"><span class="label">Tier A · included with lease</span><b>Listing basics</b><ul><li>Monthly profile views and “Navigate” taps</li><li>Top search terms that led to the store</li><li>Month-on-month change</li></ul></div>
+      <div class="tier"><span class="label">Tier B · add-on</span><b>Foot traffic</b><ul><li>Arrivals at store by hour and weekday</li><li>Passenger flow past the storefront (cells ≥ 20)</li><li>Domestic vs international split</li></ul></div>
+      <div class="tier"><span class="label">Tier C · add-on</span><b>Campaign &amp; benchmark</b><ul><li>Sponsored promo reach, taps and store visits</li><li>Benchmark vs category median in the same zone</li><li>Quarterly review with the NNIC commercial team</li></ul></div>
+    </div></div>
+  </div>`;
+  drawHeat(); renderSearches(); renderRoutes(); renderMerch(); renderFunnel(); renderShare();
+}
+function drawHeat() {
+  const svg = $('#heatSvg'); if (!svg) return;
+  const term = S.an.heatTerm, h = S.an.hour;
+  const cells = heatCells(term, h, S.an.range);
+  let hs = '<g class="heat">', total = 0, sup = 0, max = 0;
+  cells.forEach(c => {
+    const b = binOf(c.c);
+    if (b < 0) { sup++; hs += `<rect class="sup" x="${c.x + 1}" y="${c.y + 1}" width="18" height="18"><title>Fewer than 20 passengers · suppressed</title></rect>`; return; }
+    total += c.c; if (c.c > max) max = c.c;
+    hs += `<rect x="${c.x}" y="${c.y}" width="20" height="20" fill="${HEAT_FILL[b]}"><title>${fmt(c.c)} passengers</title></rect>`;
+  });
+  hs += '</g>';
+  const base = term === 'T1'
+    ? planT1({ layers: { walls: true, gates: true, places: false, paths: false, conns: false } })
+    : planT3L3({ layers: { walls: true, gates: true, places: false, paths: false, conns: false }, heat: hs });
+  svg.innerHTML = term === 'T1' ? base.replace(/(<text class="rl)/, hs + '$1') : base;
+  svg.setAttribute('aria-label', `Foot traffic heatmap, ${term} Level 3, ${String(h).padStart(2, '0')}:00, busiest cell ${fmt(max)} passengers`);
+  $('#hourLbl').textContent = String(h).padStart(2, '0') + ':00–' + String(h).padStart(2, '0') + ':59';
+  $('#hourSum').textContent = `${fmt(total)} passenger-cell counts · busiest cell ${fmt(max)} · ${sup} cells suppressed`;
+  const lg = $('#heatLegend');
+  lg.innerHTML = HEAT_BINS.map((t, i) => `<div class="sw"><i style="background:${HEAT_FILL[i]}"></i><span>${i < HEAT_BINS.length - 1 ? fmt(t) + '–' + fmt(HEAT_BINS[i + 1] - 1) : fmt(t) + '+'}</span></div>`).join('') + `<div class="supp"><i></i><span>Under 20 · suppressed</span></div>`;
+}
+function renderSearches() {
+  const el = $('#searchTbl'); if (!el) return;
+  const f = rf() * (S.term === 'All' ? 1 : TF[S.term]);
+  const rows = SEARCHES.filter(s => S.term === 'All' || s.t === 'Both' || s.t === S.term).slice(0, 8);
+  const max = Math.max.apply(null, rows.map(r => r.n));
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Search</th><th class="r">Searches</th><th>Share</th><th class="r">Trend</th></tr></thead><tbody>
+  ${rows.map(s => { const n = Math.round(s.n * (s.t === 'Both' ? f : rf()) / 10) * 10; const tr = s.d > 0 ? `<span class="up">${ic('up', 'sm')}${s.d}%</span>` : s.d < 0 ? `<span class="down">${ic('down', 'sm')}${Math.abs(s.d)}%</span>` : `<span class="muted">${ic('flat', 'sm')}0%</span>`; return `<tr><td><span class="t-main">${esc(s.q)}</span>${s.t !== 'Both' ? ` <span class="tag">${s.t}</span>` : ''}</td><td class="r tnum">${fmt(n)}</td><td><div class="bar-cell"><span class="b" style="width:${(s.n / max * 100).toFixed(0)}px"></span></div></td><td class="r" style="white-space:nowrap">${tr.replace('<svg', '<svg style="vertical-align:-3px"')}</td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+function renderRoutes() {
+  const el = $('#routeList'); if (!el) return;
+  const rows = ROUTES.filter(r => S.term === 'All' || r.t === S.term);
+  const max = Math.max.apply(null, rows.map(r => r.n));
+  el.innerHTML = rows.map(r => { const n = Math.round(r.n * rf() / 10) * 10; return `<li><div class="rt">${esc(r.a)} ${ic('arrow', 'sm')} ${esc(r.b)} <span class="tag">${r.t}</span></div><div class="rv">${fmt(n)}</div><div class="rs">median ${r.m} min walk</div><div></div><div class="rbar"><i style="width:${(r.n / max * 100).toFixed(1)}%"></i></div></li>`; }).join('') || `<li><div class="empty">No routes for this terminal.</div></li>`;
+}
+function spark(seed, n) {
+  const pts = []; for (let i = 0; i < 14; i++) pts.push(n / 14 * (0.8 + 0.25 * Math.sin(i * 0.9 + seed) + (i === 5 || i === 12 ? 0.18 : 0) + (i / 14) * 0.12));
+  const W = 96, Hh = 26, mx = Math.max.apply(null, pts), mn = 0;
+  const p = pts.map((v, i) => (i * W / 13).toFixed(1) + ',' + (Hh - 3 - (v - mn) / (mx - mn) * (Hh - 6)).toFixed(1));
+  const last = p[p.length - 1].split(',');
+  return `<svg class="spark" width="${W + 6}" height="${Hh}" viewBox="0 0 ${W + 6} ${Hh}" aria-hidden="true"><polyline points="${p.join(' ')}" fill="none" stroke="var(--chart)" stroke-width="1.6" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2.8" fill="var(--chart)"/></svg>`;
+}
+function renderMerch() {
+  const el = $('#merchTbl'); if (!el) return;
+  const rows = MERCH.filter(m => S.term === 'All' || byId(m.id).term === S.term);
+  const f = rf();
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tenant</th><th class="r">Profile views</th><th class="r">“Navigate” taps</th><th class="r">Arrivals at store</th><th class="r">View → visit</th><th>Daily views · 14 d</th></tr></thead><tbody>
+  ${rows.map(m => { const t = byId(m.id); const v = Math.round(m.views * f), n = Math.round(m.nav * f), a = Math.round(m.arr * f); const cv = a / v * 100; return `<tr><td><div class="t-main">${esc(t.name)}</div><div class="t-sub">${t.term} · ${esc(ZONES[t.zone])}</div></td><td class="r tnum">${fmt(v)}</td><td class="r tnum">${fmt(n)}</td><td class="r tnum">${fmt(a)}</td><td class="r tnum"><b>${cv.toFixed(1)}%</b></td><td>${spark(m.seed, m.views)}</td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+function renderFunnel() {
+  const el = $('#funnel'); if (!el) return;
+  const f = rf() * (S.term === 'All' ? 1 : TF[S.term]);
+  const steps = [['Arrival flight looked up', 'Flight number or “I just landed”', 38400], ['Route to carousel started', 'From gate or arrivals corridor', 21900], ['Reached the carousel', 'Within 25 m of the assigned carousel', 18200], ['Ride booked', 'Airport taxi queue ticket (ride-hail pending agreements)', 3050]];
+  const top = steps[0][2];
+  el.innerHTML = steps.map((s, i) => { const n = Math.round(s[2] * f / 10) * 10; const w = s[2] / top * 100; const inside = w > 30; return `<div class="fn-row"><div class="fl">${esc(s[0])}<small>${esc(s[1])}</small></div><div class="fn-track"><div class="fn-bar" style="width:${w.toFixed(1)}%">${inside ? `<span class="fn-val" style="color:var(--brand-fg)">${fmt(n)}</span>` : ''}</div>${inside ? '' : `<span class="fn-val">${fmt(n)}</span>`}<span class="small muted" style="white-space:nowrap">${i ? Math.round(s[2] / steps[i - 1][2] * 100) + '% of previous' : ''}</span></div></div>`; }).join('') +
+    `<div class="note">${ic('info')}<span>Ride-hail partners (Grab, JoyRide) are pending agreement. Once live, bookings made in their mini-programs appear here as counts only.</span></div>`;
+}
+function renderShare() {
+  const el = $('#shareList'); if (!el) return;
+  const rows = MERCH.filter(m => S.term === 'All' || byId(m.id).term === S.term);
+  const on = rows.filter(m => S.share[m.id]).length;
+  el.innerHTML = `<div class="card-b" style="display:flex;flex-direction:column;gap:12px"><div class="small muted">${on} of ${rows.length} tenants receive the September report on 1 Oct. Reports contain only aggregated counts for the tenant's own listing and the cells around it.</div>
+  <div style="display:flex;flex-direction:column">${rows.map(m => { const t = byId(m.id); return `<div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:nowrap"><div style="min-width:0"><div class="t-main" style="font-weight:700">${esc(t.name)}</div><div class="small muted">${S.share[m.id] ? 'Tier A · Tier B' : 'Not shared'}</div></div><label class="switch"><input type="checkbox" id="share-${m.id}" data-share="${m.id}" ${S.share[m.id] ? 'checked' : ''}><span class="trk"></span><span class="sr">Share with ${esc(t.name)}</span><span aria-hidden="true" class="small">Share with tenant</span></label></div>`; }).join('')}</div></div>`;
+}
+
+/* ================= integrations ================= */
+const INTS = [
+  { id: 'fids', name: 'FIDS flight information feed (NAIA)', sub: 'Gates, times and status for T1 and T3', icon: 'plane', status: 'Connected', sync: '13:01:48', lat: '420 ms', key: 'sk_test_••••••••3f9a', env: 'Production', prodOk: true, test: ['ok', 'Connected · 412 flights today · last message 13:01:48'] },
+  { id: 'cirium', name: 'Cirium Flight Status API', sub: 'Codeshares, delay reasons, inbound aircraft', icon: 'plane', status: 'Sandbox', sync: '12:58:10', lat: '690 ms', key: 'sk_test_••••••••b21c', env: 'Sandbox', prodOk: false, prodWhy: 'Live-feed budget not yet approved', test: ['ok', 'Sandbox reachable · sample flights PR 102, Z2 330 returned'] },
+  { id: 'bhs', name: 'Baggage status (NAIA BHS / carousel assignment)', sub: 'Carousel number and first-bag time for arrivals', icon: 'box', status: 'Pending', sync: '—', lat: '—', key: 'Not issued', env: 'Sandbox', prodOk: false, prodWhy: 'Awaiting interface spec from NNIC IT', test: ['warn', 'No endpoint configured yet. Carousel numbers come from FIDS for now.'] },
+  { id: 'grab', name: 'Grab (ride-hail mini-program)', sub: 'Book a ride to or from NAIA inside the app', icon: 'car', status: 'Pending agreement', sync: '—', lat: '—', key: 'sk_test_••••••••7d04', env: 'Sandbox', prodOk: false, prodWhy: 'Partner agreement not signed', test: ['ok', 'Sandbox mini-program loaded · bridge handshake OK · no bookings made'] },
+  { id: 'joyride', name: 'JoyRide (ride-hail)', sub: 'Book a ride to or from NAIA inside the app', icon: 'car', status: 'Pending agreement', sync: '—', lat: '—', key: 'sk_test_••••••••c8e2', env: 'Sandbox', prodOk: false, prodWhy: 'Partner agreement not signed', test: ['ok', 'Sandbox mini-program loaded · bridge handshake OK · no bookings made'] },
+  { id: 'taxi', name: 'Airport taxi queue dispatch', sub: 'Queue length and wait time at T1 and T3 bays', icon: 'car', status: 'Degraded', sync: '12:56:02', lat: '2.4 s', key: 'sk_test_••••••••41aa', env: 'Production', prodOk: true, test: ['warn', 'Reachable but data is 6 min old · last queue update 12:56:02'] },
+  { id: 'etravel', name: 'eTravel (Bureau of Immigration)', sub: 'Opens the official eTravel site; no data exchanged', icon: 'link', status: 'Deep link only', sync: '—', lat: '—', key: 'No key needed', env: 'Production', prodOk: true, test: ['ok', 'Link target responds · etravel.gov.ph'] },
+  { id: 'pay', name: 'Payments', sub: 'Handled inside partner mini-programs. Airport Navi stores no card data.', icon: 'card', status: 'Handled by partners', sync: '—', lat: '—', key: 'Not applicable', env: 'Production', prodOk: true, test: ['ok', 'Nothing to test. Payment data never passes through Airport Navi.'] }
+];
+const MINIS = [
+  { id: 'm1', app: 'Airport taxi queue', partner: 'NNIC ground transport · built by Multisys', ver: '1.2.0', rev: 'Approved', perms: { term: true, lang: true, flight: false }, on: true },
+  { id: 'm2', app: 'SIM & pocket WiFi rental', partner: 'Internal demo partner', ver: '0.8.1', rev: 'Approved', perms: { term: true, lang: true, flight: true }, on: true },
+  { id: 'm3', app: 'Grab', partner: 'Grab Philippines', ver: '0.9.2', rev: 'In review', perms: { term: true, lang: true, flight: true }, on: false },
+  { id: 'm4', app: 'JoyRide', partner: 'JoyRide', ver: '0.4.0', rev: 'In review', perms: { term: true, lang: false, flight: false }, on: false },
+  { id: 'm5', app: 'Car rental (demo)', partner: 'Internal demo partner', ver: '0.3.5', rev: 'Rejected', why: 'Requested precise location; only terminal-level location is allowed', perms: { term: true, lang: true, flight: true }, on: false }
+];
+S.intTest = {};
+function intStatus(s) {
+  const c = s === 'Connected' ? 'ok' : s === 'Degraded' ? 'crit' : s === 'Pending' || s === 'Pending agreement' ? 'warn' : s === 'Sandbox' ? '' : 'mute';
+  return `<span class="pill ${c}">${esc(s)}</span>`;
+}
+function renderInts() {
+  const v = $('#v-ints');
+  v.innerHTML = `
+  <div class="view-head">
+    <div><div class="eyebrow">Data feeds &amp; partners</div><h1 id="h-ints">Integrations &amp; Mini-programs</h1>
+    <p>Feeds that power flight, baggage and ground-transport information, and partner mini-programs that run inside the app.</p></div>
+    <div class="actions"><button class="btn sec" type="button" data-act="test-all">${ic('refresh', 'sm')}Test all connections</button></div>
+  </div>
+  <div class="int-grid">${INTS.map(intCard).join('')}</div>
+  <div class="card">
+    <div class="card-h"><div><h2>Mini-program registry</h2><div class="sub">Partner apps that open full-screen inside Airport Navi</div></div></div>
+    <div class="card-b" style="padding-bottom:0"><div class="note">${ic('lock')}<span><b>Sandbox policy.</b> Each mini-program runs in a sandboxed iframe and talks to the app only through a postMessage bridge. It gets the permissions ticked below and never the passenger's identity, contacts or precise location. Location is shared at terminal level only.</span></div></div>
+    <div class="tbl-wrap"><table class="tbl" style="margin-top:12px"><thead><tr><th>Mini-program</th><th>Version</th><th>Review</th><th>Permissions requested</th><th>Enabled</th></tr></thead><tbody>
+    ${MINIS.map(m => `<tr><td><div class="t-main">${esc(m.app)}</div><div class="t-sub">${esc(m.partner)}</div></td><td class="tnum">${esc(m.ver)}</td><td>${statusPill(m.rev)}${m.why ? `<div class="t-sub" style="max-width:220px;margin-top:4px">${esc(m.why)}</div>` : ''}</td>
+    <td><div class="perm">${[['term', 'Terminal & pickup bay'], ['lang', 'Language'], ['flight', 'Flight number']].map(([k, l]) => `<label for="perm-${m.id}-${k}"><input type="checkbox" id="perm-${m.id}-${k}" data-perm="${m.id}:${k}" ${m.perms[k] ? 'checked' : ''}>${l}</label>`).join('')}<span class="fixed">${ic('pin', 'sm')}Location: terminal-level only</span></div></td>
+    <td><label class="switch"><input type="checkbox" id="mini-${m.id}" data-mini="${m.id}" ${m.on ? 'checked' : ''} ${m.rev !== 'Approved' ? 'disabled' : ''}><span class="trk"></span><span class="small">${m.rev !== 'Approved' ? 'After approval' : m.on ? 'On' : 'Off'}</span></label></td></tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+}
+function intCard(i) {
+  const t = S.intTest[i.id];
+  const res = !t ? '' : t === 'run' ? `<div class="result"><span class="spin" aria-hidden="true"></span>Testing ${esc(i.env.toLowerCase())} connection…</div>` : `<div class="result ${t[0]}">${ic(t[0] === 'ok' ? 'check' : 'alert', 'sm')}<span>${esc(t[1])}<br><span style="opacity:.8">Tested 29 Sep, 13:02</span></span></div>`;
+  return `<div class="int" id="int-${i.id}">
+    <div class="int-h"><span class="ii">${ic(i.icon)}</span><div class="grow"><b>${esc(i.name)}</b><span>${esc(i.sub)}</span></div></div>
+    <div>${intStatus(i.status)}</div>
+    <div class="int-meta"><div>Last sync<b>${esc(i.sync)}</b></div><div>Latency<b>${esc(i.lat)}</b></div></div>
+    <div class="field"><span class="lbl">API key</span><span class="key">${esc(i.key)}</span></div>
+    <div class="int-foot">
+      <div class="seg" role="group" aria-label="Environment for ${esc(i.name)}">
+        <button type="button" data-act="env" data-arg="${i.id}:Sandbox" aria-pressed="${i.env === 'Sandbox'}">Sandbox</button>
+        <button type="button" data-act="env" data-arg="${i.id}:Production" aria-pressed="${i.env === 'Production'}" ${i.prodOk ? '' : 'disabled'} ${i.prodOk ? '' : `title="${esc(i.prodWhy)}"`}>Production</button>
+      </div>
+      <button class="btn sec sm" type="button" data-act="test" data-arg="${i.id}" ${t === 'run' ? 'disabled' : ''}>${ic('bolt', 'sm')}Test connection</button>
+    </div>
+    ${i.prodOk ? '' : `<div class="small muted">${ic('lock', 'sm')} Production locked · ${esc(i.prodWhy)}</div>`}
+    ${res}
+  </div>`;
+}
+function runTest(id) {
+  S.intTest[id] = 'run';
+  const el = $('#int-' + id); const i = INTS.find(x => x.id === id);
+  if (el) el.outerHTML = intCard(i);
+  setTimeout(() => {
+    S.intTest[id] = i.test;
+    const e2 = $('#int-' + id); if (e2) e2.outerHTML = intCard(i);
+  }, reduceMotion ? 200 : 900 + Math.random() * 500);
+}
+
+/* ================= router, counts, theme ================= */
+const RENDER = { overview: renderOverview, maps: renderMaps, tenants: renderTenants, promos: renderPromos, analytics: renderAnalytics, ints: renderInts };
+function go(view, opts) {
+  if (!RENDER[view]) view = 'overview';
+  S.view = view;
+  $$('.view').forEach(v => { v.hidden = v.id !== 'v-' + view; });
+  $$('.side .nav-btn').forEach(b => b.setAttribute('aria-current', b.dataset.nav === view ? 'page' : 'false'));
+  RENDER[view]();
+  closeNav();
+  if (!(opts && opts.keepScroll)) window.scrollTo(0, 0);
+  const h = $('#h-' + view); if (h && opts && opts.focus) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+  store.set('an-bp-view', view);
+  try { if (location.hash.slice(1) !== view) history.replaceState(null, '', '#' + view); } catch (e) { /* ignore */ }
+}
+function updateCounts() {
+  const oi = openIssues();
+  $('#cnt-maps').textContent = (S.map.versions[0].st === 'Draft' && oi) ? oi : '';
+  $('#cnt-tenants').textContent = APPROVALS.length || '';
+  $('#cnt-ints').textContent = INTS.filter(i => i.status === 'Degraded').length || '';
+}
+function currentTheme() {
+  const a = document.documentElement.getAttribute('data-theme');
+  if (a) return a;
+  try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (e) { return 'light'; }
+}
+function paintThemeBtn() {
+  const d = currentTheme() === 'dark';
+  const b = $('#themeBtn');
+  b.innerHTML = ic(d ? 'sun' : 'moon');
+  b.setAttribute('aria-label', d ? 'Switch to light theme' : 'Switch to dark theme');
+  b.title = d ? 'Light theme' : 'Dark theme';
+}
+function openNav() { $('#side').classList.add('open'); $('#navScrim').hidden = false; $('#menuBtn').setAttribute('aria-expanded', 'true'); }
+function closeNav() { $('#side').classList.remove('open'); $('#navScrim').hidden = true; $('#menuBtn').setAttribute('aria-expanded', 'false'); }
+
+/* ================= events ================= */
+document.addEventListener('click', e => {
+  const navEl = e.target.closest('[data-nav]');
+  if (navEl) { go(navEl.dataset.nav, { focus: navEl.classList.contains('nav-btn') }); return; }
+  const a = e.target.closest('[data-act]');
+  if (!a) {
+    if (!e.target.closest('.tenant')) { $('#tenantPop').hidden = true; $('#tenantBtn').setAttribute('aria-expanded', 'false'); }
+    return;
+  }
+  const act = a.dataset.act, arg = a.dataset.arg;
+  switch (act) {
+    case 'tenant-pick': $('#tenantPop').hidden = true; $('#tenantBtn').setAttribute('aria-expanded', 'false'); toast('You are working in NNIC · NAIA'); break;
+    /* maps */
+    case 'layer': S.map.layers[arg] = !S.map.layers[arg]; a.setAttribute('aria-pressed', S.map.layers[arg]); drawPlan(); break;
+    case 'lvl': S.map.level = arg; $('#lvl').value = arg; drawPlan(); renderIssues(); break;
+    case 'sel-issue': if (S.map.level !== 'L3') { S.map.level = 'L3'; $('#lvl').value = 'L3'; } S.map.sel = S.map.sel === arg ? null : arg; drawPlan(); renderIssues(); break;
+    case 'accept-issue': S.mapIssues[arg].state = 'accepted'; S.mapIssues[arg].fixing = false; if (S.map.sel === arg) S.map.sel = null; refreshMapBits(); toast('Accepted · ' + openIssues() + ' left to review'); break;
+    case 'fix-issue': S.mapIssues[arg].fixing = true; S.map.sel = arg; drawPlan(); renderIssues(); { const f = $('#fix-' + arg); if (f) f.focus(); } break;
+    case 'cancel-fix': S.mapIssues[arg].fixing = false; renderIssues(); break;
+    case 'save-fix': { const f = $('#fix-' + arg); const val = f ? f.value.trim() : ''; if (!val) { toast('Enter a value before saving the fix.', 'warn'); return; } S.mapIssues[arg].value = val; S.mapIssues[arg].state = 'fixed'; S.mapIssues[arg].fixing = false; if (S.map.sel === arg) S.map.sel = null; refreshMapBits(); toast('Fix saved to v4 draft'); break; }
+    case 'undo-issue': S.mapIssues[arg].state = 'open'; S.mapIssues[arg].value = ISSUE_DEF.find(d => d.id === arg).value; S.map.confirm = false; refreshMapBits(); break;
+    case 'accept-all': ISSUE_DEF.forEach(d => { if (S.mapIssues[d.id].state === 'open') { S.mapIssues[d.id].state = 'accepted'; S.mapIssues[d.id].fixing = false; } }); S.map.sel = null; refreshMapBits(); toast('All suggestions accepted'); break;
+    case 'pub-ask': S.map.confirm = true; refreshMapBits(); { const b = $('[data-act="pub-yes"]'); if (b) b.focus(); } break;
+    case 'pub-no': S.map.confirm = false; refreshMapBits(); break;
+    case 'pub-yes':
+      S.map.confirm = false;
+      S.map.versions = [{ v: 'v4', st: 'Live', d: 'Published 29 Sep 2026, 13:02 by Ops Admin' }, { v: 'v3', st: 'Archived', d: 'Published 28 Sep 2026 · kept for rollback' }, { v: 'v2', st: 'Archived', d: 'Published 02 Sep 2026' }];
+      renderMaps(); updateCounts(); toast('v4 published · passengers get it on the next app refresh'); break;
+    /* overview */
+    case 'goto-approvals': S.ten.tab = 'appr'; go('tenants'); break;
+    case 'open-promo': go('promos'); S.promo.edit = JSON.parse(JSON.stringify(PROMOS.find(p => p.id === arg))); renderPromoForm(); { const f = $('#promoForm'); if (f) f.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); } break;
+    /* tenants */
+    case 'ten-tab': S.ten.tab = arg; $$('#v-tenants .tab').forEach(t => t.setAttribute('aria-selected', t.dataset.arg === arg)); $('#tenPanel').setAttribute('aria-labelledby', arg === 'list' ? 'tab-list' : 'tab-appr'); renderTenPanel(); break;
+    case 'ten-clear': S.ten = Object.assign(S.ten, { q: '', cat: 'All', status: 'All', term: 'All' }); renderTenPanel(); break;
+    case 'open-tenant': e.preventDefault(); openTenant(arg); break;
+    case 'new-tenant': openTenant(null); break;
+    case 'approve': decide(arg, true); break;
+    case 'reject': decide(arg, false); break;
+    case 'close-drawer': closeDrawer(); break;
+    case 'ed-tag': case 'ed-pay': { const list = act === 'ed-tag' ? ED.tags : ED.pay; const i = list.indexOf(arg); if (i >= 0) list.splice(i, 1); else list.push(arg); a.setAttribute('aria-pressed', i < 0); updatePhone(); break; }
+    case 'ed-draft': saveTenant(false); break;
+    case 'ed-submit': saveTenant(true); break;
+    /* promos */
+    case 'promo-filter': S.promo.filter = arg; $$('#v-promos [data-act="promo-filter"]').forEach(c => { if (c.classList.contains('chip')) c.setAttribute('aria-pressed', c.dataset.arg === arg); }); renderPromoTable(); break;
+    case 'edit-promo': S.promo.edit = JSON.parse(JSON.stringify(PROMOS.find(p => p.id === arg))); renderPromoForm(); { const f = $('#promoForm'); if (f) { f.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); } } break;
+    case 'new-promo': S.promo.edit = blankPromo(); renderPromoForm(); { const f = $('#promoForm'); if (f) f.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => { const h = $('#p-head'); if (h) h.focus({ preventScroll: true }); }, 300); } break;
+    case 'p-type': { const p = S.promo.edit; p.type = arg; if (arg === 'Sponsored promo' && p.place === 'Arrivals prompt') p.place = 'Shops “Sponsored” slot'; if (arg !== 'Travel advisory') p.prio = 'Normal'; renderPromoForm(); break; }
+    case 'p-save': savePromo(arg); break;
+    /* analytics */
+    case 'range': S.an.range = arg; renderAnalytics(); break;
+    case 'heat-term': S.an.heatTerm = arg; renderAnalytics(); break;
+    /* integrations */
+    case 'test': runTest(arg); break;
+    case 'test-all': INTS.forEach(i => runTest(i.id)); break;
+    case 'env': { const [id, env] = arg.split(':'); const i = INTS.find(x => x.id === id); if (env === 'Production' && !i.prodOk) return; i.env = env; S.intTest[id] = null; $('#int-' + id).outerHTML = intCard(i); toast(`${i.name.split(' (')[0]} set to ${env.toLowerCase()}`); break; }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (!$('#drawer').hidden) { closeDrawer(); return; }
+    if ($('#side').classList.contains('open')) { closeNav(); $('#menuBtn').focus(); return; }
+    if (!$('#tenantPop').hidden) { $('#tenantPop').hidden = true; $('#tenantBtn').setAttribute('aria-expanded', 'false'); $('#tenantBtn').focus(); }
+  }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('g[role="button"]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
+});
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (id === 'ten-q') { S.ten.q = e.target.value; renderTenTable(); }
+  else if (id === 'hour') { S.an.hour = +e.target.value; e.target.setAttribute('aria-valuetext', String(S.an.hour).padStart(2, '0') + ':00'); drawHeat(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target, id = t.id;
+  if (id === 'lvl') { S.map.level = t.value; S.map.sel = null; drawPlan(); renderIssues(); }
+  else if (id === 'ten-term') { S.ten.term = t.value; renderTenTable(); }
+  else if (id === 'ten-cat') { S.ten.cat = t.value; renderTenTable(); }
+  else if (id === 'ten-st') { S.ten.status = t.value; renderTenTable(); }
+  else if (t.dataset && t.dataset.share) { S.share[t.dataset.share] = t.checked; renderShare(); const n = byId(t.dataset.share).name; toast(t.checked ? `${n} will receive the monthly report` : `Stopped sharing reports with ${n}`); const again = $('#share-' + t.dataset.share); if (again) again.focus(); }
+  else if (t.dataset && t.dataset.perm) { const [mid, k] = t.dataset.perm.split(':'); const m = MINIS.find(x => x.id === mid); m.perms[k] = t.checked; toast(`${m.app}: ${t.checked ? 'allowed' : 'removed'} ${k === 'term' ? 'terminal & pickup bay' : k === 'lang' ? 'language' : 'flight number'}`); }
+  else if (t.dataset && t.dataset.mini) { const m = MINIS.find(x => x.id === t.dataset.mini); m.on = t.checked; t.nextElementSibling.nextElementSibling.textContent = m.on ? 'On' : 'Off'; toast(`${m.app} ${m.on ? 'enabled in the Services tab' : 'disabled for all passengers'}`); }
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'geoForm') {
+    const la = parseFloat($('#g-lat').value), ln = parseFloat($('#g-lng').value), be = parseFloat($('#g-bear').value), mp = parseFloat($('#g-mpp').value);
+    const bad = [[la, 'g-lat', v => v > 14.4 && v < 14.6], [ln, 'g-lng', v => v > 120.9 && v < 121.1], [be, 'g-bear', v => v >= 0 && v < 360], [mp, 'g-mpp', v => v > 0 && v < 5]].filter(([v, id, ok]) => { const bad = isNaN(v) || !ok(v); $('#' + id).setAttribute('aria-invalid', bad); return bad; });
+    if (bad.length) { toast('Check the highlighted values. Origin must be at NAIA; bearing 0–359.9°.', 'warn'); $('#' + bad[0][1]).focus(); return; }
+    geo.lat = la; geo.lng = ln; geo.bearing = be; geo.mpp = mp;
+    geoCheck(); drawPlan(); toast('Scale & position applied to v4 draft');
+  }
+});
+$('#menuBtn').addEventListener('click', () => ($('#side').classList.contains('open') ? closeNav() : openNav()));
+$('#navScrim').addEventListener('click', closeNav);
+$('#drawerScrim').addEventListener('click', closeDrawer);
+$('#tenantBtn').addEventListener('click', e => { e.stopPropagation(); const p = $('#tenantPop'); p.hidden = !p.hidden; $('#tenantBtn').setAttribute('aria-expanded', String(!p.hidden)); });
+$('#termSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-term]'); if (!b) return;
+  S.term = b.dataset.term;
+  $$('#termSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  store.set('an-bp-term', S.term);
+  RENDER[S.view]();
+});
+$('#themeBtn').addEventListener('click', () => {
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  store.set('an-bp-theme', next);
+  paintThemeBtn();
+});
+try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paintThemeBtn); } catch (e) { /* ignore */ }
+wirePromoForm();
+
+/* ================= boot ================= */
+(function boot() {
+  const th = store.get('an-bp-theme'); if (th === 'dark' || th === 'light') document.documentElement.setAttribute('data-theme', th);
+  paintThemeBtn();
+  const tm = store.get('an-bp-term');
+  if (tm === 'T1' || tm === 'T3') { S.term = tm; $$('#termSeg button').forEach(x => x.setAttribute('aria-pressed', x.dataset.term === tm)); }
+  updateCounts();
+  const h = (location.hash || '').slice(1);
+  go(RENDER[h] ? h : 'overview', { keepScroll: true });
+})();
+})();
+</script>
+
+</body>
+</html>
