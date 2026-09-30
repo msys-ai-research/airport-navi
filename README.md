@@ -4,6 +4,7 @@ Interactive prototype of **Airport Navi**, a web app passengers open by scanning
 
 **Live demo:** https://msys-ai-research.github.io/airport-navi/
 **Business Portal (concept):** https://msys-ai-research.github.io/airport-navi/portal.html
+**GPS navigation prototype:** https://msys-ai-research.github.io/airport-navi/gps.html
 
 > Prototype only. Flights, bag status, positions, fares, drivers and partner services are simulated. Maps are schematic (not to scale) and built from public guides, not official plans from NNIC, NAIA's operator.
 
@@ -18,6 +19,7 @@ Interactive prototype of **Airport Navi**, a web app passengers open by scanning
 - **Map:** drag to pan, scroll or pinch to zoom, *+ / − / fit* buttons; *walk ▶* moves the blue dot; the Demo panel's phone compass shows the facing cone and "Turn around" cue.
 - **Domestic vs international (T3):** gates across the glass partition show a "no walking route" state instead of a path.
 - **Concierge, amenities, shops & lounges, travel forms, services (mini programs).**
+- **GPS navigation (`gps.html`):** linked from the Demo panel. Blue-dot navigation on a georeferenced MapLibre map: simulated or device GPS, QR-anchor bias correction, Kalman smoothing, snap-to-route, off-route re-routing after 3 fixes, floor switching at escalators, voice guidance. The simulator has speed, noise, drift/multipath, *Wrong turn* and tap-to-place. Includes the same gate-change animation, terminal switch, arrivals-to-carousel and ride-to-Bay-4 flows. Placement is approximate; adjust it under *Georeference* in its Demo panel.
 - **Business Portal:** linked from the Demo panel. Blueprint scanner, tenant & amenity CMS with approvals, promotions & banners, foot-traffic & merchant analytics, integrations & mini-program registry.
 
 ### Sample flights
@@ -38,7 +40,7 @@ Clock is fixed at 13:02, 28 Sep. Flight data mimics the Cirium Flight Status for
 
 ## How it's built
 
-- `index.html` (passenger app) and `portal.html` (Business Portal) are each one self-contained file — vanilla JS, no build step, no dependencies. Font: DM Sans (Google Fonts).
+- `index.html` (passenger app), `gps.html` (GPS navigation) and `portal.html` (Business Portal) are each one self-contained file — vanilla JS, no build step. `gps.html` loads MapLibre GL JS 4.7.1 from jsDelivr; the others have no dependencies. Font: DM Sans (Google Fonts).
 - Terminal maps: corridor graph per terminal with zones (domestic / international / arriving / landside), one-way checkpoints (immigration, customs), level changes (stairs, escalators, lifts) and shortest-path routing; directions are generated from the path. Arrivals maps show Level 2 and Level 1 unfolded on one sheet.
 - `.nojekyll` makes GitHub Pages serve the files as-is.
 
